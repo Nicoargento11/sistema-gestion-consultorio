@@ -15,7 +15,7 @@ public partial class FormMenuPrincipal : Form
 
         ConfigurarBotonesPorRol();
 
-        btnPacientes.Click += (s, e) => AbrirPantallaPendiente("ABM de Pacientes");
+        btnPacientes.Click += (s, e) => new FormPacientes().ShowDialog();
         btnMedicos.Click += (s, e) => AbrirPantallaPendiente("ABM de Médicos");
         btnTurnos.Click += (s, e) => AbrirPantallaPendiente("Gestión de Turnos");
         btnAgenda.Click += (s, e) => AbrirPantallaPendiente("Mi Agenda");
@@ -48,5 +48,10 @@ public partial class FormMenuPrincipal : Form
         var login = new FormLogin();
         login.Show();
         Close();
+    }
+
+    private void FormMenuPrincipal_Load(object sender, EventArgs e)
+    {
+
     }
 }

@@ -99,7 +99,7 @@ partial class FormLogin
         BtnIngresar.Location = new Point(80, 305);
         BtnIngresar.Name = "BtnIngresar";
         BtnIngresar.Size = new Size(260, 42);
-        BtnIngresar.TabIndex = 1;
+        BtnIngresar.TabIndex = 2;
         BtnIngresar.Text = "Ingresar";
         BtnIngresar.UseVisualStyleBackColor = false;
         BtnIngresar.Click += BtnIngresar_Click;
@@ -111,7 +111,7 @@ partial class FormLogin
         TxtContrasenia.Name = "TxtContrasenia";
         TxtContrasenia.PasswordChar = '*';
         TxtContrasenia.Size = new Size(260, 37);
-        TxtContrasenia.TabIndex = 2;
+        TxtContrasenia.TabIndex = 1;
         // 
         // label2
         // 
@@ -130,7 +130,7 @@ partial class FormLogin
         TxtUsuario.Location = new Point(80, 178);
         TxtUsuario.Name = "TxtUsuario";
         TxtUsuario.Size = new Size(260, 37);
-        TxtUsuario.TabIndex = 4;
+        TxtUsuario.TabIndex = 0;
         // 
         // label1
         // 

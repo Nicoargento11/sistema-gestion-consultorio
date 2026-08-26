@@ -6,6 +6,7 @@ public partial class FormLogin : Form
     public FormLogin()
     {
         InitializeComponent();
+        AcceptButton = BtnIngresar;
     }
 
     private void FormLogin_Load(object sender, EventArgs e)
