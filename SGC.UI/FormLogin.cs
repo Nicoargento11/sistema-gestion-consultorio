@@ -29,13 +29,14 @@ public partial class FormLogin : Form
             return;
         }
 
-        MessageBox.Show($"Bienvenido, rol: {usuario.Rol}");
+        var menu = new FormMenuPrincipal(usuario);
+        menu.Show();
+        Hide();
     }
 
     private void label2_Click(object sender, EventArgs e)
     {
 
     }
-
 
 }
