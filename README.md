@@ -71,6 +71,102 @@ Al reasignar `DataSource` de una grilla (`CargarGrilla()`), WinForms selecciona 
 
 ## Git: como nos vamos a manejar
 
-- `main` siempre tiene que compilar y andar.
+Reglas generales:
+- `main` siempre tiene que compilar y andar. Nunca se pushea a `main` codigo roto.
 - Cada modulo grande se arma en su propia rama (`feature/nombre-modulo`), no directo en `main`.
 - Pull Request en GitHub antes de mergear a `main`, para que el otro revise.
+
+### Primera vez (clonar el repo)
+
+```bash
+git clone https://github.com/Nicoargento11/sistema-gestion-consultorio.git
+cd sistema-gestion-consultorio
+```
+
+### Antes de arrancar a trabajar cada dia: traer lo ultimo de main
+
+```bash
+git checkout main
+git pull
+```
+
+`checkout main` te para en la rama `main`. `pull` trae los commits nuevos que el otro haya subido desde la ultima vez. Hacer esto SIEMPRE antes de crear una rama nueva, para partir de la version mas actualizada.
+
+### Crear tu rama de trabajo
+
+```bash
+git checkout -b feature/medicos
+```
+
+Crea la rama `feature/medicos` Y te para en ella en un solo paso (el `-b` es "branch nueva"). A partir de aca, todo lo que hagas queda en ESTA rama, sin tocar `main`.
+
+Para confirmar en que rama estas parado en cualquier momento:
+```bash
+git branch
+```
+(la que tiene un `*` al lado es la actual)
+
+### El ciclo de trabajo normal (repetir las veces que haga falta)
+
+1. Hacer cambios en el codigo (Visual Studio).
+2. Ver que archivos cambiaron:
+   ```bash
+   git status
+   ```
+3. Agregar los archivos que querés incluir en el commit:
+   ```bash
+   git add NombreDelArchivo.cs
+   ```
+   O, si tocaste varios archivos relacionados y querés agregarlos todos:
+   ```bash
+   git add .
+   ```
+4. Confirmar el commit con un mensaje descriptivo:
+   ```bash
+   git commit -m "Agrega ABM de Medicos con validaciones"
+   ```
+5. Subir tu rama a GitHub:
+   ```bash
+   git push -u origin feature/medicos
+   ```
+   El `-u origin feature/medicos` hace falta SOLO la primera vez que pusheas esa rama (conecta tu rama local con una remota del mismo nombre). Las veces siguientes, con `git push` alcanza.
+
+Repetir los pasos 1 a 4 (commits chicos y frecuentes son mejores que uno gigante al final), y pushear cuando quieras guardar avance en GitHub.
+
+### Cuando tu parte esta lista: Pull Request
+
+1. Andá a https://github.com/Nicoargento11/sistema-gestion-consultorio en el navegador.
+2. Te va a aparecer un cartel amarillo "feature/medicos had recent pushes" con un boton **"Compare & pull request"** — clic ahi.
+3. Ponele un titulo/descripcion breve de que hiciste, y **"Create pull request"**.
+4. El otro (o vos, si es al reves) revisa los cambios en la pestaña "Files changed", y si esta todo bien, aprieta **"Merge pull request"**.
+
+Eso mezcla `feature/medicos` adentro de `main` en GitHub. Despues, en tu compu:
+```bash
+git checkout main
+git pull
+```
+para traerte esa mezcla a tu copia local tambien.
+
+### Si mientras tanto `main` cambio y tu rama quedo desactualizada
+
+Si el otro mergeo algo a `main` mientras vos seguias trabajando en tu rama, conviene traer esos cambios a tu rama antes de que se acumule diferencia:
+
+```bash
+git checkout main
+git pull
+git checkout feature/medicos
+git merge main
+```
+
+Si no hay conflictos, se mezcla solo. Si hay conflictos (los dos tocaron la misma linea del mismo archivo), Git te va a marcar el archivo en conflicto — ahi hay que abrirlo, elegir que parte queda (VS marca los conflictos con `<<<<<<<`, `=======`, `>>>>>>>`), guardar, `git add` al archivo resuelto, y `git commit` para cerrar el merge.
+
+### Comandos sueltos que van a usar seguido
+
+| Comando | Que hace |
+|---|---|
+| `git status` | Que archivos cambiaste, en que rama estas |
+| `git log --oneline` | Historial de commits, resumido |
+| `git branch` | Lista las ramas locales |
+| `git checkout nombre-rama` | Cambiar de rama |
+| `git pull` | Traer cambios nuevos de GitHub a tu rama actual |
+| `git push` | Subir tus commits a GitHub |

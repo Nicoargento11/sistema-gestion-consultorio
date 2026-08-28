@@ -10,9 +10,9 @@ public class TurnoService
 
     public List<Turno> ObtenerTodos()
     {
-        // Muestra TODOS los turnos, incluidos los cancelados (se distinguen por Estado),
-        // asi la recepcionista puede verificar que una cancelacion realmente se aplico.
-        return _turnos.OrderBy(t => t.Fecha).ToList();
+        // Mismo criterio que PacienteService: al cancelar (baja logica), desaparece
+        // de la vista normal. Consistente con como se comporta "Eliminar" en Pacientes.
+        return _turnos.Where(t => t.Activo).OrderBy(t => t.Fecha).ToList();
     }
 
     public void AsignarTurno(Paciente paciente, Medico medico, Horario horario, DateOnly fecha)
