@@ -16,6 +16,8 @@ partial class FormTurnos
     private void InitializeComponent()
     {
         pnlFormulario = new Panel();
+        BtnModificar = new Button();
+        ChkMostrarCancelados = new CheckBox();
         LblMensaje = new Label();
         BtnCancelar = new Button();
         BtnAsignar = new Button();
@@ -35,6 +37,8 @@ partial class FormTurnos
         // pnlFormulario
         // 
         pnlFormulario.BackColor = Color.FromArgb(245, 246, 250);
+        pnlFormulario.Controls.Add(BtnModificar);
+        pnlFormulario.Controls.Add(ChkMostrarCancelados);
         pnlFormulario.Controls.Add(LblMensaje);
         pnlFormulario.Controls.Add(BtnCancelar);
         pnlFormulario.Controls.Add(BtnAsignar);
@@ -51,9 +55,34 @@ partial class FormTurnos
         pnlFormulario.Name = "pnlFormulario";
         pnlFormulario.Size = new Size(1100, 190);
         pnlFormulario.TabIndex = 1;
-        // 
+        //
+        // BtnModificar
+        //
+        BtnModificar.BackColor = Color.FromArgb(120, 130, 145);
+        BtnModificar.FlatAppearance.BorderSize = 0;
+        BtnModificar.FlatStyle = FlatStyle.Flat;
+        BtnModificar.Font = new Font("Segoe UI", 9.5F);
+        BtnModificar.ForeColor = Color.White;
+        BtnModificar.Location = new Point(570, 113);
+        BtnModificar.Name = "BtnModificar";
+        BtnModificar.Size = new Size(130, 34);
+        BtnModificar.TabIndex = 7;
+        BtnModificar.Text = "Modificar";
+        BtnModificar.UseVisualStyleBackColor = false;
+        //
+        // ChkMostrarCancelados
+        //
+        ChkMostrarCancelados.AutoSize = true;
+        ChkMostrarCancelados.Font = new Font("Segoe UI", 9F);
+        ChkMostrarCancelados.Location = new Point(870, 118);
+        ChkMostrarCancelados.Name = "ChkMostrarCancelados";
+        ChkMostrarCancelados.Size = new Size(160, 29);
+        ChkMostrarCancelados.TabIndex = 6;
+        ChkMostrarCancelados.Text = "Mostrar cancelados";
+        ChkMostrarCancelados.UseVisualStyleBackColor = true;
+        //
         // LblMensaje
-        // 
+        //
         LblMensaje.AutoSize = true;
         LblMensaje.Font = new Font("Segoe UI", 9F);
         LblMensaje.Location = new Point(430, 155);
@@ -69,7 +98,7 @@ partial class FormTurnos
         BtnCancelar.FlatStyle = FlatStyle.Flat;
         BtnCancelar.Font = new Font("Segoe UI", 9.5F);
         BtnCancelar.ForeColor = Color.White;
-        BtnCancelar.Location = new Point(570, 113);
+        BtnCancelar.Location = new Point(710, 113);
         BtnCancelar.Name = "BtnCancelar";
         BtnCancelar.Size = new Size(150, 34);
         BtnCancelar.TabIndex = 5;
@@ -201,6 +230,8 @@ partial class FormTurnos
     }
 
     private Panel pnlFormulario;
+    private Button BtnModificar;
+    private CheckBox ChkMostrarCancelados;
     private Label lblPaciente;
     private ComboBox CboPaciente;
     private Label lblMedico;

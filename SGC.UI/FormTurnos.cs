@@ -9,6 +9,7 @@ public partial class FormTurnos : Form
     private readonly MedicoService _medicoService = new();
     private readonly HorarioService _horarioService = new();
     private readonly TurnoService _turnoService = new();
+    private int? _idTurnoSeleccionado = null;
 
     public FormTurnos()
     {
@@ -16,6 +17,70 @@ public partial class FormTurnos : Form
         ConfigurarColumnas();
         CargarCombos();
         CargarGrilla();
+        ChkMostrarCancelados.CheckedChanged += (s, e) => CargarGrilla();
+        DgvTurnos.SelectionChanged += DgvTurnos_SelectionChanged;
+        BtnModificar.Click += BtnModificar_Click;
+    }
+
+    private void DgvTurnos_SelectionChanged(object? sender, EventArgs e)
+    {
+        if (DgvTurnos.CurrentRow == null) return;
+
+        var turno = (Turno)DgvTurnos.CurrentRow.DataBoundItem;
+
+        _idTurnoSeleccionado = turno.Id;
+        CboPaciente.SelectedValue = turno.PacienteId;
+        CboMedico.SelectedValue = turno.MedicoId;
+        CboHorario.SelectedValue = turno.HorarioId;
+        DtpFecha.Value = turno.Fecha.ToDateTime(TimeOnly.MinValue);
+
+        // Paciente y medico de un turno ya asignado no se cambian aca (RF#05
+        // solo permite modificar fecha/horario). Se deshabilitan para que
+        // quede claro que no son editables mientras hay una fila seleccionada.
+        CboPaciente.Enabled = false;
+        CboMedico.Enabled = false;
+    }
+
+    private void LimpiarSeleccion()
+    {
+        _idTurnoSeleccionado = null;
+        CboPaciente.Enabled = true;
+        CboMedico.Enabled = true;
+    }
+
+    private void BtnModificar_Click(object? sender, EventArgs e)
+    {
+        if (_idTurnoSeleccionado == null)
+        {
+            LblMensaje.ForeColor = Color.Red;
+            LblMensaje.Text = "Seleccione un turno de la lista para modificar.";
+            return;
+        }
+
+        if (CboHorario.SelectedItem == null)
+        {
+            LblMensaje.ForeColor = Color.Red;
+            LblMensaje.Text = "Seleccione un horario.";
+            return;
+        }
+
+        try
+        {
+            var horario = (Horario)CboHorario.SelectedItem;
+            var fecha = DateOnly.FromDateTime(DtpFecha.Value);
+
+            _turnoService.ModificarTurno(_idTurnoSeleccionado.Value, horario, fecha);
+
+            CargarGrilla();
+            LimpiarSeleccion();
+            LblMensaje.ForeColor = Color.Green;
+            LblMensaje.Text = "Turno modificado correctamente.";
+        }
+        catch (Exception ex)
+        {
+            LblMensaje.ForeColor = Color.Red;
+            LblMensaje.Text = ex.Message;
+        }
     }
 
     private void ConfigurarColumnas()
@@ -47,7 +112,7 @@ public partial class FormTurnos : Form
 
     private void CargarGrilla()
     {
-        DgvTurnos.DataSource = _turnoService.ObtenerTodos();
+        DgvTurnos.DataSource = _turnoService.ObtenerTodos(ChkMostrarCancelados.Checked);
     }
 
     private void BtnAsignar_Click(object sender, EventArgs e)
@@ -69,6 +134,7 @@ public partial class FormTurnos : Form
             _turnoService.AsignarTurno(paciente, medico, horario, fecha);
 
             CargarGrilla();
+            LimpiarSeleccion();
             LblMensaje.ForeColor = Color.Green;
             LblMensaje.Text = "Turno asignado correctamente.";
         }
@@ -101,6 +167,7 @@ public partial class FormTurnos : Form
         {
             _turnoService.CancelarTurno(turnoSeleccionado.Id);
             CargarGrilla();
+            LimpiarSeleccion();
             LblMensaje.ForeColor = Color.Green;
             LblMensaje.Text = "Turno cancelado correctamente.";
         }

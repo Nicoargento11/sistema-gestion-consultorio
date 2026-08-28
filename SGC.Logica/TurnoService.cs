@@ -8,11 +8,13 @@ public class TurnoService
     private static readonly List<Turno> _turnos = new();
     private static int _siguienteId = 1;
 
-    public List<Turno> ObtenerTodos()
+    public List<Turno> ObtenerTodos(bool incluirCancelados = false)
     {
-        // Mismo criterio que PacienteService: al cancelar (baja logica), desaparece
-        // de la vista normal. Consistente con como se comporta "Eliminar" en Pacientes.
-        return _turnos.Where(t => t.Activo).OrderBy(t => t.Fecha).ToList();
+        // Por default, mismo criterio que PacienteService: al cancelar (baja logica),
+        // desaparece de la vista normal. RF#09 pide filtros de consulta, asi que
+        // dejamos la opcion de traer tambien los cancelados cuando se necesite.
+        var query = incluirCancelados ? _turnos : _turnos.Where(t => t.Activo);
+        return query.OrderBy(t => t.Fecha).ToList();
     }
 
     public void AsignarTurno(Paciente paciente, Medico medico, Horario horario, DateOnly fecha)
@@ -47,6 +49,35 @@ public class TurnoService
         };
 
         _turnos.Add(turno);
+    }
+
+    public void ModificarTurno(int turnoId, Horario nuevoHorario, DateOnly nuevaFecha)
+    {
+        var turno = _turnos.FirstOrDefault(t => t.Id == turnoId)
+            ?? throw new InvalidOperationException("El turno que intenta modificar no existe.");
+
+        if (turno.Estado == EstadoTurno.Cancelado)
+            throw new InvalidOperationException("No se puede modificar un turno cancelado.");
+
+        if (nuevaFecha < DateOnly.FromDateTime(DateTime.Today))
+            throw new ArgumentException("No se puede modificar un turno a una fecha pasada.");
+
+        // Misma validacion de sobreturno que en AsignarTurno, pero excluyendo
+        // al propio turno (si no, siempre "chocaria" contra si mismo).
+        bool sobreturno = _turnos.Any(t =>
+            t.Activo &&
+            t.Id != turno.Id &&
+            t.MedicoId == turno.MedicoId &&
+            t.HorarioId == nuevoHorario.Id &&
+            t.Fecha == nuevaFecha);
+
+        if (sobreturno)
+            throw new InvalidOperationException(
+                $"El Dr./Dra. {turno.Medico?.Apellido} ya tiene otro turno asignado el {nuevaFecha:dd/MM/yyyy} en el horario {nuevoHorario.HoraInicio:HH:mm} - {nuevoHorario.HoraFin:HH:mm}.");
+
+        turno.HorarioId = nuevoHorario.Id;
+        turno.Horario = nuevoHorario;
+        turno.Fecha = nuevaFecha;
     }
 
     public void CancelarTurno(int id)
