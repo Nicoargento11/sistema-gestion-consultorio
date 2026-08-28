@@ -1,6 +1,6 @@
 namespace SGC.UI;
 
-partial class FormPacientes
+partial class FormMedicos
 {
     private System.ComponentModel.IContainer components = null;
 
@@ -20,19 +20,19 @@ partial class FormPacientes
         BtnEliminar = new Button();
         BtnGuardar = new Button();
         BtnNuevo = new Button();
-        TxtTelefono = new TextBox();
-        lblTelefono = new Label();
-        TxtEmail = new TextBox();
-        lblEmail = new Label();
+        TxtEspecialidad = new TextBox();
+        lblEspecialidad = new Label();
+        TxtMatricula = new TextBox();
+        lblMatricula = new Label();
         TxtDni = new TextBox();
         lblDni = new Label();
         TxtApellido = new TextBox();
         lblApellido = new Label();
         TxtNombre = new TextBox();
         lblNombre = new Label();
-        DgvPacientes = new DataGridView();
+        DgvMedicos = new DataGridView();
         pnlFormulario.SuspendLayout();
-        ((System.ComponentModel.ISupportInitialize)DgvPacientes).BeginInit();
+        ((System.ComponentModel.ISupportInitialize)DgvMedicos).BeginInit();
         SuspendLayout();
         // 
         // pnlFormulario
@@ -42,10 +42,10 @@ partial class FormPacientes
         pnlFormulario.Controls.Add(BtnEliminar);
         pnlFormulario.Controls.Add(BtnGuardar);
         pnlFormulario.Controls.Add(BtnNuevo);
-        pnlFormulario.Controls.Add(TxtTelefono);
-        pnlFormulario.Controls.Add(lblTelefono);
-        pnlFormulario.Controls.Add(TxtEmail);
-        pnlFormulario.Controls.Add(lblEmail);
+        pnlFormulario.Controls.Add(TxtEspecialidad);
+        pnlFormulario.Controls.Add(lblEspecialidad);
+        pnlFormulario.Controls.Add(TxtMatricula);
+        pnlFormulario.Controls.Add(lblMatricula);
         pnlFormulario.Controls.Add(TxtDni);
         pnlFormulario.Controls.Add(lblDni);
         pnlFormulario.Controls.Add(TxtApellido);
@@ -113,41 +113,41 @@ partial class FormPacientes
         BtnNuevo.UseVisualStyleBackColor = false;
         BtnNuevo.Click += BtnNuevo_Click;
         // 
-        // TxtTelefono
+        // TxtEspecialidad
         // 
-        TxtTelefono.Font = new Font("Segoe UI", 10F);
-        TxtTelefono.Location = new Point(295, 103);
-        TxtTelefono.Name = "TxtTelefono";
-        TxtTelefono.Size = new Size(180, 34);
-        TxtTelefono.TabIndex = 4;
+        TxtEspecialidad.Font = new Font("Segoe UI", 10F);
+        TxtEspecialidad.Location = new Point(220, 103);
+        TxtEspecialidad.Name = "TxtEspecialidad";
+        TxtEspecialidad.Size = new Size(260, 34);
+        TxtEspecialidad.TabIndex = 4;
         // 
-        // lblTelefono
+        // lblEspecialidad
         // 
-        lblTelefono.AutoSize = true;
-        lblTelefono.Font = new Font("Segoe UI", 9F);
-        lblTelefono.Location = new Point(295, 80);
-        lblTelefono.Name = "lblTelefono";
-        lblTelefono.Size = new Size(79, 25);
-        lblTelefono.TabIndex = 5;
-        lblTelefono.Text = "Teléfono";
+        lblEspecialidad.AutoSize = true;
+        lblEspecialidad.Font = new Font("Segoe UI", 9F);
+        lblEspecialidad.Location = new Point(220, 80);
+        lblEspecialidad.Name = "lblEspecialidad";
+        lblEspecialidad.Size = new Size(109, 25);
+        lblEspecialidad.TabIndex = 8;
+        lblEspecialidad.Text = "Especialidad";
         // 
-        // TxtEmail
+        // TxtMatricula
         // 
-        TxtEmail.Font = new Font("Segoe UI", 10F);
-        TxtEmail.Location = new Point(20, 103);
-        TxtEmail.Name = "TxtEmail";
-        TxtEmail.Size = new Size(260, 34);
-        TxtEmail.TabIndex = 3;
+        TxtMatricula.Font = new Font("Segoe UI", 10F);
+        TxtMatricula.Location = new Point(20, 103);
+        TxtMatricula.Name = "TxtMatricula";
+        TxtMatricula.Size = new Size(180, 34);
+        TxtMatricula.TabIndex = 3;
         // 
-        // lblEmail
+        // lblMatricula
         // 
-        lblEmail.AutoSize = true;
-        lblEmail.Font = new Font("Segoe UI", 9F);
-        lblEmail.Location = new Point(20, 80);
-        lblEmail.Name = "lblEmail";
-        lblEmail.Size = new Size(54, 25);
-        lblEmail.TabIndex = 7;
-        lblEmail.Text = "Email";
+        lblMatricula.AutoSize = true;
+        lblMatricula.Font = new Font("Segoe UI", 9F);
+        lblMatricula.Location = new Point(20, 80);
+        lblMatricula.Name = "lblMatricula";
+        lblMatricula.Size = new Size(84, 25);
+        lblMatricula.TabIndex = 9;
+        lblMatricula.Text = "Matricula";
         // 
         // TxtDni
         // 
@@ -164,7 +164,7 @@ partial class FormPacientes
         lblDni.Location = new Point(410, 15);
         lblDni.Name = "lblDni";
         lblDni.Size = new Size(43, 25);
-        lblDni.TabIndex = 9;
+        lblDni.TabIndex = 10;
         lblDni.Text = "DNI";
         // 
         // TxtApellido
@@ -200,41 +200,39 @@ partial class FormPacientes
         lblNombre.Location = new Point(20, 15);
         lblNombre.Name = "lblNombre";
         lblNombre.Size = new Size(78, 25);
-        lblNombre.TabIndex = 13;
+        lblNombre.TabIndex = 0;
         lblNombre.Text = "Nombre";
         // 
-        // DgvPacientes
+        // DgvMedicos
         // 
-        DgvPacientes.AllowUserToAddRows = false;
-        DgvPacientes.BackgroundColor = Color.White;
-        DgvPacientes.ColumnHeadersHeight = 34;
-        DgvPacientes.Dock = DockStyle.Fill;
-        DgvPacientes.Font = new Font("Segoe UI", 9.5F);
-        DgvPacientes.Location = new Point(0, 190);
-        DgvPacientes.MultiSelect = false;
-        DgvPacientes.Name = "DgvPacientes";
-        DgvPacientes.ReadOnly = true;
-        DgvPacientes.RowHeadersWidth = 62;
-        DgvPacientes.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-        DgvPacientes.Size = new Size(1000, 410);
-        DgvPacientes.TabIndex = 0;
-        DgvPacientes.CellContentClick += DgvPacientes_CellContentClick;
-        DgvPacientes.SelectionChanged += DgvPacientes_SelectionChanged;
+        DgvMedicos.AllowUserToAddRows = false;
+        DgvMedicos.BackgroundColor = Color.White;
+        DgvMedicos.ColumnHeadersHeight = 34;
+        DgvMedicos.Dock = DockStyle.Fill;
+        DgvMedicos.Font = new Font("Segoe UI", 9.5F);
+        DgvMedicos.Location = new Point(0, 190);
+        DgvMedicos.MultiSelect = false;
+        DgvMedicos.Name = "DgvMedicos";
+        DgvMedicos.ReadOnly = true;
+        DgvMedicos.RowHeadersWidth = 62;
+        DgvMedicos.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+        DgvMedicos.Size = new Size(1000, 410);
+        DgvMedicos.TabIndex = 0;
+        DgvMedicos.SelectionChanged += DgvMedicos_SelectionChanged_1;
         // 
-        // FormPacientes
+        // FormMedicos
         // 
         AutoScaleDimensions = new SizeF(10F, 25F);
         AutoScaleMode = AutoScaleMode.Font;
         ClientSize = new Size(1000, 600);
-        Controls.Add(DgvPacientes);
+        Controls.Add(DgvMedicos);
         Controls.Add(pnlFormulario);
-        Name = "FormPacientes";
+        Name = "FormMedicos";
         StartPosition = FormStartPosition.CenterScreen;
-        Text = "ABM de Pacientes";
-        Load += FormPacientes_Load;
+        Text = "ABM de Medicos";
         pnlFormulario.ResumeLayout(false);
         pnlFormulario.PerformLayout();
-        ((System.ComponentModel.ISupportInitialize)DgvPacientes).EndInit();
+        ((System.ComponentModel.ISupportInitialize)DgvMedicos).EndInit();
         ResumeLayout(false);
     }
 
@@ -245,13 +243,13 @@ partial class FormPacientes
     private TextBox TxtApellido;
     private Label lblDni;
     private TextBox TxtDni;
-    private Label lblEmail;
-    private TextBox TxtEmail;
-    private Label lblTelefono;
-    private TextBox TxtTelefono;
+    private Label lblMatricula;
+    private TextBox TxtMatricula;
+    private Label lblEspecialidad;
+    private TextBox TxtEspecialidad;
     private Button BtnNuevo;
     private Button BtnGuardar;
     private Button BtnEliminar;
     private Label LblMensaje;
-    private DataGridView DgvPacientes;
+    private DataGridView DgvMedicos;
 }

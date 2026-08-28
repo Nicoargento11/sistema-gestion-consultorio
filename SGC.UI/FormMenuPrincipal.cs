@@ -16,7 +16,7 @@ public partial class FormMenuPrincipal : Form
         ConfigurarBotonesPorRol();
 
         btnPacientes.Click += (s, e) => new FormPacientes().ShowDialog();
-        btnMedicos.Click += (s, e) => AbrirPantallaPendiente("ABM de Médicos");
+        btnMedicos.Click += (s, e) => new FormMedicos().ShowDialog();
         btnTurnos.Click += (s, e) => new FormTurnos().ShowDialog();
         btnAgenda.Click += (s, e) => AbrirPantallaPendiente("Mi Agenda");
         btnActividad.Click += (s, e) => AbrirPantallaPendiente("Registrar Actividad Médica");

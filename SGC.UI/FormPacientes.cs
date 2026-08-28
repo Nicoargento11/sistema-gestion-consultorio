@@ -142,4 +142,9 @@ public partial class FormPacientes : Form
         TxtEmail.Text = paciente.Email;
         TxtTelefono.Text = paciente.Telefono;
     }
+
+    private void DgvPacientes_CellContentClick(object sender, DataGridViewCellEventArgs e)
+    {
+
+    }
 }
