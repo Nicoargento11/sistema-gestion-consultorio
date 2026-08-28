@@ -8,15 +8,18 @@ public class TurnoService
     private static readonly List<Turno> _turnos = new();
     private static int _siguienteId = 1;
 
-    public List<Turno> ObtenerTodos(bool incluirCancelados = false, int? medicoId = null)
+    public List<Turno> ObtenerTodos(bool incluirCancelados = false, int? medicoId = null, DateOnly? fecha = null)
     {
         // Por default, mismo criterio que PacienteService: al cancelar (baja logica),
         // desaparece de la vista normal. RF#06/RF#09 piden filtros de consulta
-        // (por medico, entre otros), asi que se puede acotar por medicoId.
+        // (por medico o por fecha), asi que se puede acotar por cualquiera de los dos.
         IEnumerable<Turno> query = incluirCancelados ? _turnos : _turnos.Where(t => t.Activo);
 
         if (medicoId != null)
             query = query.Where(t => t.MedicoId == medicoId);
+
+        if (fecha != null)
+            query = query.Where(t => t.Fecha == fecha);
 
         return query.OrderBy(t => t.Fecha).ToList();
     }

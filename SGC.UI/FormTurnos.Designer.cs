@@ -19,6 +19,7 @@ partial class FormTurnos
         BtnNuevoTurno = new Button();
         BtnModificar = new Button();
         ChkTodosMedicos = new CheckBox();
+        ChkFiltrarFecha = new CheckBox();
         ChkMostrarCancelados = new CheckBox();
         LblMensaje = new Label();
         BtnCancelar = new Button();
@@ -44,6 +45,7 @@ partial class FormTurnos
         // pnlFormulario
         // 
         pnlFormulario.BackColor = Color.FromArgb(245, 246, 250);
+        pnlFormulario.Controls.Add(ChkFiltrarFecha);
         pnlFormulario.Controls.Add(ChkTodosMedicos);
         pnlFormulario.Controls.Add(BtnNuevoTurno);
         pnlFormulario.Controls.Add(BtnModificar);
@@ -75,6 +77,17 @@ partial class FormTurnos
         ChkTodosMedicos.TabIndex = 9;
         ChkTodosMedicos.Text = "Ver todos los medicos";
         ChkTodosMedicos.UseVisualStyleBackColor = true;
+        //
+        // ChkFiltrarFecha
+        //
+        ChkFiltrarFecha.AutoSize = true;
+        ChkFiltrarFecha.Font = new Font("Segoe UI", 9F);
+        ChkFiltrarFecha.Location = new Point(220, 155);
+        ChkFiltrarFecha.Name = "ChkFiltrarFecha";
+        ChkFiltrarFecha.Size = new Size(160, 29);
+        ChkFiltrarFecha.TabIndex = 10;
+        ChkFiltrarFecha.Text = "Filtrar por fecha";
+        ChkFiltrarFecha.UseVisualStyleBackColor = true;
         //
         // BtnNuevoTurno
         //
@@ -313,6 +326,7 @@ partial class FormTurnos
     private DataGridView DgvAgenda;
     private Button BtnNuevoTurno;
     private CheckBox ChkTodosMedicos;
+    private CheckBox ChkFiltrarFecha;
     private Button BtnModificar;
     private CheckBox ChkMostrarCancelados;
     private Label lblPaciente;

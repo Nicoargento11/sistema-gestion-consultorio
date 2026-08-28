@@ -18,11 +18,18 @@ public partial class FormTurnos : Form
         CargarCombos();
         DgvTurnos.SelectionChanged += DgvTurnos_SelectionChanged;
         BtnModificar.Click += BtnModificar_Click;
-        BtnNuevoTurno.Click += (s, e) => { DgvTurnos.ClearSelection(); LimpiarSeleccion(); };
+        BtnNuevoTurno.Click += (s, e) =>
+        {
+            DgvTurnos.SelectionChanged -= DgvTurnos_SelectionChanged;
+            DgvTurnos.ClearSelection();
+            DgvTurnos.SelectionChanged += DgvTurnos_SelectionChanged;
+            LimpiarSeleccion();
+        };
         ChkMostrarCancelados.CheckedChanged += (s, e) => CargarGrilla();
         ChkTodosMedicos.CheckedChanged += (s, e) => CargarGrilla();
+        ChkFiltrarFecha.CheckedChanged += (s, e) => CargarGrilla();
         CboMedico.SelectedIndexChanged += (s, e) => { ActualizarAgenda(); CargarGrilla(); };
-        DtpFecha.ValueChanged += (s, e) => ActualizarAgenda();
+        DtpFecha.ValueChanged += (s, e) => { ActualizarAgenda(); CargarGrilla(); };
         DgvAgenda.CellClick += DgvAgenda_CellClick;
         DgvAgenda.CellDoubleClick += DgvAgenda_CellDoubleClick;
 
@@ -177,13 +184,17 @@ public partial class FormTurnos : Form
         if (!ChkTodosMedicos.Checked && CboMedico.SelectedItem != null)
             medicoFiltro = ((Medico)CboMedico.SelectedItem).Id;
 
+        DateOnly? fechaFiltro = ChkFiltrarFecha.Checked
+            ? DateOnly.FromDateTime(DtpFecha.Value)
+            : null;
+
         // Desconectamos el evento antes de reasignar el DataSource: WinForms
         // selecciona sola la primera fila al hacerlo, y eso disparaba
         // SelectionChanged sin que el usuario clickeara nada (el bug de
         // "se vuelve a Gomez, Laura" y de no poder deseleccionar). Reconectamos
         // apenas termina, asi el clic manual del usuario sigue funcionando normal.
         DgvTurnos.SelectionChanged -= DgvTurnos_SelectionChanged;
-        DgvTurnos.DataSource = _turnoService.ObtenerTodos(ChkMostrarCancelados.Checked, medicoFiltro);
+        DgvTurnos.DataSource = _turnoService.ObtenerTodos(ChkMostrarCancelados.Checked, medicoFiltro, fechaFiltro);
         DgvTurnos.ClearSelection();
         DgvTurnos.SelectionChanged += DgvTurnos_SelectionChanged;
     }
