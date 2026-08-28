@@ -10,5 +10,7 @@ public class Paciente
     public string Telefono { get; set; } = string.Empty;
     public bool Activo { get; set; } = true;
 
+    public string NombreCompleto => $"{Apellido}, {Nombre}";
+
     public ICollection<Turno> Turnos { get; set; } = new List<Turno>();
 }

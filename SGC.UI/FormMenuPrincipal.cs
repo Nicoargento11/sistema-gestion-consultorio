@@ -17,7 +17,7 @@ public partial class FormMenuPrincipal : Form
 
         btnPacientes.Click += (s, e) => new FormPacientes().ShowDialog();
         btnMedicos.Click += (s, e) => AbrirPantallaPendiente("ABM de Médicos");
-        btnTurnos.Click += (s, e) => AbrirPantallaPendiente("Gestión de Turnos");
+        btnTurnos.Click += (s, e) => new FormTurnos().ShowDialog();
         btnAgenda.Click += (s, e) => AbrirPantallaPendiente("Mi Agenda");
         btnActividad.Click += (s, e) => AbrirPantallaPendiente("Registrar Actividad Médica");
         btnHistorial.Click += (s, e) => AbrirPantallaPendiente("Historial Clínico");

@@ -24,5 +24,9 @@ public class Turno
     public EstadoTurno Estado { get; set; } = EstadoTurno.Pendiente;
     public bool Activo { get; set; } = true;
 
+    public string PacienteNombre => Paciente?.NombreCompleto ?? "";
+    public string MedicoNombre => Medico?.NombreCompleto ?? "";
+    public string HorarioRango => Horario?.Rango ?? "";
+
     public ActividadMedica? ActividadMedica { get; set; }
 }
