@@ -96,6 +96,37 @@ public class TurnoService
             t.Fecha == fecha);
     }
 
+    public void ConfirmarAsistencia(int turnoId, bool asistio, string? medioPago, decimal? monto)
+    {
+        var turno = _turnos.FirstOrDefault(t => t.Id == turnoId)
+            ?? throw new InvalidOperationException("El turno no existe.");
+
+        if (turno.Estado != EstadoTurno.Confirmado)
+            throw new InvalidOperationException("Solo se puede confirmar asistencia de un turno en estado Confirmado.");
+
+        if (turno.Fecha > DateOnly.FromDateTime(DateTime.Today))
+            throw new InvalidOperationException("No se puede confirmar la asistencia de un turno que todavia no llego a su fecha.");
+
+        if (asistio)
+        {
+            if (string.IsNullOrWhiteSpace(medioPago))
+                throw new ArgumentException("Debe indicar el medio de pago cuando el paciente asistio.");
+
+            if (monto == null || monto < 0)
+                throw new ArgumentException("Debe indicar un monto valido (no puede ser negativo) cuando el paciente asistio.");
+
+            turno.Estado = EstadoTurno.Asistio;
+            turno.MedioPago = medioPago;
+            turno.Monto = monto;
+        }
+        else
+        {
+            turno.Estado = EstadoTurno.Ausente;
+            turno.MedioPago = null;
+            turno.Monto = null;
+        }
+    }
+
     public void CancelarTurno(int id)
     {
         var turno = _turnos.FirstOrDefault(t => t.Id == id)

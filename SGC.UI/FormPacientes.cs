@@ -23,9 +23,12 @@ public partial class FormPacientes : Form
         DgvPacientes.Columns.Add(new DataGridViewTextBoxColumn { Name = "colId", HeaderText = "Id", DataPropertyName = "Id", Width = 50 });
         DgvPacientes.Columns.Add(new DataGridViewTextBoxColumn { Name = "colNombre", HeaderText = "Nombre", DataPropertyName = "Nombre", Width = 150 });
         DgvPacientes.Columns.Add(new DataGridViewTextBoxColumn { Name = "colApellido", HeaderText = "Apellido", DataPropertyName = "Apellido", Width = 150 });
+        DgvPacientes.Columns.Add(new DataGridViewTextBoxColumn { Name = "colFechaNacimiento", HeaderText = "Fecha Nacimiento", DataPropertyName = "FechaNacimiento", Width = 120 });
         DgvPacientes.Columns.Add(new DataGridViewTextBoxColumn { Name = "colDni", HeaderText = "DNI", DataPropertyName = "Dni", Width = 120 });
         DgvPacientes.Columns.Add(new DataGridViewTextBoxColumn { Name = "colEmail", HeaderText = "Email", DataPropertyName = "Email", Width = 200 });
         DgvPacientes.Columns.Add(new DataGridViewTextBoxColumn { Name = "colTelefono", HeaderText = "Telefono", DataPropertyName = "Telefono", Width = 130 });
+        DgvPacientes.Columns.Add(new DataGridViewTextBoxColumn { Name = "colObraSocial", HeaderText = "Obra Social", DataPropertyName = "ObraSocial", Width = 150 });
+
     }
 
     private void FormPacientes_Load(object sender, EventArgs e)
@@ -46,6 +49,8 @@ public partial class FormPacientes : Form
         TxtDni.Text = "";
         TxtEmail.Text = "";
         TxtTelefono.Text = "";
+        CboObraSocial.Text = "";
+        DtpFechaNacimiento.Value = DateTime.Today;
     }
 
     private void BtnGuardar_Click(object sender, EventArgs e)
@@ -59,7 +64,10 @@ public partial class FormPacientes : Form
                 Apellido = TxtApellido.Text,
                 Dni = TxtDni.Text,
                 Email = TxtEmail.Text,
-                Telefono = TxtTelefono.Text
+                Telefono = TxtTelefono.Text,
+                ObraSocial = CboObraSocial.Text,
+                FechaNacimiento = DateOnly.FromDateTime(DtpFechaNacimiento.Value)
+
             };
 
             if (_idSeleccionado == null)
@@ -78,6 +86,8 @@ public partial class FormPacientes : Form
             TxtDni.Text = "";
             TxtEmail.Text = "";
             TxtTelefono.Text = "";
+            CboObraSocial.Text = "";
+            DtpFechaNacimiento.Value = DateTime.Today;
 
             LblMensaje.ForeColor = Color.Green;
             LblMensaje.Text = "Paciente guardado correctamente";
@@ -118,6 +128,8 @@ public partial class FormPacientes : Form
             TxtDni.Text = "";
             TxtEmail.Text = "";
             TxtTelefono.Text = "";
+            CboObraSocial.Text = "";
+            DtpFechaNacimiento.Value = DateTime.Today;
 
             LblMensaje.ForeColor = Color.Green;
             LblMensaje.Text = "Paciente eliminado correctamente.";
@@ -141,6 +153,8 @@ public partial class FormPacientes : Form
         TxtDni.Text = paciente.Dni;
         TxtEmail.Text = paciente.Email;
         TxtTelefono.Text = paciente.Telefono;
+        CboObraSocial.Text = paciente.ObraSocial;
+        DtpFechaNacimiento.Value = paciente.FechaNacimiento.ToDateTime(TimeOnly.MinValue);
     }
 
     private void DgvPacientes_CellContentClick(object sender, DataGridViewCellEventArgs e)

@@ -15,6 +15,7 @@ public class PacienteService
 
     public void Agregar(Paciente paciente)
     {
+        paciente.ObraSocial = paciente.ObraSocial.Trim();
         Validar(paciente);
 
         if (_pacientes.Any(p => p.Activo && p.Dni == paciente.Dni))
@@ -27,6 +28,7 @@ public class PacienteService
 
     public void Modificar(Paciente paciente)
     {
+        paciente.ObraSocial = paciente.ObraSocial.Trim();
         Validar(paciente);
 
         var existente = _pacientes.FirstOrDefault(p => p.Id == paciente.Id)
@@ -40,6 +42,8 @@ public class PacienteService
         existente.Dni = paciente.Dni;
         existente.Email = paciente.Email;
         existente.Telefono = paciente.Telefono;
+        existente.FechaNacimiento = paciente.FechaNacimiento;
+        existente.ObraSocial = paciente.ObraSocial;
     }
 
     public void EliminarLogico(int id)
@@ -67,5 +71,16 @@ public class PacienteService
 
         if (string.IsNullOrWhiteSpace(paciente.Telefono))
             throw new ArgumentException("El teléfono es obligatorio.");
+
+        if (paciente.FechaNacimiento == default)
+            throw new ArgumentException("Debe ingresar la fecha de nacimiento.");
+
+        if (paciente.FechaNacimiento > DateOnly.FromDateTime(DateTime.Today))
+            throw new ArgumentException("La fecha de nacimiento no puede ser futura.");
+
+        if (paciente.FechaNacimiento < DateOnly.FromDateTime(DateTime.Today).AddYears(-120))
+            throw new ArgumentException("La fecha de nacimiento no es válida.");
+
+        // ObraSocial es opcional: vacío se interpreta como "Particular".
     }
 }
