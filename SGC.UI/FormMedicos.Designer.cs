@@ -326,7 +326,7 @@ partial class FormMedicos
         DgvMedicos.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
         DgvMedicos.Size = new Size(1000, 400);
         DgvMedicos.TabIndex = 2;
-        DgvMedicos.SelectionChanged += DgvMedicos_SelectionChanged;
+        
 
         // 
         // FormMedicos
