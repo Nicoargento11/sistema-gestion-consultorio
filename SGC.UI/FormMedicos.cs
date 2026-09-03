@@ -1,4 +1,4 @@
-ï»¿using SGC.Entidades;
+using SGC.Entidades;
 using SGC.Logica;
 
 namespace SGC.UI;
@@ -7,95 +7,74 @@ public partial class FormMedicos : Form
 {
     private readonly MedicoService _service = new();
     private int? _idSeleccionado = null;
-
     public FormMedicos()
     {
         InitializeComponent();
         ConfigurarColumnas();
-
-        BtnNuevo.Click += BtnNuevo_Click;
-        BtnGuardar.Click += BtnGuardar_Click;
-        BtnEliminar.Click += BtnEliminar_Click;
-        TxtBuscar.TextChanged += (s, e) => CargarGrilla(TxtBuscar.Text);
-        DgvMedicos.SelectionChanged += DgvMedicos_SelectionChanged;
-
         CargarGrilla();
-        AcceptButton = BtnGuardar;
     }
 
     private void ConfigurarColumnas()
     {
+        // Se configura acá, en código, y no en el Designer, porque el diseñador
+        // visual de Visual Studio borra las columnas de un DataGridView cada vez
+        // que se abre el formulario. Acá es inmune a eso.
         DgvMedicos.AutoGenerateColumns = false;
-        DgvMedicos.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-
-        DgvMedicos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colId", HeaderText = "Id", DataPropertyName = "Id", FillWeight = 8 });
-        DgvMedicos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colApellido", HeaderText = "Apellido", DataPropertyName = "Apellido", FillWeight = 22 });
-        DgvMedicos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colNombre", HeaderText = "Nombre", DataPropertyName = "Nombre", FillWeight = 22 });
-        DgvMedicos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colMatricula", HeaderText = "Matricula", DataPropertyName = "Matricula", FillWeight = 16 });
-        DgvMedicos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colEspecialidad", HeaderText = "Especialidad", DataPropertyName = "Especialidad", FillWeight = 20 });
-        DgvMedicos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colDni", HeaderText = "DNI", DataPropertyName = "Dni", FillWeight = 14 });
+        DgvMedicos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colId", HeaderText = "Id", DataPropertyName = "Id", Width = 50 });
+        DgvMedicos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colNombre", HeaderText = "Nombre", DataPropertyName = "Nombre", Width = 150 });
+        DgvMedicos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colApellido", HeaderText = "Apellido", DataPropertyName = "Apellido", Width = 150 });
+        DgvMedicos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colDni", HeaderText = "Dni", DataPropertyName = "Dni", Width = 130 });
+        DgvMedicos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colMatricula", HeaderText = "Matricula", DataPropertyName = "Matricula", Width = 120 });
+        DgvMedicos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colEspecialidad", HeaderText = "Especialidad", DataPropertyName = "Especialidad", Width = 200 });
     }
 
-    private void CargarGrilla(string? filtro = null)
+    private void CargarGrilla()
     {
-        var medicos = _service.ObtenerTodos();
-
-        if (!string.IsNullOrWhiteSpace(filtro))
-        {
-            var f = filtro.Trim().ToLower();
-            medicos = medicos.Where(m =>
-                m.NombreCompleto.ToLower().Contains(f) ||
-                m.Dni.Contains(f) ||
-                m.Matricula.ToLower().Contains(f) ||
-                m.Especialidad.ToLower().Contains(f)).ToList();
-        }
-
-        DgvMedicos.SelectionChanged -= DgvMedicos_SelectionChanged;
-        DgvMedicos.DataSource = medicos;
-        DgvMedicos.ClearSelection();
-        DgvMedicos.SelectionChanged += DgvMedicos_SelectionChanged;
+        DgvMedicos.DataSource = _service.ObtenerTodos();
     }
 
-    private void BtnNuevo_Click(object? sender, EventArgs e)
+    private void BtnNuevo_Click(object sender, EventArgs e)
     {
         _idSeleccionado = null;
         TxtNombre.Text = "";
         TxtApellido.Text = "";
         TxtDni.Text = "";
+        TxtEspecialidad.Text = "";
         TxtMatricula.Text = "";
-        if (CboEspecialidad.Items.Count > 0)
-            CboEspecialidad.SelectedIndex = 0;
-        BtnGuardar.Text = "Guardar";
-        LblMensaje.Text = "";
-        DgvMedicos.ClearSelection();
-        TxtNombre.Focus();
     }
 
-    private void BtnGuardar_Click(object? sender, EventArgs e)
+    private void BtnGuardar_Click(object sender, EventArgs e)
     {
         try
         {
             var medico = new Medico
             {
                 Id = _idSeleccionado ?? 0,
-                Nombre = TxtNombre.Text.Trim(),
-                Apellido = TxtApellido.Text.Trim(),
-                Dni = TxtDni.Text.Trim(),
-                Matricula = TxtMatricula.Text.Trim(),
-                Especialidad = CboEspecialidad.Text.Trim(),
-                Activo = true
+                Nombre = TxtNombre.Text,
+                Apellido = TxtApellido.Text,
+                Dni = TxtDni.Text,
+                Especialidad = TxtEspecialidad.Text,
+                Matricula = TxtMatricula.Text
             };
-
             if (_idSeleccionado == null)
+            {
                 _service.Agregar(medico);
+            }
             else
+            {
                 _service.Modificar(medico);
+            }
+            CargarGrilla();
 
-            CargarGrilla(TxtBuscar.Text);
-            BtnNuevo_Click(this, EventArgs.Empty);
+            _idSeleccionado = null;
+            TxtNombre.Text = "";
+            TxtApellido.Text = "";
+            TxtDni.Text = "";
+            TxtEspecialidad.Text = "";
+            TxtMatricula.Text = "";
 
             LblMensaje.ForeColor = Color.Green;
-            LblMensaje.Text = "Profesional medico guardado correctamente.";
+            LblMensaje.Text = "Medico guardado correctamente";
         }
         catch (Exception ex)
         {
@@ -104,7 +83,7 @@ public partial class FormMedicos : Form
         }
     }
 
-    private void BtnEliminar_Click(object? sender, EventArgs e)
+    private void BtnEliminar_Click(object sender, EventArgs e)
     {
         if (DgvMedicos.CurrentRow == null)
         {
@@ -116,8 +95,8 @@ public partial class FormMedicos : Form
         var medicoSeleccionado = (Medico)DgvMedicos.CurrentRow.DataBoundItem;
 
         var respuesta = MessageBox.Show(
-            $"Esta seguro que desea dar de baja al Dr./Dra. {medicoSeleccionado.NombreCompleto}?",
-            "Confirmar eliminacion", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                   $"Esta seguro que desea eliminar a {medicoSeleccionado.Nombre} {medicoSeleccionado.Apellido}?",
+                   "Confirmar eliminacion", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
 
         if (respuesta != DialogResult.Yes)
             return;
@@ -125,11 +104,17 @@ public partial class FormMedicos : Form
         try
         {
             _service.EliminarLogico(medicoSeleccionado.Id);
-            CargarGrilla(TxtBuscar.Text);
-            BtnNuevo_Click(this, EventArgs.Empty);
+            CargarGrilla();
+
+            _idSeleccionado = null;
+            TxtNombre.Text = "";
+            TxtApellido.Text = "";
+            TxtDni.Text = "";
+            TxtMatricula.Text = "";
+            TxtEspecialidad.Text = "";
 
             LblMensaje.ForeColor = Color.Green;
-            LblMensaje.Text = "Profesional medico dado de baja correctamente.";
+            LblMensaje.Text = "Medico eliminado correctamente.";
         }
         catch (Exception ex)
         {
@@ -138,7 +123,9 @@ public partial class FormMedicos : Form
         }
     }
 
-    private void DgvMedicos_SelectionChanged(object? sender, EventArgs e)
+
+
+    private void DgvMedicos_SelectionChanged_1(object sender, EventArgs e)
     {
         if (DgvMedicos.CurrentRow == null) return;
 
@@ -148,9 +135,7 @@ public partial class FormMedicos : Form
         TxtNombre.Text = medico.Nombre;
         TxtApellido.Text = medico.Apellido;
         TxtDni.Text = medico.Dni;
+        TxtEspecialidad.Text = medico.Especialidad;
         TxtMatricula.Text = medico.Matricula;
-        CboEspecialidad.Text = medico.Especialidad;
-        BtnGuardar.Text = "Actualizar";
-        LblMensaje.Text = "";
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace SGC.UI;
+namespace SGC.UI;
 
 partial class FormMedicos
 {
@@ -38,10 +38,12 @@ partial class FormMedicos
         TxtNombre = new TextBox();
         lblNombre = new Label();
         DgvMedicos = new DataGridView();
+
         pnlHeader.SuspendLayout();
         pnlFormulario.SuspendLayout();
         ((System.ComponentModel.ISupportInitialize)DgvMedicos).BeginInit();
         SuspendLayout();
+
         // 
         // pnlHeader
         // 
@@ -54,6 +56,7 @@ partial class FormMedicos
         pnlHeader.Padding = new Padding(20, 10, 20, 10);
         pnlHeader.Size = new Size(1000, 75);
         pnlHeader.TabIndex = 0;
+
         // 
         // lblSubtitulo
         // 
@@ -65,6 +68,7 @@ partial class FormMedicos
         lblSubtitulo.Size = new Size(395, 23);
         lblSubtitulo.TabIndex = 1;
         lblSubtitulo.Text = "Alta, modificacion y padron del cuerpo medico";
+
         // 
         // lblTitulo
         // 
@@ -76,6 +80,7 @@ partial class FormMedicos
         lblTitulo.Size = new Size(230, 32);
         lblTitulo.TabIndex = 0;
         lblTitulo.Text = "ABM de Medicos";
+
         // 
         // pnlFormulario
         // 
@@ -102,6 +107,7 @@ partial class FormMedicos
         pnlFormulario.Padding = new Padding(20, 10, 20, 10);
         pnlFormulario.Size = new Size(1000, 175);
         pnlFormulario.TabIndex = 1;
+
         // 
         // CboEspecialidad
         // 
@@ -121,6 +127,7 @@ partial class FormMedicos
         CboEspecialidad.Name = "CboEspecialidad";
         CboEspecialidad.Size = new Size(240, 29);
         CboEspecialidad.TabIndex = 4;
+
         // 
         // lblEspecialidad
         // 
@@ -132,6 +139,7 @@ partial class FormMedicos
         lblEspecialidad.Size = new Size(95, 20);
         lblEspecialidad.TabIndex = 16;
         lblEspecialidad.Text = "Especialidad";
+
         // 
         // TxtMatricula
         // 
@@ -141,6 +149,7 @@ partial class FormMedicos
         TxtMatricula.PlaceholderText = "Ej: MP1234";
         TxtMatricula.Size = new Size(180, 29);
         TxtMatricula.TabIndex = 3;
+
         // 
         // lblMatricula
         // 
@@ -152,6 +161,7 @@ partial class FormMedicos
         lblMatricula.Size = new Size(75, 20);
         lblMatricula.TabIndex = 15;
         lblMatricula.Text = "Matricula";
+
         // 
         // TxtBuscar
         // 
@@ -162,6 +172,7 @@ partial class FormMedicos
         TxtBuscar.PlaceholderText = "Buscar por Especialidad o Apellido...";
         TxtBuscar.Size = new Size(270, 29);
         TxtBuscar.TabIndex = 8;
+
         // 
         // lblBuscar
         // 
@@ -174,6 +185,7 @@ partial class FormMedicos
         lblBuscar.Size = new Size(111, 20);
         lblBuscar.TabIndex = 14;
         lblBuscar.Text = "Filtrar Cuerpo:";
+
         // 
         // LblMensaje
         // 
@@ -184,6 +196,7 @@ partial class FormMedicos
         LblMensaje.Name = "LblMensaje";
         LblMensaje.Size = new Size(0, 21);
         LblMensaje.TabIndex = 0;
+
         // 
         // BtnEliminar
         // 
@@ -198,6 +211,8 @@ partial class FormMedicos
         BtnEliminar.TabIndex = 7;
         BtnEliminar.Text = "Eliminar";
         BtnEliminar.UseVisualStyleBackColor = false;
+        BtnEliminar.Click += BtnEliminar_Click;
+
         // 
         // BtnGuardar
         // 
@@ -212,6 +227,8 @@ partial class FormMedicos
         BtnGuardar.TabIndex = 6;
         BtnGuardar.Text = "Guardar";
         BtnGuardar.UseVisualStyleBackColor = false;
+        BtnGuardar.Click += BtnGuardar_Click;
+
         // 
         // BtnNuevo
         // 
@@ -226,6 +243,8 @@ partial class FormMedicos
         BtnNuevo.TabIndex = 5;
         BtnNuevo.Text = "+ Nuevo";
         BtnNuevo.UseVisualStyleBackColor = false;
+        BtnNuevo.Click += BtnNuevo_Click;
+
         // 
         // TxtDni
         // 
@@ -234,6 +253,7 @@ partial class FormMedicos
         TxtDni.Name = "TxtDni";
         TxtDni.Size = new Size(140, 29);
         TxtDni.TabIndex = 2;
+
         // 
         // lblDni
         // 
@@ -245,6 +265,7 @@ partial class FormMedicos
         lblDni.Size = new Size(37, 20);
         lblDni.TabIndex = 9;
         lblDni.Text = "DNI";
+
         // 
         // TxtApellido
         // 
@@ -253,6 +274,7 @@ partial class FormMedicos
         TxtApellido.Name = "TxtApellido";
         TxtApellido.Size = new Size(180, 29);
         TxtApellido.TabIndex = 1;
+
         // 
         // lblApellido
         // 
@@ -264,6 +286,7 @@ partial class FormMedicos
         lblApellido.Size = new Size(67, 20);
         lblApellido.TabIndex = 11;
         lblApellido.Text = "Apellido";
+
         // 
         // TxtNombre
         // 
@@ -272,6 +295,7 @@ partial class FormMedicos
         TxtNombre.Name = "TxtNombre";
         TxtNombre.Size = new Size(180, 29);
         TxtNombre.TabIndex = 0;
+
         // 
         // lblNombre
         // 
@@ -283,6 +307,7 @@ partial class FormMedicos
         lblNombre.Size = new Size(67, 20);
         lblNombre.TabIndex = 13;
         lblNombre.Text = "Nombre";
+
         // 
         // DgvMedicos
         // 
@@ -301,6 +326,8 @@ partial class FormMedicos
         DgvMedicos.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
         DgvMedicos.Size = new Size(1000, 400);
         DgvMedicos.TabIndex = 2;
+        DgvMedicos.SelectionChanged += DgvMedicos_SelectionChanged;
+
         // 
         // FormMedicos
         // 
@@ -312,7 +339,9 @@ partial class FormMedicos
         Controls.Add(pnlFormulario);
         Controls.Add(pnlHeader);
         Name = "FormMedicos";
+        StartPosition = FormStartPosition.CenterScreen;
         Text = "ABM de Medicos";
+
         pnlHeader.ResumeLayout(false);
         pnlHeader.PerformLayout();
         pnlFormulario.ResumeLayout(false);

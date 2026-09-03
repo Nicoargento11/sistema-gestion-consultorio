@@ -18,11 +18,18 @@ public partial class FormTurnos : Form
         CargarCombos();
         DgvTurnos.SelectionChanged += DgvTurnos_SelectionChanged;
         BtnModificar.Click += BtnModificar_Click;
-        BtnNuevoTurno.Click += (s, e) => { DgvTurnos.ClearSelection(); LimpiarSeleccion(); };
+        BtnNuevoTurno.Click += (s, e) =>
+        {
+            DgvTurnos.SelectionChanged -= DgvTurnos_SelectionChanged;
+            DgvTurnos.ClearSelection();
+            DgvTurnos.SelectionChanged += DgvTurnos_SelectionChanged;
+            LimpiarSeleccion();
+        };
         ChkMostrarCancelados.CheckedChanged += (s, e) => CargarGrilla();
         ChkTodosMedicos.CheckedChanged += (s, e) => CargarGrilla();
+        ChkFiltrarFecha.CheckedChanged += (s, e) => CargarGrilla();
         CboMedico.SelectedIndexChanged += (s, e) => { ActualizarAgenda(); CargarGrilla(); };
-        DtpFecha.ValueChanged += (s, e) => ActualizarAgenda();
+        DtpFecha.ValueChanged += (s, e) => { ActualizarAgenda(); CargarGrilla(); };
         DgvAgenda.CellClick += DgvAgenda_CellClick;
         DgvAgenda.CellDoubleClick += DgvAgenda_CellDoubleClick;
 
@@ -144,16 +151,16 @@ public partial class FormTurnos : Form
     private void ConfigurarColumnas()
     {
         DgvTurnos.AutoGenerateColumns = false;
-        DgvTurnos.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-        DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colFecha", HeaderText = "Fecha", DataPropertyName = "Fecha", FillWeight = 14 });
-        DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colMedico", HeaderText = "Medico", DataPropertyName = "MedicoNombre", FillWeight = 28 });
-        DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colPaciente", HeaderText = "Paciente", DataPropertyName = "PacienteNombre", FillWeight = 28 });
-        DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colHorario", HeaderText = "Horario", DataPropertyName = "HorarioRango", FillWeight = 16 });
-        DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colEstado", HeaderText = "Estado", DataPropertyName = "Estado", FillWeight = 14 });
+        DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colFecha", HeaderText = "Fecha", DataPropertyName = "Fecha", Width = 100 });
+        DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colMedico", HeaderText = "Medico", DataPropertyName = "MedicoNombre", Width = 220 });
+        DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colPaciente", HeaderText = "Paciente", DataPropertyName = "PacienteNombre", Width = 200 });
+        DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colHorario", HeaderText = "Horario", DataPropertyName = "HorarioRango", Width = 130 });
+        DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colEstado", HeaderText = "Estado", DataPropertyName = "Estado", Width = 100 });
+        DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colMedioPago", HeaderText = "Medio de pago", DataPropertyName = "MedioPago", Width = 120 });
+        DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colMonto", HeaderText = "Monto", DataPropertyName = "Monto", Width = 90 });
 
-        DgvAgenda.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-        DgvAgenda.Columns.Add(new DataGridViewTextBoxColumn { Name = "colAgendaHorario", HeaderText = "Horario", FillWeight = 55 });
-        DgvAgenda.Columns.Add(new DataGridViewTextBoxColumn { Name = "colAgendaEstado", HeaderText = "Estado", FillWeight = 45 });
+        DgvAgenda.Columns.Add(new DataGridViewTextBoxColumn { Name = "colAgendaHorario", HeaderText = "Horario", Width = 130 });
+        DgvAgenda.Columns.Add(new DataGridViewTextBoxColumn { Name = "colAgendaEstado", HeaderText = "Estado", Width = 100 });
     }
 
     private void CargarCombos()
@@ -179,13 +186,17 @@ public partial class FormTurnos : Form
         if (!ChkTodosMedicos.Checked && CboMedico.SelectedItem != null)
             medicoFiltro = ((Medico)CboMedico.SelectedItem).Id;
 
+        DateOnly? fechaFiltro = ChkFiltrarFecha.Checked
+            ? DateOnly.FromDateTime(DtpFecha.Value)
+            : null;
+
         // Desconectamos el evento antes de reasignar el DataSource: WinForms
         // selecciona sola la primera fila al hacerlo, y eso disparaba
         // SelectionChanged sin que el usuario clickeara nada (el bug de
         // "se vuelve a Gomez, Laura" y de no poder deseleccionar). Reconectamos
         // apenas termina, asi el clic manual del usuario sigue funcionando normal.
         DgvTurnos.SelectionChanged -= DgvTurnos_SelectionChanged;
-        DgvTurnos.DataSource = _turnoService.ObtenerTodos(ChkMostrarCancelados.Checked, medicoFiltro);
+        DgvTurnos.DataSource = _turnoService.ObtenerTodos(ChkMostrarCancelados.Checked, medicoFiltro, fechaFiltro);
         DgvTurnos.ClearSelection();
         DgvTurnos.SelectionChanged += DgvTurnos_SelectionChanged;
     }
@@ -247,6 +258,39 @@ public partial class FormTurnos : Form
             ActualizarAgenda();
             LblMensaje.ForeColor = Color.Green;
             LblMensaje.Text = "Turno cancelado correctamente.";
+        }
+        catch (Exception ex)
+        {
+            LblMensaje.ForeColor = Color.Red;
+            LblMensaje.Text = ex.Message;
+        }
+    }
+
+    private void BtnConfirmarAsistencia_Click(object sender, EventArgs e)
+    {
+        if (DgvTurnos.CurrentRow == null)
+        {
+            LblMensaje.ForeColor = Color.Red;
+            LblMensaje.Text = "Seleccione un turno de la lista primero";
+            return;
+        }
+
+        var turno = (Turno)DgvTurnos.CurrentRow.DataBoundItem;
+
+        var dialogo = new FormConfirmarAsistencia(turno);
+
+        if (dialogo.ShowDialog() != DialogResult.OK)
+        {
+            return;
+        }
+
+        try
+        {
+            _turnoService.ConfirmarAsistencia(turno.Id, dialogo.Asistio, dialogo.MedioPagoSeleccionado, dialogo.MontoSeleccionado);
+            CargarGrilla();
+            ActualizarAgenda();
+            LblMensaje.ForeColor = Color.Green;
+            LblMensaje.Text = "Asistencia confirmada.";
         }
         catch (Exception ex)
         {

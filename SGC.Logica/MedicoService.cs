@@ -1,9 +1,10 @@
-﻿using SGC.Entidades;
+using SGC.Entidades;
 
 namespace SGC.Logica;
 
 public class MedicoService
 {
+    // TODO (companero): reemplazar por ABM real cuando este listo SGC.Datos.
     private static readonly List<Medico> _medicos = new()
     {
         new Medico { Id = 1, Dni = "20111222", Nombre = "Laura", Apellido = "Gomez", Matricula = "MP1234", Especialidad = "Clinica General", Activo = true },
@@ -27,10 +28,7 @@ public class MedicoService
         Validar(medico);
 
         if (_medicos.Any(m => m.Activo && m.Dni == medico.Dni))
-            throw new InvalidOperationException($"Ya existe un profesional activo con el DNI {medico.Dni}.");
-
-        if (_medicos.Any(m => m.Activo && m.Matricula.Equals(medico.Matricula, StringComparison.OrdinalIgnoreCase)))
-            throw new InvalidOperationException($"Ya existe un profesional activo con la matricula {medico.Matricula}.");
+            throw new InvalidOperationException($"Ya existe un medico activo con el DNI {medico.Dni}.");
 
         medico.Id = _siguienteId++;
         medico.Activo = true;
@@ -45,10 +43,7 @@ public class MedicoService
             ?? throw new InvalidOperationException("El medico que intenta modificar no existe.");
 
         if (_medicos.Any(m => m.Activo && m.Dni == medico.Dni && m.Id != medico.Id))
-            throw new InvalidOperationException($"Ya existe otro profesional activo con el DNI {medico.Dni}.");
-
-        if (_medicos.Any(m => m.Activo && m.Matricula.Equals(medico.Matricula, StringComparison.OrdinalIgnoreCase) && m.Id != medico.Id))
-            throw new InvalidOperationException($"Ya existe otro profesional activo con la matricula {medico.Matricula}.");
+            throw new InvalidOperationException($"Ya existe otro medico activo con el DNI {medico.Dni}.");
 
         existente.Nombre = medico.Nombre;
         existente.Apellido = medico.Apellido;
@@ -68,17 +63,17 @@ public class MedicoService
     private void Validar(Medico medico)
     {
         if (string.IsNullOrWhiteSpace(medico.Nombre))
-            throw new ArgumentException("El nombre del medico es obligatorio.");
+            throw new ArgumentException("El nombre es obligatorio.");
 
         if (string.IsNullOrWhiteSpace(medico.Apellido))
-            throw new ArgumentException("El apellido del medico es obligatorio.");
+            throw new ArgumentException("El apellido es obligatorio.");
 
         if (string.IsNullOrWhiteSpace(medico.Dni) || !medico.Dni.All(char.IsDigit) ||
             medico.Dni.Length < 7 || medico.Dni.Length > 8)
-            throw new ArgumentException("El DNI debe tener entre 7 y 8 digitos numericos.");
+            throw new ArgumentException("El DNI debe tener entre 7 y 8 digitos numericos, sin puntos ni letras.");
 
         if (string.IsNullOrWhiteSpace(medico.Matricula))
-            throw new ArgumentException("La matricula profesional es obligatoria.");
+            throw new ArgumentException("La matricula es obligatoria.");
 
         if (string.IsNullOrWhiteSpace(medico.Especialidad))
             throw new ArgumentException("La especialidad es obligatoria.");

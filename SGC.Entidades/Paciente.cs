@@ -8,6 +8,8 @@ public class Paciente
     public string Apellido { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string Telefono { get; set; } = string.Empty;
+    public DateOnly FechaNacimiento { get; set; }
+    public string ObraSocial { get; set; } = string.Empty;
     public bool Activo { get; set; } = true;
 
     public string NombreCompleto => $"{Apellido}, {Nombre}";

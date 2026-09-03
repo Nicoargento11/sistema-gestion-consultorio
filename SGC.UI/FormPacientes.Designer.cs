@@ -1,4 +1,4 @@
-﻿namespace SGC.UI;
+namespace SGC.UI;
 
 partial class FormPacientes
 {
@@ -13,16 +13,13 @@ partial class FormPacientes
         base.Dispose(disposing);
     }
 
-    #region Windows Form Designer generated code
-
     private void InitializeComponent()
     {
-        pnlHeader = new Panel();
-        lblSubtitulo = new Label();
-        lblTitulo = new Label();
         pnlFormulario = new Panel();
-        TxtBuscar = new TextBox();
-        lblBuscar = new Label();
+        CboObraSocial = new ComboBox();
+        lblObraSocial = new Label();
+        DtpFechaNacimiento = new DateTimePicker();
+        lblFechaNacimiento = new Label();
         LblMensaje = new Label();
         BtnEliminar = new Button();
         BtnGuardar = new Button();
@@ -38,50 +35,17 @@ partial class FormPacientes
         TxtNombre = new TextBox();
         lblNombre = new Label();
         DgvPacientes = new DataGridView();
-        pnlHeader.SuspendLayout();
         pnlFormulario.SuspendLayout();
         ((System.ComponentModel.ISupportInitialize)DgvPacientes).BeginInit();
         SuspendLayout();
         // 
-        // pnlHeader
-        // 
-        pnlHeader.BackColor = Color.FromArgb(27, 42, 74);
-        pnlHeader.Controls.Add(lblSubtitulo);
-        pnlHeader.Controls.Add(lblTitulo);
-        pnlHeader.Dock = DockStyle.Top;
-        pnlHeader.Location = new Point(0, 0);
-        pnlHeader.Name = "pnlHeader";
-        pnlHeader.Padding = new Padding(20, 10, 20, 10);
-        pnlHeader.Size = new Size(1000, 75);
-        pnlHeader.TabIndex = 0;
-        // 
-        // lblSubtitulo
-        // 
-        lblSubtitulo.AutoSize = true;
-        lblSubtitulo.Font = new Font("Segoe UI", 10F);
-        lblSubtitulo.ForeColor = Color.FromArgb(180, 205, 235);
-        lblSubtitulo.Location = new Point(20, 42);
-        lblSubtitulo.Name = "lblSubtitulo";
-        lblSubtitulo.Size = new Size(410, 23);
-        lblSubtitulo.TabIndex = 1;
-        lblSubtitulo.Text = "Padron general de pacientes y datos de contacto";
-        // 
-        // lblTitulo
-        // 
-        lblTitulo.AutoSize = true;
-        lblTitulo.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
-        lblTitulo.ForeColor = Color.White;
-        lblTitulo.Location = new Point(18, 10);
-        lblTitulo.Name = "lblTitulo";
-        lblTitulo.Size = new Size(245, 32);
-        lblTitulo.TabIndex = 0;
-        lblTitulo.Text = "Gestion de Pacientes";
-        // 
         // pnlFormulario
         // 
         pnlFormulario.BackColor = Color.FromArgb(245, 246, 250);
-        pnlFormulario.Controls.Add(TxtBuscar);
-        pnlFormulario.Controls.Add(lblBuscar);
+        pnlFormulario.Controls.Add(CboObraSocial);
+        pnlFormulario.Controls.Add(lblObraSocial);
+        pnlFormulario.Controls.Add(DtpFechaNacimiento);
+        pnlFormulario.Controls.Add(lblFechaNacimiento);
         pnlFormulario.Controls.Add(LblMensaje);
         pnlFormulario.Controls.Add(BtnEliminar);
         pnlFormulario.Controls.Add(BtnGuardar);
@@ -97,223 +61,227 @@ partial class FormPacientes
         pnlFormulario.Controls.Add(TxtNombre);
         pnlFormulario.Controls.Add(lblNombre);
         pnlFormulario.Dock = DockStyle.Top;
-        pnlFormulario.Location = new Point(0, 75);
+        pnlFormulario.Location = new Point(0, 0);
         pnlFormulario.Name = "pnlFormulario";
-        pnlFormulario.Padding = new Padding(20, 10, 20, 10);
-        pnlFormulario.Size = new Size(1000, 175);
+        pnlFormulario.Size = new Size(1000, 260);
         pnlFormulario.TabIndex = 1;
-        // 
-        // TxtBuscar
-        // 
-        TxtBuscar.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-        TxtBuscar.Font = new Font("Segoe UI", 9.5F);
-        TxtBuscar.Location = new Point(710, 125);
-        TxtBuscar.Name = "TxtBuscar";
-        TxtBuscar.PlaceholderText = "Buscar por DNI o Apellido...";
-        TxtBuscar.Size = new Size(270, 29);
-        TxtBuscar.TabIndex = 8;
-        // 
-        // lblBuscar
-        // 
-        lblBuscar.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-        lblBuscar.AutoSize = true;
-        lblBuscar.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-        lblBuscar.ForeColor = Color.FromArgb(27, 42, 74);
-        lblBuscar.Location = new Point(595, 129);
-        lblBuscar.Name = "lblBuscar";
-        lblBuscar.Size = new Size(111, 20);
-        lblBuscar.TabIndex = 14;
-        lblBuscar.Text = "Filtrar Padron:";
         // 
         // LblMensaje
         // 
         LblMensaje.AutoSize = true;
-        LblMensaje.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
-        LblMensaje.Location = new Point(585, 75);
+        LblMensaje.Font = new Font("Segoe UI", 9F);
+        LblMensaje.Location = new Point(500, 175);
         LblMensaje.MaximumSize = new Size(400, 0);
         LblMensaje.Name = "LblMensaje";
-        LblMensaje.Size = new Size(0, 21);
+        LblMensaje.Size = new Size(0, 25);
         LblMensaje.TabIndex = 0;
-        // 
+        //
+        // lblFechaNacimiento
+        //
+        lblFechaNacimiento.AutoSize = true;
+        lblFechaNacimiento.Font = new Font("Segoe UI", 9F);
+        lblFechaNacimiento.Location = new Point(20, 145);
+        lblFechaNacimiento.Name = "lblFechaNacimiento";
+        lblFechaNacimiento.Text = "Fecha de nacimiento";
+        //
+        // DtpFechaNacimiento
+        //
+        DtpFechaNacimiento.Font = new Font("Segoe UI", 10F);
+        DtpFechaNacimiento.Format = DateTimePickerFormat.Short;
+        DtpFechaNacimiento.Location = new Point(20, 168);
+        DtpFechaNacimiento.MaxDate = DateTime.Today;
+        DtpFechaNacimiento.Name = "DtpFechaNacimiento";
+        DtpFechaNacimiento.Size = new Size(180, 34);
+        DtpFechaNacimiento.TabIndex = 8;
+        //
+        // lblObraSocial
+        //
+        lblObraSocial.AutoSize = true;
+        lblObraSocial.Font = new Font("Segoe UI", 9F);
+        lblObraSocial.Location = new Point(220, 145);
+        lblObraSocial.Name = "lblObraSocial";
+        lblObraSocial.Text = "Obra social (vacio = Particular)";
+        //
+        // CboObraSocial
+        //
+        CboObraSocial.DropDownStyle = ComboBoxStyle.DropDown;
+        CboObraSocial.Font = new Font("Segoe UI", 10F);
+        CboObraSocial.Items.AddRange(new object[] { "Particular", "OSDE", "Swiss Medical", "Galeno", "IOMA", "PAMI", "IOSFA", "Medife", "Sancor Salud" });
+        CboObraSocial.Location = new Point(220, 168);
+        CboObraSocial.Name = "CboObraSocial";
+        CboObraSocial.Size = new Size(260, 34);
+        CboObraSocial.TabIndex = 9;
+        //
         // BtnEliminar
-        // 
-        BtnEliminar.BackColor = Color.FromArgb(231, 76, 60);
+        //
+        BtnEliminar.BackColor = Color.FromArgb(200, 60, 60);
         BtnEliminar.FlatAppearance.BorderSize = 0;
         BtnEliminar.FlatStyle = FlatStyle.Flat;
-        BtnEliminar.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+        BtnEliminar.Font = new Font("Segoe UI", 9.5F);
         BtnEliminar.ForeColor = Color.White;
-        BtnEliminar.Location = new Point(240, 125);
+        BtnEliminar.Location = new Point(240, 220);
         BtnEliminar.Name = "BtnEliminar";
-        BtnEliminar.Size = new Size(100, 32);
+        BtnEliminar.Size = new Size(100, 34);
         BtnEliminar.TabIndex = 7;
         BtnEliminar.Text = "Eliminar";
         BtnEliminar.UseVisualStyleBackColor = false;
+        BtnEliminar.Click += BtnEliminar_Click;
         // 
         // BtnGuardar
         // 
-        BtnGuardar.BackColor = Color.FromArgb(39, 174, 96);
+        BtnGuardar.BackColor = Color.FromArgb(46, 134, 222);
         BtnGuardar.FlatAppearance.BorderSize = 0;
         BtnGuardar.FlatStyle = FlatStyle.Flat;
         BtnGuardar.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
         BtnGuardar.ForeColor = Color.White;
-        BtnGuardar.Location = new Point(130, 125);
+        BtnGuardar.Location = new Point(130, 220);
         BtnGuardar.Name = "BtnGuardar";
-        BtnGuardar.Size = new Size(100, 32);
+        BtnGuardar.Size = new Size(100, 34);
         BtnGuardar.TabIndex = 6;
         BtnGuardar.Text = "Guardar";
         BtnGuardar.UseVisualStyleBackColor = false;
+        BtnGuardar.Click += BtnGuardar_Click;
         // 
         // BtnNuevo
         // 
-        BtnNuevo.BackColor = Color.FromArgb(46, 134, 222);
+        BtnNuevo.BackColor = Color.FromArgb(120, 130, 145);
         BtnNuevo.FlatAppearance.BorderSize = 0;
         BtnNuevo.FlatStyle = FlatStyle.Flat;
-        BtnNuevo.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+        BtnNuevo.Font = new Font("Segoe UI", 9.5F);
         BtnNuevo.ForeColor = Color.White;
-        BtnNuevo.Location = new Point(20, 125);
+        BtnNuevo.Location = new Point(20, 220);
         BtnNuevo.Name = "BtnNuevo";
-        BtnNuevo.Size = new Size(100, 32);
+        BtnNuevo.Size = new Size(100, 34);
         BtnNuevo.TabIndex = 5;
-        BtnNuevo.Text = "+ Nuevo";
+        BtnNuevo.Text = "Nuevo";
         BtnNuevo.UseVisualStyleBackColor = false;
+        BtnNuevo.Click += BtnNuevo_Click;
         // 
         // TxtTelefono
         // 
-        TxtTelefono.Font = new Font("Segoe UI", 9.5F);
-        TxtTelefono.Location = new Point(310, 80);
+        TxtTelefono.Font = new Font("Segoe UI", 10F);
+        TxtTelefono.Location = new Point(295, 103);
         TxtTelefono.Name = "TxtTelefono";
-        TxtTelefono.Size = new Size(240, 29);
+        TxtTelefono.Size = new Size(180, 34);
         TxtTelefono.TabIndex = 4;
         // 
         // lblTelefono
         // 
         lblTelefono.AutoSize = true;
-        lblTelefono.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-        lblTelefono.ForeColor = Color.FromArgb(50, 60, 75);
-        lblTelefono.Location = new Point(310, 60);
+        lblTelefono.Font = new Font("Segoe UI", 9F);
+        lblTelefono.Location = new Point(295, 80);
         lblTelefono.Name = "lblTelefono";
-        lblTelefono.Size = new Size(70, 20);
+        lblTelefono.Size = new Size(79, 25);
         lblTelefono.TabIndex = 5;
-        lblTelefono.Text = "Telefono";
+        lblTelefono.Text = "Teléfono";
         // 
         // TxtEmail
         // 
-        TxtEmail.Font = new Font("Segoe UI", 9.5F);
-        TxtEmail.Location = new Point(20, 80);
+        TxtEmail.Font = new Font("Segoe UI", 10F);
+        TxtEmail.Location = new Point(20, 103);
         TxtEmail.Name = "TxtEmail";
-        TxtEmail.Size = new Size(270, 29);
+        TxtEmail.Size = new Size(260, 34);
         TxtEmail.TabIndex = 3;
         // 
         // lblEmail
         // 
         lblEmail.AutoSize = true;
-        lblEmail.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-        lblEmail.ForeColor = Color.FromArgb(50, 60, 75);
-        lblEmail.Location = new Point(20, 60);
+        lblEmail.Font = new Font("Segoe UI", 9F);
+        lblEmail.Location = new Point(20, 80);
         lblEmail.Name = "lblEmail";
-        lblEmail.Size = new Size(47, 20);
+        lblEmail.Size = new Size(54, 25);
         lblEmail.TabIndex = 7;
         lblEmail.Text = "Email";
         // 
         // TxtDni
         // 
-        TxtDni.Font = new Font("Segoe UI", 9.5F);
-        TxtDni.Location = new Point(410, 28);
+        TxtDni.Font = new Font("Segoe UI", 10F);
+        TxtDni.Location = new Point(410, 38);
         TxtDni.Name = "TxtDni";
-        TxtDni.Size = new Size(140, 29);
+        TxtDni.Size = new Size(150, 34);
         TxtDni.TabIndex = 2;
         // 
         // lblDni
         // 
         lblDni.AutoSize = true;
-        lblDni.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-        lblDni.ForeColor = Color.FromArgb(50, 60, 75);
-        lblDni.Location = new Point(410, 8);
+        lblDni.Font = new Font("Segoe UI", 9F);
+        lblDni.Location = new Point(410, 15);
         lblDni.Name = "lblDni";
-        lblDni.Size = new Size(37, 20);
+        lblDni.Size = new Size(43, 25);
         lblDni.TabIndex = 9;
         lblDni.Text = "DNI";
         // 
         // TxtApellido
         // 
-        TxtApellido.Font = new Font("Segoe UI", 9.5F);
-        TxtApellido.Location = new Point(215, 28);
+        TxtApellido.Font = new Font("Segoe UI", 10F);
+        TxtApellido.Location = new Point(215, 38);
         TxtApellido.Name = "TxtApellido";
-        TxtApellido.Size = new Size(180, 29);
+        TxtApellido.Size = new Size(180, 34);
         TxtApellido.TabIndex = 1;
         // 
         // lblApellido
         // 
         lblApellido.AutoSize = true;
-        lblApellido.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-        lblApellido.ForeColor = Color.FromArgb(50, 60, 75);
-        lblApellido.Location = new Point(215, 8);
+        lblApellido.Font = new Font("Segoe UI", 9F);
+        lblApellido.Location = new Point(215, 15);
         lblApellido.Name = "lblApellido";
-        lblApellido.Size = new Size(67, 20);
+        lblApellido.Size = new Size(78, 25);
         lblApellido.TabIndex = 11;
         lblApellido.Text = "Apellido";
         // 
         // TxtNombre
         // 
-        TxtNombre.Font = new Font("Segoe UI", 9.5F);
-        TxtNombre.Location = new Point(20, 28);
+        TxtNombre.Font = new Font("Segoe UI", 10F);
+        TxtNombre.Location = new Point(20, 38);
         TxtNombre.Name = "TxtNombre";
-        TxtNombre.Size = new Size(180, 29);
+        TxtNombre.Size = new Size(180, 34);
         TxtNombre.TabIndex = 0;
         // 
         // lblNombre
         // 
         lblNombre.AutoSize = true;
-        lblNombre.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-        lblNombre.ForeColor = Color.FromArgb(50, 60, 75);
-        lblNombre.Location = new Point(20, 8);
+        lblNombre.Font = new Font("Segoe UI", 9F);
+        lblNombre.Location = new Point(20, 15);
         lblNombre.Name = "lblNombre";
-        lblNombre.Size = new Size(67, 20);
+        lblNombre.Size = new Size(78, 25);
         lblNombre.TabIndex = 13;
         lblNombre.Text = "Nombre";
         // 
         // DgvPacientes
         // 
         DgvPacientes.AllowUserToAddRows = false;
-        DgvPacientes.AllowUserToDeleteRows = false;
         DgvPacientes.BackgroundColor = Color.White;
         DgvPacientes.ColumnHeadersHeight = 34;
         DgvPacientes.Dock = DockStyle.Fill;
         DgvPacientes.Font = new Font("Segoe UI", 9.5F);
-        DgvPacientes.Location = new Point(0, 250);
+        DgvPacientes.Location = new Point(0, 260);
         DgvPacientes.MultiSelect = false;
         DgvPacientes.Name = "DgvPacientes";
         DgvPacientes.ReadOnly = true;
-        DgvPacientes.RowHeadersVisible = false;
-        DgvPacientes.RowHeadersWidth = 51;
+        DgvPacientes.RowHeadersWidth = 62;
         DgvPacientes.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-        DgvPacientes.Size = new Size(1000, 400);
-        DgvPacientes.TabIndex = 2;
+        DgvPacientes.Size = new Size(1000, 410);
+        DgvPacientes.TabIndex = 0;
+        DgvPacientes.CellContentClick += DgvPacientes_CellContentClick;
+        DgvPacientes.SelectionChanged += DgvPacientes_SelectionChanged;
         // 
         // FormPacientes
         // 
-        AutoScaleDimensions = new SizeF(8F, 20F);
+        AutoScaleDimensions = new SizeF(10F, 25F);
         AutoScaleMode = AutoScaleMode.Font;
-        BackColor = Color.FromArgb(245, 246, 250);
         ClientSize = new Size(1000, 650);
         Controls.Add(DgvPacientes);
         Controls.Add(pnlFormulario);
-        Controls.Add(pnlHeader);
         Name = "FormPacientes";
-        Text = "Gestion de Pacientes";
-        pnlHeader.ResumeLayout(false);
-        pnlHeader.PerformLayout();
+        StartPosition = FormStartPosition.CenterScreen;
+        Text = "ABM de Pacientes";
+        Load += FormPacientes_Load;
         pnlFormulario.ResumeLayout(false);
         pnlFormulario.PerformLayout();
         ((System.ComponentModel.ISupportInitialize)DgvPacientes).EndInit();
         ResumeLayout(false);
     }
 
-    #endregion
-
-    private Panel pnlHeader;
-    private Label lblTitulo;
-    private Label lblSubtitulo;
     private Panel pnlFormulario;
     private Label lblNombre;
     private TextBox TxtNombre;
@@ -325,11 +293,13 @@ partial class FormPacientes
     private TextBox TxtEmail;
     private Label lblTelefono;
     private TextBox TxtTelefono;
+    private Label lblFechaNacimiento;
+    private DateTimePicker DtpFechaNacimiento;
+    private Label lblObraSocial;
+    private ComboBox CboObraSocial;
     private Button BtnNuevo;
     private Button BtnGuardar;
     private Button BtnEliminar;
     private Label LblMensaje;
-    private Label lblBuscar;
-    private TextBox TxtBuscar;
     private DataGridView DgvPacientes;
 }

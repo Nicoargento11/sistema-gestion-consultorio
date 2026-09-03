@@ -4,7 +4,9 @@ public enum EstadoTurno
 {
     Pendiente,
     Confirmado,
-    Cancelado
+    Cancelado,
+    Asistio,
+    Ausente
 }
 
 public class Turno
@@ -22,6 +24,8 @@ public class Turno
 
     public DateOnly Fecha { get; set; }
     public EstadoTurno Estado { get; set; } = EstadoTurno.Pendiente;
+    public string? MedioPago { get; set; }
+    public decimal? Monto { get; set; }
     public bool Activo { get; set; } = true;
 
     public string PacienteNombre => Paciente?.NombreCompleto ?? "";
