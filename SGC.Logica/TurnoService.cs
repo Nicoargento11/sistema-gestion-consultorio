@@ -4,9 +4,63 @@ namespace SGC.Logica;
 
 public class TurnoService
 {
-    // TODO: reemplazar por SGCContext.Turnos cuando conectemos la base de datos real.
-    private static readonly List<Turno> _turnos = new();
-    private static int _siguienteId = 1;
+    // Datos iniciales de prueba para desarrollo y demostracion
+    private static readonly List<Turno> _turnos = new()
+    {
+        new Turno
+        {
+            Id = 1,
+            PacienteId = 1,
+            Paciente = new Paciente { Id = 1, Nombre = "Carlos", Apellido = "Fernandez", Dni = "35123456", Email = "carlos.f@email.com", Telefono = "3794123456", Activo = true },
+            MedicoId = 1,
+            Medico = new Medico { Id = 1, Dni = "20111222", Nombre = "Laura", Apellido = "Gomez", Matricula = "MP1234", Especialidad = "Clinica General", Activo = true },
+            HorarioId = 1,
+            Horario = new Horario { Id = 1, HoraInicio = new TimeOnly(8, 0), HoraFin = new TimeOnly(8, 30), Activo = true },
+            Fecha = DateOnly.FromDateTime(DateTime.Today),
+            Estado = EstadoTurno.Confirmado,
+            Activo = true
+        },
+        new Turno
+        {
+            Id = 2,
+            PacienteId = 2,
+            Paciente = new Paciente { Id = 2, Nombre = "Ana", Apellido = "Martinez", Dni = "38987654", Email = "ana.martinez@email.com", Telefono = "3794987654", Activo = true },
+            MedicoId = 1,
+            Medico = new Medico { Id = 1, Dni = "20111222", Nombre = "Laura", Apellido = "Gomez", Matricula = "MP1234", Especialidad = "Clinica General", Activo = true },
+            HorarioId = 2,
+            Horario = new Horario { Id = 2, HoraInicio = new TimeOnly(8, 30), HoraFin = new TimeOnly(9, 0), Activo = true },
+            Fecha = DateOnly.FromDateTime(DateTime.Today),
+            Estado = EstadoTurno.Confirmado,
+            Activo = true
+        },
+        new Turno
+        {
+            Id = 3,
+            PacienteId = 3,
+            Paciente = new Paciente { Id = 3, Nombre = "Luis", Apellido = "Torres", Dni = "40555666", Email = "luis.torres@email.com", Telefono = "3794555666", Activo = true },
+            MedicoId = 1,
+            Medico = new Medico { Id = 1, Dni = "20111222", Nombre = "Laura", Apellido = "Gomez", Matricula = "MP1234", Especialidad = "Clinica General", Activo = true },
+            HorarioId = 3,
+            Horario = new Horario { Id = 3, HoraInicio = new TimeOnly(9, 0), HoraFin = new TimeOnly(9, 30), Activo = true },
+            Fecha = DateOnly.FromDateTime(DateTime.Today),
+            Estado = EstadoTurno.Confirmado,
+            Activo = true
+        },
+        new Turno
+        {
+            Id = 4,
+            PacienteId = 4,
+            Paciente = new Paciente { Id = 4, Nombre = "Sofia", Apellido = "Herrera", Dni = "42111222", Email = "sofia.herrera@email.com", Telefono = "3794111222", Activo = true },
+            MedicoId = 1,
+            Medico = new Medico { Id = 1, Dni = "20111222", Nombre = "Laura", Apellido = "Gomez", Matricula = "MP1234", Especialidad = "Clinica General", Activo = true },
+            HorarioId = 4,
+            Horario = new Horario { Id = 4, HoraInicio = new TimeOnly(9, 30), HoraFin = new TimeOnly(10, 0), Activo = true },
+            Fecha = DateOnly.FromDateTime(DateTime.Today),
+            Estado = EstadoTurno.Confirmado,
+            Activo = true
+        }
+    };
+    private static int _siguienteId = 5;
 
     public List<Turno> ObtenerTodos(bool incluirCancelados = false, int? medicoId = null)
     {
@@ -20,6 +74,23 @@ public class TurnoService
 
         return query.OrderBy(t => t.Fecha).ToList();
     }
+
+    public List<Turno> ObtenerPorMedicoYFecha(int medicoId, DateOnly? fecha = null, bool incluirCancelados = false)
+    {
+        IEnumerable<Turno> query = incluirCancelados ? _turnos : _turnos.Where(t => t.Activo);
+        query = query.Where(t => t.MedicoId == medicoId);
+
+        if (fecha.HasValue)
+            query = query.Where(t => t.Fecha == fecha.Value);
+
+        return query.OrderBy(t => t.Fecha).ThenBy(t => t.Horario != null ? t.Horario.HoraInicio : TimeOnly.MinValue).ToList();
+    }
+
+    public Turno? ObtenerPorId(int id)
+    {
+        return _turnos.FirstOrDefault(t => t.Id == id);
+    }
+
 
     public void AsignarTurno(Paciente paciente, Medico medico, Horario horario, DateOnly fecha)
     {

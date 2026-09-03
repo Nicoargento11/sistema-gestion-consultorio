@@ -25,8 +25,11 @@ public class Turno
     public bool Activo { get; set; } = true;
 
     public string PacienteNombre => Paciente?.NombreCompleto ?? "";
+    public string PacienteDni => Paciente?.Dni ?? "";
     public string MedicoNombre => Medico?.NombreCompleto ?? "";
     public string HorarioRango => Horario?.Rango ?? "";
+    public string EstadoAtencion => ActividadMedica != null && ActividadMedica.Activo ? "Atendido" : Estado.ToString();
 
     public ActividadMedica? ActividadMedica { get; set; }
 }
+

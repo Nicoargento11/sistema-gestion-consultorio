@@ -4,9 +4,15 @@ namespace SGC.Logica;
 
 public class PacienteService
 {
-    // TODO: reemplazar por SGCContext.Pacientes cuando conectemos la base de datos real.
-    private static readonly List<Paciente> _pacientes = new();
-    private static int _siguienteId = 1;
+    // Datos iniciales de prueba para desarrollo y demostracion
+    private static readonly List<Paciente> _pacientes = new()
+    {
+        new Paciente { Id = 1, Nombre = "Carlos", Apellido = "Fernandez", Dni = "35123456", Email = "carlos.f@email.com", Telefono = "3794123456", Activo = true },
+        new Paciente { Id = 2, Nombre = "Ana", Apellido = "Martinez", Dni = "38987654", Email = "ana.martinez@email.com", Telefono = "3794987654", Activo = true },
+        new Paciente { Id = 3, Nombre = "Luis", Apellido = "Torres", Dni = "40555666", Email = "luis.torres@email.com", Telefono = "3794555666", Activo = true },
+        new Paciente { Id = 4, Nombre = "Sofia", Apellido = "Herrera", Dni = "42111222", Email = "sofia.herrera@email.com", Telefono = "3794111222", Activo = true }
+    };
+    private static int _siguienteId = 5;
 
     public List<Paciente> ObtenerTodos()
     {
