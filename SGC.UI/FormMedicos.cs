@@ -12,13 +12,16 @@ public partial class FormMedicos : Form
         InitializeComponent();
         ConfigurarColumnas();
         CargarGrilla();
+        AcceptButton = BtnGuardar;
+        DgvMedicos.SelectionChanged += DgvMedicos_SelectionChanged_1;
+        TxtBuscar.TextChanged += (s, e) => CargarGrilla();
     }
 
     private void ConfigurarColumnas()
     {
-        // Se configura acá, en código, y no en el Designer, porque el diseñador
+        // Se configura ac, en cdigo, y no en el Designer, porque el diseador
         // visual de Visual Studio borra las columnas de un DataGridView cada vez
-        // que se abre el formulario. Acá es inmune a eso.
+        // que se abre el formulario. Ac es inmune a eso.
         DgvMedicos.AutoGenerateColumns = false;
         DgvMedicos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colId", HeaderText = "Id", DataPropertyName = "Id", Width = 50 });
         DgvMedicos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colNombre", HeaderText = "Nombre", DataPropertyName = "Nombre", Width = 150 });
@@ -30,7 +33,20 @@ public partial class FormMedicos : Form
 
     private void CargarGrilla()
     {
-        DgvMedicos.DataSource = _service.ObtenerTodos();
+        var medicos = _service.ObtenerTodos();
+        var filtro = TxtBuscar.Text?.Trim() ?? "";
+        if (!string.IsNullOrWhiteSpace(filtro))
+        {
+            var f = filtro.ToLower();
+            medicos = medicos.Where(m =>
+                m.Apellido.ToLower().Contains(f) ||
+                m.Nombre.ToLower().Contains(f) ||
+                m.Especialidad.ToLower().Contains(f) ||
+                m.Matricula.ToLower().Contains(f) ||
+                m.Dni.Contains(f)).ToList();
+        }
+
+        DgvMedicos.DataSource = medicos;
     }
 
     private void BtnNuevo_Click(object sender, EventArgs e)
@@ -39,7 +55,7 @@ public partial class FormMedicos : Form
         TxtNombre.Text = "";
         TxtApellido.Text = "";
         TxtDni.Text = "";
-        TxtEspecialidad.Text = "";
+        CboEspecialidad.Text = "";
         TxtMatricula.Text = "";
     }
 
@@ -53,7 +69,7 @@ public partial class FormMedicos : Form
                 Nombre = TxtNombre.Text,
                 Apellido = TxtApellido.Text,
                 Dni = TxtDni.Text,
-                Especialidad = TxtEspecialidad.Text,
+                Especialidad = CboEspecialidad.Text,
                 Matricula = TxtMatricula.Text
             };
             if (_idSeleccionado == null)
@@ -70,7 +86,7 @@ public partial class FormMedicos : Form
             TxtNombre.Text = "";
             TxtApellido.Text = "";
             TxtDni.Text = "";
-            TxtEspecialidad.Text = "";
+            CboEspecialidad.Text = "";
             TxtMatricula.Text = "";
 
             LblMensaje.ForeColor = Color.Green;
@@ -111,7 +127,7 @@ public partial class FormMedicos : Form
             TxtApellido.Text = "";
             TxtDni.Text = "";
             TxtMatricula.Text = "";
-            TxtEspecialidad.Text = "";
+            CboEspecialidad.Text = "";
 
             LblMensaje.ForeColor = Color.Green;
             LblMensaje.Text = "Medico eliminado correctamente.";
@@ -123,9 +139,7 @@ public partial class FormMedicos : Form
         }
     }
 
-
-
-    private void DgvMedicos_SelectionChanged_1(object sender, EventArgs e)
+    private void DgvMedicos_SelectionChanged_1(object? sender, EventArgs e)
     {
         if (DgvMedicos.CurrentRow == null) return;
 
@@ -135,7 +149,7 @@ public partial class FormMedicos : Form
         TxtNombre.Text = medico.Nombre;
         TxtApellido.Text = medico.Apellido;
         TxtDni.Text = medico.Dni;
-        TxtEspecialidad.Text = medico.Especialidad;
+        CboEspecialidad.Text = medico.Especialidad;
         TxtMatricula.Text = medico.Matricula;
     }
 }

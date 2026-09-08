@@ -45,6 +45,8 @@ public partial class FormRegistrarActividad : Form
         {
             CboTurnos.SelectedValue = _turnoInicial.Id;
         }
+
+        AcceptButton = BtnGuardar;
     }
 
     private void DeterminarMedicoActivo()
@@ -61,7 +63,7 @@ public partial class FormRegistrarActividad : Form
 
         if (_medicoActual != null)
         {
-            lblMedicoInfo.Text = $"Profesional: {_medicoActual.NombreCompleto} | Mat: {_medicoActual.Matricula}";
+            lblMedicoInfo.Text = $"Escribe la atencion de un turno  |  {_medicoActual.NombreCompleto}  |  Mat {_medicoActual.Matricula}";
         }
     }
 
@@ -77,7 +79,10 @@ public partial class FormRegistrarActividad : Form
         if (_medicoActual == null) return;
 
         var fechaSeleccionada = DateOnly.FromDateTime(DtpFecha.Value);
-        var turnos = _turnoService.ObtenerPorMedicoYFecha(_medicoActual.Id, fechaSeleccionada, false);
+        var turnos = _turnoService.ObtenerPorMedicoYFecha(_medicoActual.Id, fechaSeleccionada, false)
+            .OrderBy(t => t.ActividadMedica?.Activo == true)
+            .ThenBy(t => t.Horario != null ? t.Horario.HoraInicio : TimeOnly.MinValue)
+            .ToList();
 
         var listaTurnosCombo = turnos.Select(t => new
         {
@@ -211,10 +216,20 @@ public partial class FormRegistrarActividad : Form
 
     private void BtnBorrarRegistro_Click(object? sender, EventArgs e)
     {
-        if (_turnoSeleccionado == null) return;
+        if (_turnoSeleccionado == null)
+        {
+            LblMensaje.ForeColor = Color.Red;
+            LblMensaje.Text = "Seleccione una actividad primero.";
+            return;
+        }
 
         var actividad = _actividadService.ObtenerPorTurnoId(_turnoSeleccionado.Id);
-        if (actividad == null) return;
+        if (actividad == null)
+        {
+            LblMensaje.ForeColor = Color.Red;
+            LblMensaje.Text = "Seleccione una actividad primero.";
+            return;
+        }
 
         var confirmacion = MessageBox.Show(
             "Esta seguro que desea eliminar la atencion registrada para este paciente?",

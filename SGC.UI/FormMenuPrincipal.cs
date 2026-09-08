@@ -32,6 +32,7 @@ public partial class FormMenuPrincipal : Form
 
         // Modulo Administrador
         btnMedicos.Visible = _usuarioActivo.Rol == RolUsuario.Administrador;
+        btnHorarios.Visible = _usuarioActivo.Rol == RolUsuario.Administrador;
 
         // Modulo Medico
         btnAgenda.Visible = _usuarioActivo.Rol == RolUsuario.Medico;
@@ -44,6 +45,7 @@ public partial class FormMenuPrincipal : Form
         btnPacientes.Click += (s, e) => { ResaltarBoton((Button)s!); AbrirFormularioHijo(new FormPacientes()); };
         btnTurnos.Click += (s, e) => { ResaltarBoton((Button)s!); AbrirFormularioHijo(new FormTurnos()); };
         btnMedicos.Click += (s, e) => { ResaltarBoton((Button)s!); AbrirFormularioHijo(new FormMedicos()); };
+        btnHorarios.Click += (s, e) => { ResaltarBoton((Button)s!); AbrirFormularioHijo(new FormHorarios()); };
 
         btnAgenda.Click += (s, e) => { ResaltarBoton((Button)s!); AbrirFormularioHijo(new FormAgendaMedico(_usuarioActivo, AbrirFormularioHijo)); };
         btnActividad.Click += (s, e) => { ResaltarBoton((Button)s!); AbrirFormularioHijo(new FormRegistrarActividad(null, _usuarioActivo, AbrirFormularioHijo)); };

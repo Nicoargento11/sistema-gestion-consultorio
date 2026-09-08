@@ -9,6 +9,7 @@ public partial class FormTurnos : Form
     private readonly MedicoService _medicoService = new();
     private readonly HorarioService _horarioService = new();
     private readonly TurnoService _turnoService = new();
+    private readonly NotificacionService _notificacionService = new();
     private int? _idTurnoSeleccionado = null;
 
     public FormTurnos()
@@ -28,6 +29,11 @@ public partial class FormTurnos : Form
         ChkMostrarCancelados.CheckedChanged += (s, e) => CargarGrilla();
         ChkTodosMedicos.CheckedChanged += (s, e) => CargarGrilla();
         ChkFiltrarFecha.CheckedChanged += (s, e) => CargarGrilla();
+        ChkFiltrarPaciente.CheckedChanged += (s, e) => CargarGrilla();
+        CboPaciente.SelectedIndexChanged += (s, e) =>
+        {
+            if (ChkFiltrarPaciente.Checked) CargarGrilla();
+        };
         CboMedico.SelectedIndexChanged += (s, e) => { ActualizarAgenda(); CargarGrilla(); };
         DtpFecha.ValueChanged += (s, e) => { ActualizarAgenda(); CargarGrilla(); };
         DgvAgenda.CellClick += DgvAgenda_CellClick;
@@ -134,12 +140,15 @@ public partial class FormTurnos : Form
             var fecha = DateOnly.FromDateTime(DtpFecha.Value);
 
             _turnoService.ModificarTurno(_idTurnoSeleccionado.Value, horario, fecha);
+            var turno = _turnoService.ObtenerPorId(_idTurnoSeleccionado.Value);
 
             CargarGrilla();
             LimpiarSeleccion();
             ActualizarAgenda();
             LblMensaje.ForeColor = Color.Green;
-            LblMensaje.Text = "Turno modificado correctamente.";
+            LblMensaje.Text = "Turno modificado. " + (turno?.Paciente != null
+                ? _notificacionService.AvisarTurno(turno.Paciente, "Reprogramacion", $"{fecha:dd/MM/yyyy} {horario.Rango}")
+                : "");
         }
         catch (Exception ex)
         {
@@ -190,15 +199,21 @@ public partial class FormTurnos : Form
             ? DateOnly.FromDateTime(DtpFecha.Value)
             : null;
 
-        // Desconectamos el evento antes de reasignar el DataSource: WinForms
-        // selecciona sola la primera fila al hacerlo, y eso disparaba
-        // SelectionChanged sin que el usuario clickeara nada (el bug de
-        // "se vuelve a Gomez, Laura" y de no poder deseleccionar). Reconectamos
-        // apenas termina, asi el clic manual del usuario sigue funcionando normal.
+        int? pacienteFiltro = null;
+        if (ChkFiltrarPaciente.Checked && CboPaciente.SelectedItem != null)
+            pacienteFiltro = ((Paciente)CboPaciente.SelectedItem).Id;
+
         DgvTurnos.SelectionChanged -= DgvTurnos_SelectionChanged;
-        DgvTurnos.DataSource = _turnoService.ObtenerTodos(ChkMostrarCancelados.Checked, medicoFiltro, fechaFiltro);
+        var lista = _turnoService.ObtenerTodos(ChkMostrarCancelados.Checked, medicoFiltro, fechaFiltro, pacienteFiltro);
+        DgvTurnos.DataSource = lista;
         DgvTurnos.ClearSelection();
         DgvTurnos.SelectionChanged += DgvTurnos_SelectionChanged;
+
+        if (lista.Count == 0 && (medicoFiltro != null || fechaFiltro != null || pacienteFiltro != null))
+        {
+            LblMensaje.ForeColor = Color.DarkOrange;
+            LblMensaje.Text = "No existen resultados asociados a la busqueda realizada.";
+        }
     }
 
     private void BtnAsignar_Click(object sender, EventArgs e)
@@ -223,7 +238,8 @@ public partial class FormTurnos : Form
             LimpiarSeleccion();
             ActualizarAgenda();
             LblMensaje.ForeColor = Color.Green;
-            LblMensaje.Text = "Turno asignado correctamente.";
+            LblMensaje.Text = "Turno Agendado. " + _notificacionService.AvisarTurno(
+                paciente, "Confirmacion", $"{fecha:dd/MM/yyyy} {horario.Rango} con {medico.NombreCompleto}");
         }
         catch (Exception ex)
         {
@@ -257,7 +273,9 @@ public partial class FormTurnos : Form
             LimpiarSeleccion();
             ActualizarAgenda();
             LblMensaje.ForeColor = Color.Green;
-            LblMensaje.Text = "Turno cancelado correctamente.";
+            LblMensaje.Text = "Turno eliminado. " + (turnoSeleccionado.Paciente != null
+                ? _notificacionService.AvisarTurno(turnoSeleccionado.Paciente, "Cancelacion", $"{turnoSeleccionado.Fecha:dd/MM/yyyy} {turnoSeleccionado.HorarioRango}")
+                : "");
         }
         catch (Exception ex)
         {

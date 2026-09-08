@@ -35,6 +35,7 @@ partial class FormAgendaMedico
         BtnAtender = new Button();
         lblTurnosContador = new Label();
         lblGrillaTitulo = new Label();
+        TxtBuscarPaciente = new TextBox();
         DgvTurnos = new DataGridView();
         pnlSuperior.SuspendLayout();
         pnlResumen.SuspendLayout();
@@ -114,7 +115,7 @@ partial class FormAgendaMedico
         lblTitulo.Name = "lblTitulo";
         lblTitulo.Size = new Size(335, 32);
         lblTitulo.TabIndex = 0;
-        lblTitulo.Text = "Mi Agenda de Turnos del Dia";
+        lblTitulo.Text = "Agenda del dia";
         // 
         // pnlResumen
         // 
@@ -199,6 +200,7 @@ partial class FormAgendaMedico
         pnlGrilla.BackColor = Color.FromArgb(245, 246, 250);
         pnlGrilla.Controls.Add(DgvTurnos);
         pnlGrilla.Controls.Add(pnlAcciones);
+        pnlGrilla.Controls.Add(TxtBuscarPaciente);
         pnlGrilla.Controls.Add(lblTurnosContador);
         pnlGrilla.Controls.Add(lblGrillaTitulo);
         pnlGrilla.Dock = DockStyle.Fill;
@@ -280,7 +282,17 @@ partial class FormAgendaMedico
         lblGrillaTitulo.Name = "lblGrillaTitulo";
         lblGrillaTitulo.Size = new Size(245, 28);
         lblGrillaTitulo.TabIndex = 0;
-        lblGrillaTitulo.Text = "Lista de Turnos y Pacientes";
+        lblGrillaTitulo.Text = "Lista de pacientes del dia";
+        // 
+        // TxtBuscarPaciente
+        // 
+        TxtBuscarPaciente.Anchor = AnchorStyles.Top | AnchorStyles.Left;
+        TxtBuscarPaciente.Font = new Font("Segoe UI", 9.5F);
+        TxtBuscarPaciente.Location = new Point(280, 8);
+        TxtBuscarPaciente.Name = "TxtBuscarPaciente";
+        TxtBuscarPaciente.PlaceholderText = "Buscar paciente del dia...";
+        TxtBuscarPaciente.Size = new Size(250, 29);
+        TxtBuscarPaciente.TabIndex = 4;
         // 
         // DgvTurnos
         // 
@@ -289,7 +301,7 @@ partial class FormAgendaMedico
         DgvTurnos.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
         DgvTurnos.BackgroundColor = Color.White;
         DgvTurnos.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-        DgvTurnos.Location = new Point(20, 40);
+        DgvTurnos.Location = new Point(20, 44);
         DgvTurnos.MultiSelect = false;
         DgvTurnos.Name = "DgvTurnos";
         DgvTurnos.ReadOnly = true;
@@ -335,6 +347,7 @@ partial class FormAgendaMedico
     private Button BtnFiltroCancelados;
     private Panel pnlGrilla;
     private Label lblGrillaTitulo;
+    private TextBox TxtBuscarPaciente;
     private Label lblTurnosContador;
     private DataGridView DgvTurnos;
     private Panel pnlAcciones;

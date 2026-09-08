@@ -33,6 +33,7 @@ partial class FormMenuPrincipal
     private Button btnAgenda;
     private Button btnActividad;
     private Button btnHistorial;
+    private Button btnHorarios;
     private Button btnCerrarSesion;
 
 
@@ -48,6 +49,7 @@ partial class FormMenuPrincipal
         btnMedicos = new Button();
         btnTurnos = new Button();
         btnHistorial = new Button();
+        btnHorarios = new Button();
         btnCerrarSesion = new Button();
         pnlContenido = new Panel();
         pnlSidebar.SuspendLayout();
@@ -62,6 +64,7 @@ partial class FormMenuPrincipal
         pnlSidebar.Controls.Add(btnAgenda);
         pnlSidebar.Controls.Add(btnActividad);
         pnlSidebar.Controls.Add(btnMedicos);
+        pnlSidebar.Controls.Add(btnHorarios);
         pnlSidebar.Controls.Add(btnTurnos);
         pnlSidebar.Controls.Add(btnHistorial);
         pnlSidebar.Controls.Add(btnCerrarSesion);
@@ -149,7 +152,7 @@ partial class FormMenuPrincipal
         btnActividad.Padding = new Padding(16, 0, 0, 0);
         btnActividad.Size = new Size(176, 36);
         btnActividad.TabIndex = 2;
-        btnActividad.Text = "Registrar Actividad";
+        btnActividad.Text = "Cargar atencion";
         btnActividad.TextAlign = ContentAlignment.MiddleLeft;
         btnActividad.UseVisualStyleBackColor = false;
         // 
@@ -170,6 +173,24 @@ partial class FormMenuPrincipal
         btnMedicos.Text = "Médicos";
         btnMedicos.TextAlign = ContentAlignment.MiddleLeft;
         btnMedicos.UseVisualStyleBackColor = false;
+        // 
+        // btnHorarios
+        // 
+        btnHorarios.BackColor = Color.FromArgb(27, 42, 74);
+        btnHorarios.FlatAppearance.BorderSize = 0;
+        btnHorarios.FlatAppearance.MouseOverBackColor = Color.FromArgb(46, 134, 222);
+        btnHorarios.FlatStyle = FlatStyle.Flat;
+        btnHorarios.Font = new Font("Segoe UI", 10F);
+        btnHorarios.ForeColor = Color.White;
+        btnHorarios.Location = new Point(2, 246);
+        btnHorarios.Margin = new Padding(2);
+        btnHorarios.Name = "btnHorarios";
+        btnHorarios.Padding = new Padding(16, 0, 0, 0);
+        btnHorarios.Size = new Size(176, 36);
+        btnHorarios.TabIndex = 9;
+        btnHorarios.Text = "Horarios";
+        btnHorarios.TextAlign = ContentAlignment.MiddleLeft;
+        btnHorarios.UseVisualStyleBackColor = false;
         // 
         // btnTurnos
         // 
@@ -203,7 +224,7 @@ partial class FormMenuPrincipal
         btnHistorial.Padding = new Padding(16, 0, 0, 0);
         btnHistorial.Size = new Size(176, 36);
         btnHistorial.TabIndex = 1;
-        btnHistorial.Text = "Historial Clínico";
+        btnHistorial.Text = "Consultar historial";
         btnHistorial.TextAlign = ContentAlignment.MiddleLeft;
         btnHistorial.UseVisualStyleBackColor = false;
         // 

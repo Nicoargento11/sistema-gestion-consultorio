@@ -17,6 +17,7 @@ partial class FormTurnos
     {
         pnlFormulario = new Panel();
         ChkFiltrarFecha = new CheckBox();
+        ChkFiltrarPaciente = new CheckBox();
         ChkTodosMedicos = new CheckBox();
         BtnNuevoTurno = new Button();
         BtnModificar = new Button();
@@ -47,6 +48,7 @@ partial class FormTurnos
         // 
         pnlFormulario.BackColor = Color.FromArgb(245, 246, 250);
         pnlFormulario.Controls.Add(ChkFiltrarFecha);
+        pnlFormulario.Controls.Add(ChkFiltrarPaciente);
         pnlFormulario.Controls.Add(ChkTodosMedicos);
         pnlFormulario.Controls.Add(BtnNuevoTurno);
         pnlFormulario.Controls.Add(BtnModificar);
@@ -79,6 +81,17 @@ partial class FormTurnos
         ChkFiltrarFecha.TabIndex = 10;
         ChkFiltrarFecha.Text = "Filtrar por fecha";
         ChkFiltrarFecha.UseVisualStyleBackColor = true;
+        // 
+        // ChkFiltrarPaciente
+        // 
+        ChkFiltrarPaciente.AutoSize = true;
+        ChkFiltrarPaciente.Font = new Font("Segoe UI", 9F);
+        ChkFiltrarPaciente.Location = new Point(400, 155);
+        ChkFiltrarPaciente.Name = "ChkFiltrarPaciente";
+        ChkFiltrarPaciente.Size = new Size(170, 29);
+        ChkFiltrarPaciente.TabIndex = 12;
+        ChkFiltrarPaciente.Text = "Filtrar por paciente";
+        ChkFiltrarPaciente.UseVisualStyleBackColor = true;
         // 
         // ChkTodosMedicos
         // 
@@ -344,6 +357,7 @@ partial class FormTurnos
     private Button BtnNuevoTurno;
     private CheckBox ChkTodosMedicos;
     private CheckBox ChkFiltrarFecha;
+    private CheckBox ChkFiltrarPaciente;
     private Button BtnModificar;
     private CheckBox ChkMostrarCancelados;
     private Label lblPaciente;
