@@ -9,10 +9,14 @@ public class Paciente
     public string Email { get; set; } = string.Empty;
     public string Telefono { get; set; } = string.Empty;
     public DateOnly FechaNacimiento { get; set; }
-    public string ObraSocial { get; set; } = string.Empty;
     public bool Activo { get; set; } = true;
 
+    // null = Particular (sin obra social).
+    public int? ObraSocialId { get; set; }
+    public ObraSocial? ObraSocial { get; set; }
+
     public string NombreCompleto => $"{Apellido}, {Nombre}";
+    public string ObraSocialNombre => ObraSocial?.Nombre ?? "Particular";
 
     public ICollection<Turno> Turnos { get; set; } = new List<Turno>();
 }

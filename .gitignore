@@ -9,3 +9,6 @@
 
 # Herramientas internas ajenas al proyecto
 .atl/
+
+# Documentos de referencia (ERS, entregas de otros grupos) - solo local
+docs/referencia/

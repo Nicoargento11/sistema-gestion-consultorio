@@ -32,6 +32,10 @@ public partial class FormMenuPrincipal : Form
 
         // Modulo Administrador
         btnMedicos.Visible = _usuarioActivo.Rol == RolUsuario.Administrador;
+        btnHorarios.Visible = _usuarioActivo.Rol == RolUsuario.Administrador;
+        btnUsuarios.Visible = _usuarioActivo.Rol == RolUsuario.Administrador;
+        btnObrasSociales.Visible = _usuarioActivo.Rol == RolUsuario.Administrador;
+        btnExcepcionesAgenda.Visible = _usuarioActivo.Rol == RolUsuario.Administrador;
 
         // Modulo Medico
         btnAgenda.Visible = _usuarioActivo.Rol == RolUsuario.Medico;
@@ -42,8 +46,12 @@ public partial class FormMenuPrincipal : Form
     private void AsignarEventosNavegacion()
     {
         btnPacientes.Click += (s, e) => { ResaltarBoton((Button)s!); AbrirFormularioHijo(new FormPacientes()); };
-        btnTurnos.Click += (s, e) => { ResaltarBoton((Button)s!); AbrirFormularioHijo(new FormTurnos()); };
+        btnTurnos.Click += (s, e) => { ResaltarBoton((Button)s!); AbrirFormularioHijo(new FormTurnos(_usuarioActivo)); };
         btnMedicos.Click += (s, e) => { ResaltarBoton((Button)s!); AbrirFormularioHijo(new FormMedicos()); };
+        btnHorarios.Click += (s, e) => { ResaltarBoton((Button)s!); AbrirFormularioHijo(new FormConfigurarAgenda()); };
+        btnUsuarios.Click += (s, e) => { ResaltarBoton((Button)s!); AbrirFormularioHijo(new FormUsuarios()); };
+        btnObrasSociales.Click += (s, e) => { ResaltarBoton((Button)s!); AbrirFormularioHijo(new FormObrasSociales()); };
+        btnExcepcionesAgenda.Click += (s, e) => { ResaltarBoton((Button)s!); AbrirFormularioHijo(new FormExcepcionesAgenda()); };
 
         btnAgenda.Click += (s, e) => { ResaltarBoton((Button)s!); AbrirFormularioHijo(new FormAgendaMedico(_usuarioActivo, AbrirFormularioHijo)); };
         btnActividad.Click += (s, e) => { ResaltarBoton((Button)s!); AbrirFormularioHijo(new FormRegistrarActividad(null, _usuarioActivo, AbrirFormularioHijo)); };
@@ -62,7 +70,7 @@ public partial class FormMenuPrincipal : Form
                 break;
             case RolUsuario.Recepcionista:
                 ResaltarBoton(btnTurnos);
-                AbrirFormularioHijo(new FormTurnos());
+                AbrirFormularioHijo(new FormTurnos(_usuarioActivo));
                 break;
             case RolUsuario.Administrador:
                 ResaltarBoton(btnMedicos);

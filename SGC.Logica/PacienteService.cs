@@ -7,21 +7,22 @@ public class PacienteService
     // Datos iniciales de prueba para desarrollo y demostracion
     private static readonly List<Paciente> _pacientes = new()
     {
-        new Paciente { Id = 1, Nombre = "Carlos", Apellido = "Fernandez", Dni = "35123456", Email = "carlos.f@email.com", Telefono = "3794123456", Activo = true },
-        new Paciente { Id = 2, Nombre = "Ana", Apellido = "Martinez", Dni = "38987654", Email = "ana.martinez@email.com", Telefono = "3794987654", Activo = true },
-        new Paciente { Id = 3, Nombre = "Luis", Apellido = "Torres", Dni = "40555666", Email = "luis.torres@email.com", Telefono = "3794555666", Activo = true },
-        new Paciente { Id = 4, Nombre = "Sofia", Apellido = "Herrera", Dni = "42111222", Email = "sofia.herrera@email.com", Telefono = "3794111222", Activo = true }
+        new Paciente { Id = 1, Nombre = "Carlos", Apellido = "Fernandez", Dni = "35123456", Email = "carlos.f@email.com", Telefono = "3794123456", FechaNacimiento = new DateOnly(1990, 4, 12), ObraSocialId = 1, Activo = true },
+        new Paciente { Id = 2, Nombre = "Ana", Apellido = "Martinez", Dni = "38987654", Email = "ana.martinez@email.com", Telefono = "3794987654", FechaNacimiento = new DateOnly(1985, 9, 3), ObraSocialId = 2, Activo = true },
+        new Paciente { Id = 3, Nombre = "Luis", Apellido = "Torres", Dni = "40555666", Email = "luis.torres@email.com", Telefono = "3794555666", FechaNacimiento = new DateOnly(1998, 1, 27), ObraSocialId = 3, Activo = true },
+        new Paciente { Id = 4, Nombre = "Sofia", Apellido = "Herrera", Dni = "42111222", Email = "sofia.herrera@email.com", Telefono = "3794111222", FechaNacimiento = new DateOnly(2001, 11, 15), ObraSocialId = null, Activo = true }
     };
     private static int _siguienteId = 5;
 
+    private readonly ObraSocialService _obraSocialService = new();
+
     public List<Paciente> ObtenerTodos()
     {
-        return _pacientes.Where(p => p.Activo).ToList();
+        return _pacientes.Where(p => p.Activo).Select(ResolverNavegacion).ToList();
     }
 
     public void Agregar(Paciente paciente)
     {
-        paciente.ObraSocial = paciente.ObraSocial.Trim();
         Validar(paciente);
 
         if (_pacientes.Any(p => p.Activo && p.Dni == paciente.Dni))
@@ -34,7 +35,6 @@ public class PacienteService
 
     public void Modificar(Paciente paciente)
     {
-        paciente.ObraSocial = paciente.ObraSocial.Trim();
         Validar(paciente);
 
         var existente = _pacientes.FirstOrDefault(p => p.Id == paciente.Id)
@@ -49,7 +49,7 @@ public class PacienteService
         existente.Email = paciente.Email;
         existente.Telefono = paciente.Telefono;
         existente.FechaNacimiento = paciente.FechaNacimiento;
-        existente.ObraSocial = paciente.ObraSocial;
+        existente.ObraSocialId = paciente.ObraSocialId;
     }
 
     public void EliminarLogico(int id)
@@ -58,6 +58,12 @@ public class PacienteService
             ?? throw new InvalidOperationException("El paciente que intenta eliminar no existe.");
 
         paciente.Activo = false;
+    }
+
+    private Paciente ResolverNavegacion(Paciente paciente)
+    {
+        paciente.ObraSocial = paciente.ObraSocialId is int id ? _obraSocialService.ObtenerPorId(id) : null;
+        return paciente;
     }
 
     private void Validar(Paciente paciente)
@@ -87,6 +93,12 @@ public class PacienteService
         if (paciente.FechaNacimiento < DateOnly.FromDateTime(DateTime.Today).AddYears(-120))
             throw new ArgumentException("La fecha de nacimiento no es válida.");
 
-        // ObraSocial es opcional: vacío se interpreta como "Particular".
+        // ObraSocialId es opcional: null se interpreta como "Particular".
+        if (paciente.ObraSocialId is int obraSocialId)
+        {
+            var obraSocial = _obraSocialService.ObtenerPorId(obraSocialId);
+            if (obraSocial is null || !obraSocial.Activo)
+                throw new ArgumentException("La obra social seleccionada no es valida.");
+        }
     }
 }

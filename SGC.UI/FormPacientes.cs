@@ -5,13 +5,27 @@ namespace SGC.UI;
 public partial class FormPacientes : Form
 {
     private readonly PacienteService _service = new();
+    private readonly ObraSocialService _obraSocialService = new();
     private int? _idSeleccionado = null;
     public FormPacientes()
     {
         InitializeComponent();
         ConfigurarColumnas();
+        CargarCombos();
         CargarGrilla();
         AcceptButton = BtnGuardar;
+    }
+
+    private void CargarCombos()
+    {
+        // Id = 0 es un pseudo-item que representa "Particular" (sin obra
+        // social) - ObraSocial real empieza en Id = 1, no hay colision.
+        var opciones = new List<ObraSocial> { new ObraSocial { Id = 0, Nombre = "Particular (sin obra social)" } };
+        opciones.AddRange(_obraSocialService.ObtenerTodos());
+
+        CboObraSocial.DataSource = opciones;
+        CboObraSocial.DisplayMember = "Nombre";
+        CboObraSocial.ValueMember = "Id";
     }
 
     private void ConfigurarColumnas()
@@ -19,16 +33,19 @@ public partial class FormPacientes : Form
         // Se configura acá, en código, y no en el Designer, porque el diseñador
         // visual de Visual Studio borra las columnas de un DataGridView cada vez
         // que se abre el formulario. Acá es inmune a eso.
+        // AutoSizeColumnsMode = Fill reparte el ancho disponible segun FillWeight
+        // (proporcional) en vez de pixeles fijos - necesario porque FormPacientes
+        // ahora se embebe en pnlContenido y ya no tiene un ancho de ventana fijo.
         DgvPacientes.AutoGenerateColumns = false;
-        DgvPacientes.Columns.Add(new DataGridViewTextBoxColumn { Name = "colId", HeaderText = "Id", DataPropertyName = "Id", Width = 50 });
-        DgvPacientes.Columns.Add(new DataGridViewTextBoxColumn { Name = "colNombre", HeaderText = "Nombre", DataPropertyName = "Nombre", Width = 150 });
-        DgvPacientes.Columns.Add(new DataGridViewTextBoxColumn { Name = "colApellido", HeaderText = "Apellido", DataPropertyName = "Apellido", Width = 150 });
-        DgvPacientes.Columns.Add(new DataGridViewTextBoxColumn { Name = "colFechaNacimiento", HeaderText = "Fecha Nacimiento", DataPropertyName = "FechaNacimiento", Width = 120 });
-        DgvPacientes.Columns.Add(new DataGridViewTextBoxColumn { Name = "colDni", HeaderText = "DNI", DataPropertyName = "Dni", Width = 120 });
-        DgvPacientes.Columns.Add(new DataGridViewTextBoxColumn { Name = "colEmail", HeaderText = "Email", DataPropertyName = "Email", Width = 200 });
-        DgvPacientes.Columns.Add(new DataGridViewTextBoxColumn { Name = "colTelefono", HeaderText = "Telefono", DataPropertyName = "Telefono", Width = 130 });
-        DgvPacientes.Columns.Add(new DataGridViewTextBoxColumn { Name = "colObraSocial", HeaderText = "Obra Social", DataPropertyName = "ObraSocial", Width = 150 });
-
+        DgvPacientes.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+        DgvPacientes.Columns.Add(new DataGridViewTextBoxColumn { Name = "colId", HeaderText = "Id", DataPropertyName = "Id", FillWeight = 40 });
+        DgvPacientes.Columns.Add(new DataGridViewTextBoxColumn { Name = "colNombre", HeaderText = "Nombre", DataPropertyName = "Nombre", FillWeight = 130 });
+        DgvPacientes.Columns.Add(new DataGridViewTextBoxColumn { Name = "colApellido", HeaderText = "Apellido", DataPropertyName = "Apellido", FillWeight = 130 });
+        DgvPacientes.Columns.Add(new DataGridViewTextBoxColumn { Name = "colFechaNacimiento", HeaderText = "Fecha Nacimiento", DataPropertyName = "FechaNacimiento", FillWeight = 110 });
+        DgvPacientes.Columns.Add(new DataGridViewTextBoxColumn { Name = "colDni", HeaderText = "DNI", DataPropertyName = "Dni", FillWeight = 100 });
+        DgvPacientes.Columns.Add(new DataGridViewTextBoxColumn { Name = "colEmail", HeaderText = "Email", DataPropertyName = "Email", FillWeight = 170 });
+        DgvPacientes.Columns.Add(new DataGridViewTextBoxColumn { Name = "colTelefono", HeaderText = "Telefono", DataPropertyName = "Telefono", FillWeight = 110 });
+        DgvPacientes.Columns.Add(new DataGridViewTextBoxColumn { Name = "colObraSocial", HeaderText = "Obra Social", DataPropertyName = "ObraSocialNombre", FillWeight = 130 });
     }
 
     private void FormPacientes_Load(object sender, EventArgs e)
@@ -49,7 +66,7 @@ public partial class FormPacientes : Form
         TxtDni.Text = "";
         TxtEmail.Text = "";
         TxtTelefono.Text = "";
-        CboObraSocial.Text = "";
+        CboObraSocial.SelectedValue = 0;
         DtpFechaNacimiento.Value = DateTime.Today;
     }
 
@@ -65,7 +82,7 @@ public partial class FormPacientes : Form
                 Dni = TxtDni.Text,
                 Email = TxtEmail.Text,
                 Telefono = TxtTelefono.Text,
-                ObraSocial = CboObraSocial.Text,
+                ObraSocialId = (int)(CboObraSocial.SelectedValue ?? 0) == 0 ? null : (int)CboObraSocial.SelectedValue!,
                 FechaNacimiento = DateOnly.FromDateTime(DtpFechaNacimiento.Value)
 
             };
@@ -86,7 +103,7 @@ public partial class FormPacientes : Form
             TxtDni.Text = "";
             TxtEmail.Text = "";
             TxtTelefono.Text = "";
-            CboObraSocial.Text = "";
+            CboObraSocial.SelectedValue = 0;
             DtpFechaNacimiento.Value = DateTime.Today;
 
             LblMensaje.ForeColor = Color.Green;
@@ -128,7 +145,7 @@ public partial class FormPacientes : Form
             TxtDni.Text = "";
             TxtEmail.Text = "";
             TxtTelefono.Text = "";
-            CboObraSocial.Text = "";
+            CboObraSocial.SelectedValue = 0;
             DtpFechaNacimiento.Value = DateTime.Today;
 
             LblMensaje.ForeColor = Color.Green;
@@ -153,7 +170,7 @@ public partial class FormPacientes : Form
         TxtDni.Text = paciente.Dni;
         TxtEmail.Text = paciente.Email;
         TxtTelefono.Text = paciente.Telefono;
-        CboObraSocial.Text = paciente.ObraSocial;
+        CboObraSocial.SelectedValue = paciente.ObraSocialId ?? 0;
         DtpFechaNacimiento.Value = paciente.FechaNacimiento.ToDateTime(TimeOnly.MinValue);
     }
 
