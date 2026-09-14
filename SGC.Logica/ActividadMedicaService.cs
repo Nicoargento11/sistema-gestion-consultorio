@@ -57,10 +57,26 @@ public class ActividadMedicaService
 
     public List<ActividadMedica> ObtenerHistorialPorPaciente(int pacienteId)
     {
-        return _actividades
-            .Where(a => a.Activo && a.Turno != null && a.Turno.PacienteId == pacienteId)
-            .OrderByDescending(a => a.Turno!.Fecha)
-            .ToList();
+        return Consultar(pacienteId: pacienteId);
+    }
+
+    public List<ActividadMedica> Consultar(int? pacienteId = null, int? medicoId = null, DateOnly? fecha = null, int? tipoId = null)
+    {
+        IEnumerable<ActividadMedica> query = _actividades.Where(a => a.Activo && a.Turno != null);
+
+        if (pacienteId.HasValue)
+            query = query.Where(a => a.Turno!.PacienteId == pacienteId.Value);
+
+        if (medicoId.HasValue)
+            query = query.Where(a => a.Turno!.MedicoId == medicoId.Value);
+
+        if (fecha.HasValue)
+            query = query.Where(a => a.Turno!.Fecha == fecha.Value);
+
+        if (tipoId.HasValue && tipoId.Value > 0)
+            query = query.Where(a => a.TipoActividadId == tipoId.Value);
+
+        return query.OrderByDescending(a => a.Turno!.Fecha).ToList();
     }
 
     public void RegistrarOModificarActividad(Turno turno, int tipoActividadId, string motivo, string procedimiento, string receta)

@@ -22,16 +22,16 @@ partial class FormHistorialClinico
         lblTitulo = new Label();
         pnlFiltro = new Panel();
         BtnNuevaConsulta = new Button();
-        BtnLimpiar = new Button();
-        BtnBuscar = new Button();
         CboTipoFiltro = new ComboBox();
         lblTipoFiltro = new Label();
         CboMedicoFiltro = new ComboBox();
         lblMedicoFiltro = new Label();
-        ChkFiltrarFecha = new CheckBox();
         DtpFechaFiltro = new DateTimePicker();
+        ChkFiltrarFecha = new CheckBox();
         CboPacientes = new ComboBox();
         lblSeleccionar = new Label();
+        BtnLimpiar = new Button();
+        BtnBuscar = new Button();
         TxtBuscar = new TextBox();
         lblBuscar = new Label();
         pnlCardPaciente = new Panel();
@@ -81,7 +81,7 @@ partial class FormHistorialClinico
         lblSubtitulo.ForeColor = Color.FromArgb(180, 205, 235);
         lblSubtitulo.Location = new Point(20, 40);
         lblSubtitulo.Name = "lblSubtitulo";
-        lblSubtitulo.Size = new Size(430, 21);
+        lblSubtitulo.Size = new Size(596, 21);
         lblSubtitulo.TabIndex = 1;
         lblSubtitulo.Text = "Solo lectura: consulte atenciones ya cargadas. Para escribir una nueva, use la Agenda.";
         // 
@@ -92,7 +92,7 @@ partial class FormHistorialClinico
         lblTitulo.ForeColor = Color.White;
         lblTitulo.Location = new Point(18, 8);
         lblTitulo.Name = "lblTitulo";
-        lblTitulo.Size = new Size(335, 32);
+        lblTitulo.Size = new Size(306, 32);
         lblTitulo.TabIndex = 0;
         lblTitulo.Text = "Consultar historial clinico";
         // 
@@ -118,42 +118,104 @@ partial class FormHistorialClinico
         pnlFiltro.Size = new Size(1000, 130);
         pnlFiltro.TabIndex = 1;
         // 
-        // lblBuscar
+        // BtnNuevaConsulta
         // 
-        lblBuscar.AutoSize = true;
-        lblBuscar.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-        lblBuscar.ForeColor = Color.FromArgb(27, 42, 74);
-        lblBuscar.Location = new Point(20, 16);
-        lblBuscar.Name = "lblBuscar";
-        lblBuscar.Size = new Size(58, 20);
-        lblBuscar.TabIndex = 0;
-        lblBuscar.Text = "Buscar:";
+        BtnNuevaConsulta.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+        BtnNuevaConsulta.BackColor = Color.FromArgb(46, 134, 222);
+        BtnNuevaConsulta.Cursor = Cursors.Hand;
+        BtnNuevaConsulta.FlatAppearance.BorderSize = 0;
+        BtnNuevaConsulta.FlatStyle = FlatStyle.Flat;
+        BtnNuevaConsulta.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+        BtnNuevaConsulta.ForeColor = Color.White;
+        BtnNuevaConsulta.Location = new Point(800, 11);
+        BtnNuevaConsulta.Name = "BtnNuevaConsulta";
+        BtnNuevaConsulta.Size = new Size(180, 32);
+        BtnNuevaConsulta.TabIndex = 4;
+        BtnNuevaConsulta.Text = "Ir a la Agenda";
+        BtnNuevaConsulta.UseVisualStyleBackColor = false;
         // 
-        // TxtBuscar
+        // CboTipoFiltro
         // 
-        TxtBuscar.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-        TxtBuscar.Font = new Font("Segoe UI", 9.5F);
-        TxtBuscar.Location = new Point(90, 12);
-        TxtBuscar.Name = "TxtBuscar";
-        TxtBuscar.PlaceholderText = "Nombre, apellido o DNI";
-        TxtBuscar.Size = new Size(430, 29);
-        TxtBuscar.TabIndex = 1;
+        CboTipoFiltro.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+        CboTipoFiltro.DropDownStyle = ComboBoxStyle.DropDownList;
+        CboTipoFiltro.Font = new Font("Segoe UI", 9.5F);
+        CboTipoFiltro.FormattingEnabled = true;
+        CboTipoFiltro.Location = new Point(674, 54);
+        CboTipoFiltro.Name = "CboTipoFiltro";
+        CboTipoFiltro.Size = new Size(200, 29);
+        CboTipoFiltro.TabIndex = 8;
         // 
-        // BtnBuscar
+        // lblTipoFiltro
         // 
-        BtnBuscar.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-        BtnBuscar.BackColor = Color.FromArgb(46, 134, 222);
-        BtnBuscar.Cursor = Cursors.Hand;
-        BtnBuscar.FlatAppearance.BorderSize = 0;
-        BtnBuscar.FlatStyle = FlatStyle.Flat;
-        BtnBuscar.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-        BtnBuscar.ForeColor = Color.White;
-        BtnBuscar.Location = new Point(532, 11);
-        BtnBuscar.Name = "BtnBuscar";
-        BtnBuscar.Size = new Size(90, 32);
-        BtnBuscar.TabIndex = 2;
-        BtnBuscar.Text = "Buscar";
-        BtnBuscar.UseVisualStyleBackColor = false;
+        lblTipoFiltro.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+        lblTipoFiltro.AutoSize = true;
+        lblTipoFiltro.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+        lblTipoFiltro.ForeColor = Color.FromArgb(27, 42, 74);
+        lblTipoFiltro.Location = new Point(628, 58);
+        lblTipoFiltro.Name = "lblTipoFiltro";
+        lblTipoFiltro.Size = new Size(44, 20);
+        lblTipoFiltro.TabIndex = 7;
+        lblTipoFiltro.Text = "Tipo:";
+        // 
+        // CboMedicoFiltro
+        // 
+        CboMedicoFiltro.DropDownStyle = ComboBoxStyle.DropDownList;
+        CboMedicoFiltro.Font = new Font("Segoe UI", 9.5F);
+        CboMedicoFiltro.Location = new Point(90, 90);
+        CboMedicoFiltro.Name = "CboMedicoFiltro";
+        CboMedicoFiltro.Size = new Size(280, 29);
+        CboMedicoFiltro.TabIndex = 9;
+        // 
+        // lblMedicoFiltro
+        // 
+        lblMedicoFiltro.AutoSize = true;
+        lblMedicoFiltro.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+        lblMedicoFiltro.ForeColor = Color.FromArgb(27, 42, 74);
+        lblMedicoFiltro.Location = new Point(20, 94);
+        lblMedicoFiltro.Name = "lblMedicoFiltro";
+        lblMedicoFiltro.Size = new Size(64, 20);
+        lblMedicoFiltro.TabIndex = 10;
+        lblMedicoFiltro.Text = "Medico:";
+        // 
+        // DtpFechaFiltro
+        // 
+        DtpFechaFiltro.Format = DateTimePickerFormat.Short;
+        DtpFechaFiltro.Location = new Point(530, 90);
+        DtpFechaFiltro.Name = "DtpFechaFiltro";
+        DtpFechaFiltro.Size = new Size(120, 27);
+        DtpFechaFiltro.TabIndex = 11;
+        DtpFechaFiltro.ValueChanged += DtpFechaFiltro_ValueChanged;
+        // 
+        // ChkFiltrarFecha
+        // 
+        ChkFiltrarFecha.AutoSize = true;
+        ChkFiltrarFecha.Location = new Point(390, 92);
+        ChkFiltrarFecha.Name = "ChkFiltrarFecha";
+        ChkFiltrarFecha.Size = new Size(136, 24);
+        ChkFiltrarFecha.TabIndex = 10;
+        ChkFiltrarFecha.Text = "Filtrar por fecha";
+        // 
+        // CboPacientes
+        // 
+        CboPacientes.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+        CboPacientes.DropDownStyle = ComboBoxStyle.DropDownList;
+        CboPacientes.Font = new Font("Segoe UI", 9.5F);
+        CboPacientes.FormattingEnabled = true;
+        CboPacientes.Location = new Point(90, 54);
+        CboPacientes.Name = "CboPacientes";
+        CboPacientes.Size = new Size(520, 29);
+        CboPacientes.TabIndex = 6;
+        // 
+        // lblSeleccionar
+        // 
+        lblSeleccionar.AutoSize = true;
+        lblSeleccionar.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+        lblSeleccionar.ForeColor = Color.FromArgb(27, 42, 74);
+        lblSeleccionar.Location = new Point(20, 58);
+        lblSeleccionar.Name = "lblSeleccionar";
+        lblSeleccionar.Size = new Size(72, 20);
+        lblSeleccionar.TabIndex = 5;
+        lblSeleccionar.Text = "Paciente:";
         // 
         // BtnLimpiar
         // 
@@ -171,100 +233,42 @@ partial class FormHistorialClinico
         BtnLimpiar.Text = "Limpiar";
         BtnLimpiar.UseVisualStyleBackColor = false;
         // 
-        // BtnNuevaConsulta
+        // BtnBuscar
         // 
-        BtnNuevaConsulta.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-        BtnNuevaConsulta.BackColor = Color.FromArgb(46, 134, 222);
-        BtnNuevaConsulta.Cursor = Cursors.Hand;
-        BtnNuevaConsulta.FlatAppearance.BorderSize = 0;
-        BtnNuevaConsulta.FlatStyle = FlatStyle.Flat;
-        BtnNuevaConsulta.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-        BtnNuevaConsulta.ForeColor = Color.White;
-        BtnNuevaConsulta.Location = new Point(800, 11);
-        BtnNuevaConsulta.Name = "BtnNuevaConsulta";
-        BtnNuevaConsulta.Size = new Size(180, 32);
-        BtnNuevaConsulta.TabIndex = 4;
-        BtnNuevaConsulta.Text = "Ir a la Agenda";
-        BtnNuevaConsulta.UseVisualStyleBackColor = false;
+        BtnBuscar.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+        BtnBuscar.BackColor = Color.FromArgb(46, 134, 222);
+        BtnBuscar.Cursor = Cursors.Hand;
+        BtnBuscar.FlatAppearance.BorderSize = 0;
+        BtnBuscar.FlatStyle = FlatStyle.Flat;
+        BtnBuscar.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+        BtnBuscar.ForeColor = Color.White;
+        BtnBuscar.Location = new Point(532, 11);
+        BtnBuscar.Name = "BtnBuscar";
+        BtnBuscar.Size = new Size(90, 32);
+        BtnBuscar.TabIndex = 2;
+        BtnBuscar.Text = "Buscar";
+        BtnBuscar.UseVisualStyleBackColor = false;
         // 
-        // lblSeleccionar
+        // TxtBuscar
         // 
-        lblSeleccionar.AutoSize = true;
-        lblSeleccionar.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-        lblSeleccionar.ForeColor = Color.FromArgb(27, 42, 74);
-        lblSeleccionar.Location = new Point(20, 58);
-        lblSeleccionar.Name = "lblSeleccionar";
-        lblSeleccionar.Size = new Size(68, 20);
-        lblSeleccionar.TabIndex = 5;
-        lblSeleccionar.Text = "Paciente:";
+        TxtBuscar.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+        TxtBuscar.Font = new Font("Segoe UI", 9.5F);
+        TxtBuscar.Location = new Point(90, 12);
+        TxtBuscar.Name = "TxtBuscar";
+        TxtBuscar.PlaceholderText = "Nombre, apellido o DNI";
+        TxtBuscar.Size = new Size(430, 29);
+        TxtBuscar.TabIndex = 1;
         // 
-        // CboPacientes
+        // lblBuscar
         // 
-        CboPacientes.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-        CboPacientes.DropDownStyle = ComboBoxStyle.DropDownList;
-        CboPacientes.Font = new Font("Segoe UI", 9.5F);
-        CboPacientes.FormattingEnabled = true;
-        CboPacientes.Location = new Point(90, 54);
-        CboPacientes.Name = "CboPacientes";
-        CboPacientes.Size = new Size(520, 29);
-        CboPacientes.TabIndex = 6;
-        // 
-        // lblTipoFiltro
-        // 
-        lblTipoFiltro.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-        lblTipoFiltro.AutoSize = true;
-        lblTipoFiltro.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-        lblTipoFiltro.ForeColor = Color.FromArgb(27, 42, 74);
-        lblTipoFiltro.Location = new Point(628, 58);
-        lblTipoFiltro.Name = "lblTipoFiltro";
-        lblTipoFiltro.Size = new Size(40, 20);
-        lblTipoFiltro.TabIndex = 7;
-        lblTipoFiltro.Text = "Tipo:";
-        // 
-        // CboTipoFiltro
-        // 
-        CboTipoFiltro.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-        CboTipoFiltro.DropDownStyle = ComboBoxStyle.DropDownList;
-        CboTipoFiltro.Font = new Font("Segoe UI", 9.5F);
-        CboTipoFiltro.FormattingEnabled = true;
-        CboTipoFiltro.Location = new Point(674, 54);
-        CboTipoFiltro.Name = "CboTipoFiltro";
-        CboTipoFiltro.Size = new Size(200, 29);
-        CboTipoFiltro.TabIndex = 8;
-        // 
-        // lblMedicoFiltro
-        // 
-        lblMedicoFiltro.AutoSize = true;
-        lblMedicoFiltro.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-        lblMedicoFiltro.ForeColor = Color.FromArgb(27, 42, 74);
-        lblMedicoFiltro.Location = new Point(20, 94);
-        lblMedicoFiltro.Name = "lblMedicoFiltro";
-        lblMedicoFiltro.Text = "Medico:";
-        // 
-        // CboMedicoFiltro
-        // 
-        CboMedicoFiltro.DropDownStyle = ComboBoxStyle.DropDownList;
-        CboMedicoFiltro.Font = new Font("Segoe UI", 9.5F);
-        CboMedicoFiltro.Location = new Point(90, 90);
-        CboMedicoFiltro.Name = "CboMedicoFiltro";
-        CboMedicoFiltro.Size = new Size(280, 29);
-        CboMedicoFiltro.TabIndex = 9;
-        // 
-        // ChkFiltrarFecha
-        // 
-        ChkFiltrarFecha.AutoSize = true;
-        ChkFiltrarFecha.Location = new Point(390, 92);
-        ChkFiltrarFecha.Name = "ChkFiltrarFecha";
-        ChkFiltrarFecha.Text = "Filtrar por fecha";
-        ChkFiltrarFecha.TabIndex = 10;
-        // 
-        // DtpFechaFiltro
-        // 
-        DtpFechaFiltro.Format = DateTimePickerFormat.Short;
-        DtpFechaFiltro.Location = new Point(530, 90);
-        DtpFechaFiltro.Name = "DtpFechaFiltro";
-        DtpFechaFiltro.Size = new Size(120, 27);
-        DtpFechaFiltro.TabIndex = 11;
+        lblBuscar.AutoSize = true;
+        lblBuscar.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+        lblBuscar.ForeColor = Color.FromArgb(27, 42, 74);
+        lblBuscar.Location = new Point(20, 16);
+        lblBuscar.Name = "lblBuscar";
+        lblBuscar.Size = new Size(61, 20);
+        lblBuscar.TabIndex = 0;
+        lblBuscar.Text = "Buscar:";
         // 
         // pnlCardPaciente
         // 
@@ -278,8 +282,21 @@ partial class FormHistorialClinico
         pnlCardPaciente.Size = new Size(1000, 58);
         pnlCardPaciente.TabIndex = 2;
         // 
+        // lblResumenHistorial
+        // 
+        lblResumenHistorial.AutoEllipsis = true;
+        lblResumenHistorial.Dock = DockStyle.Fill;
+        lblResumenHistorial.Font = new Font("Segoe UI", 9F);
+        lblResumenHistorial.ForeColor = Color.FromArgb(70, 90, 120);
+        lblResumenHistorial.Location = new Point(20, 30);
+        lblResumenHistorial.Name = "lblResumenHistorial";
+        lblResumenHistorial.Size = new Size(960, 20);
+        lblResumenHistorial.TabIndex = 1;
+        lblResumenHistorial.TextAlign = ContentAlignment.MiddleLeft;
+        // 
         // lblPacienteDetalle
         // 
+        lblPacienteDetalle.AutoEllipsis = true;
         lblPacienteDetalle.Dock = DockStyle.Top;
         lblPacienteDetalle.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
         lblPacienteDetalle.ForeColor = Color.FromArgb(27, 42, 74);
@@ -289,20 +306,6 @@ partial class FormHistorialClinico
         lblPacienteDetalle.TabIndex = 0;
         lblPacienteDetalle.Text = "Seleccione un paciente para consultar su historial.";
         lblPacienteDetalle.TextAlign = ContentAlignment.MiddleLeft;
-        lblPacienteDetalle.AutoEllipsis = true;
-        // 
-        // lblResumenHistorial
-        // 
-        lblResumenHistorial.Dock = DockStyle.Fill;
-        lblResumenHistorial.Font = new Font("Segoe UI", 9F);
-        lblResumenHistorial.ForeColor = Color.FromArgb(70, 90, 120);
-        lblResumenHistorial.Location = new Point(20, 30);
-        lblResumenHistorial.Name = "lblResumenHistorial";
-        lblResumenHistorial.Size = new Size(960, 20);
-        lblResumenHistorial.TabIndex = 1;
-        lblResumenHistorial.Text = "";
-        lblResumenHistorial.TextAlign = ContentAlignment.MiddleLeft;
-        lblResumenHistorial.AutoEllipsis = true;
         // 
         // splitContainerHistorial
         // 
@@ -310,12 +313,18 @@ partial class FormHistorialClinico
         splitContainerHistorial.Location = new Point(0, 258);
         splitContainerHistorial.Name = "splitContainerHistorial";
         splitContainerHistorial.Orientation = Orientation.Horizontal;
+        // 
+        // splitContainerHistorial.Panel1
+        // 
         splitContainerHistorial.Panel1.Controls.Add(pnlGrilla);
         splitContainerHistorial.Panel1MinSize = 140;
+        // 
+        // splitContainerHistorial.Panel2
+        // 
         splitContainerHistorial.Panel2.Controls.Add(pnlDetalle);
         splitContainerHistorial.Panel2MinSize = 180;
-        splitContainerHistorial.Size = new Size(1000, 426);
-        splitContainerHistorial.SplitterDistance = 200;
+        splitContainerHistorial.Size = new Size(1000, 392);
+        splitContainerHistorial.SplitterDistance = 184;
         splitContainerHistorial.SplitterWidth = 8;
         splitContainerHistorial.TabIndex = 3;
         // 
@@ -328,8 +337,28 @@ partial class FormHistorialClinico
         pnlGrilla.Location = new Point(0, 0);
         pnlGrilla.Name = "pnlGrilla";
         pnlGrilla.Padding = new Padding(16, 8, 16, 8);
-        pnlGrilla.Size = new Size(1000, 200);
+        pnlGrilla.Size = new Size(1000, 184);
         pnlGrilla.TabIndex = 0;
+        // 
+        // DgvHistorial
+        // 
+        DgvHistorial.AllowUserToAddRows = false;
+        DgvHistorial.AllowUserToDeleteRows = false;
+        DgvHistorial.AllowUserToResizeRows = false;
+        DgvHistorial.BackgroundColor = Color.White;
+        DgvHistorial.BorderStyle = BorderStyle.None;
+        DgvHistorial.ColumnHeadersHeight = 29;
+        DgvHistorial.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
+        DgvHistorial.Dock = DockStyle.Fill;
+        DgvHistorial.Location = new Point(16, 36);
+        DgvHistorial.MultiSelect = false;
+        DgvHistorial.Name = "DgvHistorial";
+        DgvHistorial.ReadOnly = true;
+        DgvHistorial.RowHeadersVisible = false;
+        DgvHistorial.RowHeadersWidth = 51;
+        DgvHistorial.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+        DgvHistorial.Size = new Size(968, 140);
+        DgvHistorial.TabIndex = 1;
         // 
         // lblHistorialTitulo
         // 
@@ -343,25 +372,6 @@ partial class FormHistorialClinico
         lblHistorialTitulo.TabIndex = 0;
         lblHistorialTitulo.Text = "Registro cronologico de atenciones";
         // 
-        // DgvHistorial
-        // 
-        DgvHistorial.AllowUserToAddRows = false;
-        DgvHistorial.AllowUserToDeleteRows = false;
-        DgvHistorial.AllowUserToResizeRows = false;
-        DgvHistorial.BackgroundColor = Color.White;
-        DgvHistorial.BorderStyle = BorderStyle.None;
-        DgvHistorial.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
-        DgvHistorial.Dock = DockStyle.Fill;
-        DgvHistorial.Location = new Point(16, 36);
-        DgvHistorial.MultiSelect = false;
-        DgvHistorial.Name = "DgvHistorial";
-        DgvHistorial.ReadOnly = true;
-        DgvHistorial.RowHeadersVisible = false;
-        DgvHistorial.RowHeadersWidth = 51;
-        DgvHistorial.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-        DgvHistorial.Size = new Size(968, 156);
-        DgvHistorial.TabIndex = 1;
-        // 
         // pnlDetalle
         // 
         pnlDetalle.BackColor = Color.White;
@@ -370,7 +380,7 @@ partial class FormHistorialClinico
         pnlDetalle.Location = new Point(0, 0);
         pnlDetalle.Name = "pnlDetalle";
         pnlDetalle.Padding = new Padding(16, 8, 16, 12);
-        pnlDetalle.Size = new Size(1000, 218);
+        pnlDetalle.Size = new Size(1000, 200);
         pnlDetalle.TabIndex = 0;
         // 
         // tblDetalle
@@ -395,25 +405,31 @@ partial class FormHistorialClinico
         tblDetalle.RowStyles.Add(new RowStyle(SizeType.Percent, 33F));
         tblDetalle.RowStyles.Add(new RowStyle(SizeType.Absolute, 22F));
         tblDetalle.RowStyles.Add(new RowStyle(SizeType.Percent, 33F));
-        tblDetalle.Size = new Size(968, 198);
+        tblDetalle.Size = new Size(968, 180);
         tblDetalle.TabIndex = 0;
         // 
         // lblDetalleTitulo
         // 
+        lblDetalleTitulo.AutoEllipsis = true;
         lblDetalleTitulo.Dock = DockStyle.Fill;
         lblDetalleTitulo.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
         lblDetalleTitulo.ForeColor = Color.FromArgb(27, 42, 74);
+        lblDetalleTitulo.Location = new Point(3, 0);
         lblDetalleTitulo.Name = "lblDetalleTitulo";
+        lblDetalleTitulo.Size = new Size(962, 28);
+        lblDetalleTitulo.TabIndex = 0;
         lblDetalleTitulo.Text = "Detalle de la atencion clinica";
         lblDetalleTitulo.TextAlign = ContentAlignment.MiddleLeft;
-        lblDetalleTitulo.AutoEllipsis = true;
         // 
         // lblMotivo
         // 
         lblMotivo.Dock = DockStyle.Fill;
         lblMotivo.Font = new Font("Segoe UI", 8.5F, FontStyle.Bold);
         lblMotivo.ForeColor = Color.FromArgb(50, 60, 75);
+        lblMotivo.Location = new Point(3, 28);
         lblMotivo.Name = "lblMotivo";
+        lblMotivo.Size = new Size(962, 22);
+        lblMotivo.TabIndex = 1;
         lblMotivo.Text = "Motivo de consulta";
         lblMotivo.TextAlign = ContentAlignment.BottomLeft;
         // 
@@ -423,10 +439,12 @@ partial class FormHistorialClinico
         TxtMotivo.BorderStyle = BorderStyle.FixedSingle;
         TxtMotivo.Dock = DockStyle.Fill;
         TxtMotivo.Font = new Font("Segoe UI", 9.5F);
+        TxtMotivo.Location = new Point(3, 53);
         TxtMotivo.Multiline = true;
         TxtMotivo.Name = "TxtMotivo";
         TxtMotivo.ReadOnly = true;
         TxtMotivo.ScrollBars = ScrollBars.Vertical;
+        TxtMotivo.Size = new Size(962, 23);
         TxtMotivo.TabIndex = 0;
         // 
         // lblDiagnostico
@@ -434,7 +452,10 @@ partial class FormHistorialClinico
         lblDiagnostico.Dock = DockStyle.Fill;
         lblDiagnostico.Font = new Font("Segoe UI", 8.5F, FontStyle.Bold);
         lblDiagnostico.ForeColor = Color.FromArgb(50, 60, 75);
+        lblDiagnostico.Location = new Point(3, 79);
         lblDiagnostico.Name = "lblDiagnostico";
+        lblDiagnostico.Size = new Size(962, 22);
+        lblDiagnostico.TabIndex = 2;
         lblDiagnostico.Text = "Diagnostico / Procedimiento";
         lblDiagnostico.TextAlign = ContentAlignment.BottomLeft;
         // 
@@ -444,10 +465,12 @@ partial class FormHistorialClinico
         TxtDiagnostico.BorderStyle = BorderStyle.FixedSingle;
         TxtDiagnostico.Dock = DockStyle.Fill;
         TxtDiagnostico.Font = new Font("Segoe UI", 9.5F);
+        TxtDiagnostico.Location = new Point(3, 104);
         TxtDiagnostico.Multiline = true;
         TxtDiagnostico.Name = "TxtDiagnostico";
         TxtDiagnostico.ReadOnly = true;
         TxtDiagnostico.ScrollBars = ScrollBars.Vertical;
+        TxtDiagnostico.Size = new Size(962, 22);
         TxtDiagnostico.TabIndex = 1;
         // 
         // lblReceta
@@ -455,7 +478,10 @@ partial class FormHistorialClinico
         lblReceta.Dock = DockStyle.Fill;
         lblReceta.Font = new Font("Segoe UI", 8.5F, FontStyle.Bold);
         lblReceta.ForeColor = Color.FromArgb(50, 60, 75);
+        lblReceta.Location = new Point(3, 129);
         lblReceta.Name = "lblReceta";
+        lblReceta.Size = new Size(962, 22);
+        lblReceta.TabIndex = 3;
         lblReceta.Text = "Prescripcion / Receta";
         lblReceta.TextAlign = ContentAlignment.BottomLeft;
         // 
@@ -465,10 +491,12 @@ partial class FormHistorialClinico
         TxtReceta.BorderStyle = BorderStyle.FixedSingle;
         TxtReceta.Dock = DockStyle.Fill;
         TxtReceta.Font = new Font("Segoe UI", 9.5F);
+        TxtReceta.Location = new Point(3, 154);
         TxtReceta.Multiline = true;
         TxtReceta.Name = "TxtReceta";
         TxtReceta.ReadOnly = true;
         TxtReceta.ScrollBars = ScrollBars.Vertical;
+        TxtReceta.Size = new Size(962, 23);
         TxtReceta.TabIndex = 2;
         // 
         // FormHistorialClinico
@@ -495,9 +523,9 @@ partial class FormHistorialClinico
         splitContainerHistorial.ResumeLayout(false);
         pnlGrilla.ResumeLayout(false);
         ((System.ComponentModel.ISupportInitialize)DgvHistorial).EndInit();
+        pnlDetalle.ResumeLayout(false);
         tblDetalle.ResumeLayout(false);
         tblDetalle.PerformLayout();
-        pnlDetalle.ResumeLayout(false);
         ResumeLayout(false);
     }
 

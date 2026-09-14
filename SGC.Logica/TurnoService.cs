@@ -4,6 +4,8 @@ namespace SGC.Logica;
 
 public class TurnoService
 {
+    private readonly AgendaService _agendaService = new();
+
     // Datos iniciales de prueba para desarrollo y demostracion
     private static readonly List<Turno> _turnos = new()
     {
@@ -62,11 +64,8 @@ public class TurnoService
     };
     private static int _siguienteId = 5;
 
-    public List<Turno> ObtenerTodos(bool incluirCancelados = false, int? medicoId = null, DateOnly? fecha = null)
+    public List<Turno> ObtenerTodos(bool incluirCancelados = false, int? medicoId = null, DateOnly? fecha = null, int? pacienteId = null)
     {
-        // Por default, mismo criterio que PacienteService: al cancelar (baja logica),
-        // desaparece de la vista normal. RF#06/RF#09 piden filtros de consulta
-        // (por medico o por fecha), asi que se puede acotar por cualquiera de los dos.
         IEnumerable<Turno> query = incluirCancelados ? _turnos : _turnos.Where(t => t.Activo);
 
         if (medicoId != null)
@@ -74,6 +73,9 @@ public class TurnoService
 
         if (fecha != null)
             query = query.Where(t => t.Fecha == fecha);
+
+        if (pacienteId != null)
+            query = query.Where(t => t.PacienteId == pacienteId);
 
         return query.OrderBy(t => t.Fecha).ToList();
     }
@@ -100,8 +102,11 @@ public class TurnoService
         if (fecha < DateOnly.FromDateTime(DateTime.Today))
             throw new ArgumentException("No se puede asignar un turno en una fecha pasada.");
 
-        // Esta es LA regla de negocio central del sistema (RF#04 del ERS):
-        // no puede haber dos turnos activos para el mismo medico, mismo horario y misma fecha.
+        if (!_agendaService.MedicoAtiende(medico.Id, fecha.DayOfWeek, horario.Id))
+            throw new InvalidOperationException(
+                $"El profesional no atiende el {AgendaMedico.NombreDia(fecha.DayOfWeek)} en el horario {horario.Rango}.");
+
+        // RF#06: no puede haber dos turnos activos para el mismo medico, mismo horario y misma fecha.
         bool sobreturno = _turnos.Any(t =>
             t.Activo &&
             t.MedicoId == medico.Id &&
@@ -139,6 +144,10 @@ public class TurnoService
 
         if (nuevaFecha < DateOnly.FromDateTime(DateTime.Today))
             throw new ArgumentException("No se puede modificar un turno a una fecha pasada.");
+
+        if (!_agendaService.MedicoAtiende(turno.MedicoId, nuevaFecha.DayOfWeek, nuevoHorario.Id))
+            throw new InvalidOperationException(
+                $"El profesional no atiende el {AgendaMedico.NombreDia(nuevaFecha.DayOfWeek)} en el horario {nuevoHorario.Rango}.");
 
         // Misma validacion de sobreturno que en AsignarTurno, pero excluyendo
         // al propio turno (si no, siempre "chocaria" contra si mismo).

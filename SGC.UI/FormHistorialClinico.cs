@@ -336,4 +336,9 @@ public partial class FormHistorialClinico : Form
     {
         return string.IsNullOrWhiteSpace(valor) ? placeholder : valor;
     }
+
+    private void DtpFechaFiltro_ValueChanged(object sender, EventArgs e)
+    {
+
+    }
 }
