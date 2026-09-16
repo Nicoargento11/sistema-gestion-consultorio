@@ -8,10 +8,12 @@ public class ExcepcionAgendaService
     private static int _siguienteId = 1;
 
     private readonly MedicoService _medicoService = new();
+    private readonly TurnoService _turnoService = new();
+    private readonly NotificacionService _notificacionService = new();
 
     public List<ExcepcionAgenda> ObtenerTodos()
     {
-        return _excepciones.Where(e => e.Activo).Select(ResolverNavegacion).ToList();
+       return _excepciones.Where(e => e.Activo).Select(ResolverNavegacion).ToList();
     }
 
     public List<ExcepcionAgenda> ObtenerPorMedico(int medicoId)
@@ -25,7 +27,7 @@ public class ExcepcionAgendaService
         return excepcion is null ? null : ResolverNavegacion(excepcion);
     }
 
-    public void Agregar(ExcepcionAgenda excepcion)
+    public List<Turno> Agregar(ExcepcionAgenda excepcion)
     {
         var medico = Validar(excepcion);
 
@@ -33,6 +35,40 @@ public class ExcepcionAgendaService
         excepcion.Activo = true;
         excepcion.Medico = medico;
         _excepciones.Add(excepcion);
+
+        return CancelarTurnosAfectados(excepcion);
+    }
+
+    // Al cargar una ausencia, los turnos que ya estaban agendados en ese
+    // rango dejan de tener sentido: se cancelan y se avisa al paciente
+    // (mismo patron que usaba FormHorarios al eliminar un bloque de horario).
+    private List<Turno> CancelarTurnosAfectados(ExcepcionAgenda excepcion)
+    {
+        var turnosAfectados = _turnoService.ObtenerTodos(false, excepcion.MedicoId, excepcion.Fecha)
+            .Where(t => t.Estado is EstadoTurno.Pendiente or EstadoTurno.Confirmado)
+            .Where(t => excepcion.Tipo == TipoExcepcionAgenda.DiaCompleto || SeSuperponeConRango(t, excepcion))
+            .ToList();
+
+        foreach (var turno in turnosAfectados)
+        {
+            _turnoService.CancelarTurno(turno.Id);
+
+            if (turno.Paciente != null)
+            {
+                _notificacionService.AvisarTurno(turno.Paciente, "Cancelacion",
+                    $"Se cancelo su turno del {turno.Fecha:dd/MM/yyyy} con el Dr./Dra. {excepcion.Medico?.Apellido} por ausencia del profesional.");
+            }
+        }
+
+        return turnosAfectados;
+    }
+
+    private static bool SeSuperponeConRango(Turno turno, ExcepcionAgenda excepcion)
+    {
+        if (turno.Horario == null || excepcion.HoraInicio == null || excepcion.HoraFin == null)
+            return false;
+
+        return turno.Horario.HoraInicio < excepcion.HoraFin && excepcion.HoraInicio < turno.Horario.HoraFin;
     }
 
     public void Modificar(ExcepcionAgenda excepcion)

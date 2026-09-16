@@ -99,9 +99,10 @@ public partial class FormExcepcionesAgenda : Form
                 Motivo = TxtMotivo.Text
             };
 
+            var turnosCancelados = new List<Turno>();
             if (_idSeleccionado == null)
             {
-                _service.Agregar(excepcion);
+                turnosCancelados = _service.Agregar(excepcion);
             }
             else
             {
@@ -112,7 +113,9 @@ public partial class FormExcepcionesAgenda : Form
             BtnNuevo_Click(sender, e);
 
             LblMensaje.ForeColor = Color.Green;
-            LblMensaje.Text = "Excepcion guardada correctamente.";
+            LblMensaje.Text = "Excepcion guardada correctamente." + (turnosCancelados.Count > 0
+                ? $" Se cancelaron {turnosCancelados.Count} turno(s) que coincidian con esta ausencia."
+                : "");
         }
         catch (Exception ex)
         {
