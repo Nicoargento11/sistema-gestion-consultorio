@@ -104,9 +104,8 @@ partial class FormPacientes
         //
         // CboObraSocial
         //
-        CboObraSocial.DropDownStyle = ComboBoxStyle.DropDown;
+        CboObraSocial.DropDownStyle = ComboBoxStyle.DropDownList;
         CboObraSocial.Font = new Font("Segoe UI", 10F);
-        CboObraSocial.Items.AddRange(new object[] { "Particular", "OSDE", "Swiss Medical", "Galeno", "IOMA", "PAMI", "IOSFA", "Medife", "Sancor Salud" });
         CboObraSocial.Location = new Point(220, 168);
         CboObraSocial.Name = "CboObraSocial";
         CboObraSocial.Size = new Size(260, 34);

@@ -18,6 +18,7 @@ public partial class FormRegistrarActividad : Form
     public FormRegistrarActividad(Turno? turnoInicial = null, Usuario? usuarioActivo = null, Action<Form>? navegador = null)
     {
         InitializeComponent();
+        AcceptButton = BtnGuardar;
         _turnoInicial = turnoInicial;
         _usuarioActivo = usuarioActivo;
         _navegador = navegador;

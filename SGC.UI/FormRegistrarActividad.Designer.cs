@@ -73,7 +73,7 @@ partial class FormRegistrarActividad
         BtnVolverAgenda.Name = "BtnVolverAgenda";
         BtnVolverAgenda.Size = new Size(140, 30);
         BtnVolverAgenda.TabIndex = 2;
-        BtnVolverAgenda.Text = "← Volver a Agenda";
+        BtnVolverAgenda.Text = "<- Volver a Agenda";
         BtnVolverAgenda.UseVisualStyleBackColor = false;
         // 
         // lblMedicoInfo

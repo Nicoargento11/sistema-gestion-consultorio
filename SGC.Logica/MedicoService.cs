@@ -13,14 +13,17 @@ public class MedicoService
     };
     private static int _siguienteId = 4;
 
+    private readonly ObraSocialService _obraSocialService = new();
+
     public List<Medico> ObtenerTodos()
     {
-        return _medicos.Where(m => m.Activo).ToList();
+        return _medicos.Where(m => m.Activo).Select(ResolverNavegacion).ToList();
     }
 
     public Medico? ObtenerPorId(int id)
     {
-        return _medicos.FirstOrDefault(m => m.Id == id);
+        var medico = _medicos.FirstOrDefault(m => m.Id == id);
+        return medico is null ? null : ResolverNavegacion(medico);
     }
 
     public void Agregar(Medico medico)
@@ -50,6 +53,8 @@ public class MedicoService
         existente.Dni = medico.Dni;
         existente.Matricula = medico.Matricula;
         existente.Especialidad = medico.Especialidad;
+        existente.PrecioConsultaParticular = medico.PrecioConsultaParticular;
+        existente.ObrasSocialesAceptadasIds = medico.ObrasSocialesAceptadasIds;
     }
 
     public void EliminarLogico(int id)
@@ -58,6 +63,16 @@ public class MedicoService
             ?? throw new InvalidOperationException("El medico que intenta eliminar no existe.");
 
         medico.Activo = false;
+    }
+
+    private Medico ResolverNavegacion(Medico medico)
+    {
+        medico.ObrasSocialesAceptadas = medico.ObrasSocialesAceptadasIds
+            .Select(id => _obraSocialService.ObtenerPorId(id))
+            .Where(o => o is not null)
+            .Cast<ObraSocial>()
+            .ToList();
+        return medico;
     }
 
     private void Validar(Medico medico)
@@ -77,5 +92,15 @@ public class MedicoService
 
         if (string.IsNullOrWhiteSpace(medico.Especialidad))
             throw new ArgumentException("La especialidad es obligatoria.");
+
+        if (medico.PrecioConsultaParticular < 0)
+            throw new ArgumentException("El precio de consulta particular no puede ser negativo.");
+
+        foreach (var obraSocialId in medico.ObrasSocialesAceptadasIds)
+        {
+            var obraSocial = _obraSocialService.ObtenerPorId(obraSocialId);
+            if (obraSocial is null || !obraSocial.Activo)
+                throw new ArgumentException("Selecciono una obra social que no es valida.");
+        }
     }
 }

@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace SGC.Entidades;
 
 public class AgendaMedico
@@ -7,10 +9,9 @@ public class AgendaMedico
     public int MedicoId { get; set; }
     public Medico? Medico { get; set; }
 
-    public int HorarioId { get; set; }
-    public Horario? Horario { get; set; }
-
     public DayOfWeek DiaSemana { get; set; }
+    public TimeOnly HoraInicio { get; set; }
+    public TimeOnly HoraFin { get; set; }
     public bool Activo { get; set; } = true;
 
     public string DiaNombre => NombreDia(DiaSemana);

@@ -5,6 +5,7 @@ namespace SGC.UI;
 public partial class FormConfirmarAsistencia : Form
 {
     private readonly Turno _turno;
+    private const string OpcionParticular = "Particular";
 
     public bool Asistio { get; private set; }
     public string? MedioPagoSeleccionado { get; private set; }
@@ -20,12 +21,22 @@ public partial class FormConfirmarAsistencia : Form
                        $"Fecha: {turno.Fecha:dd/MM/yyyy}\n" +
                        $"Horario: {turno.HorarioRango}";
 
-        CboMedioPago.Items.Add("Particular");
-        if (!string.IsNullOrWhiteSpace(turno.Paciente?.ObraSocial))
-            CboMedioPago.Items.Add(turno.Paciente.ObraSocial);
+        CboMedioPago.Items.Add(OpcionParticular);
+
+        // Solo se ofrece la obra social del paciente como medio de pago si
+        // ESTE medico puntual la acepta (Medico.ObrasSocialesAceptadas) - si
+        // el paciente tiene una obra social que el medico no cubre, paga
+        // particular como cualquier otro paciente sin obra social.
+        var obraSocial = turno.Paciente?.ObraSocial;
+        bool medicoAceptaObraSocial = obraSocial != null &&
+            (turno.Medico?.ObrasSocialesAceptadas.Any(o => o.Id == obraSocial.Id) ?? false);
+
+        if (medicoAceptaObraSocial)
+            CboMedioPago.Items.Add(obraSocial!.Nombre);
 
         RbAsistio.CheckedChanged += RadioButtons_CheckedChanged;
         RbAusente.CheckedChanged += RadioButtons_CheckedChanged;
+        CboMedioPago.SelectedIndexChanged += CboMedioPago_SelectedIndexChanged;
         BtnConfirmar.Click += BtnConfirmar_Click;
     }
 
@@ -34,6 +45,26 @@ public partial class FormConfirmarAsistencia : Form
         // El medio de pago y el monto solo importan si el paciente asistio.
         CboMedioPago.Enabled = RbAsistio.Checked;
         NudMonto.Enabled = RbAsistio.Checked;
+    }
+
+    private void CboMedioPago_SelectedIndexChanged(object? sender, EventArgs e)
+    {
+        // Precalculamos el monto para que el Recepcionista no tenga que
+        // buscar a mano el precio ni hacer la cuenta del % de cobertura -
+        // sigue quedando editable por si hace falta un ajuste puntual.
+        if (CboMedioPago.SelectedItem == null) return;
+
+        decimal precioBase = _turno.Medico?.PrecioConsultaParticular ?? 0;
+
+        if (CboMedioPago.SelectedItem.ToString() == OpcionParticular)
+        {
+            NudMonto.Value = Math.Min(precioBase, NudMonto.Maximum);
+            return;
+        }
+
+        decimal cobertura = _turno.Paciente?.ObraSocial?.PorcentajeCobertura ?? 0;
+        decimal montoConCobertura = precioBase - (precioBase * cobertura / 100m);
+        NudMonto.Value = Math.Min(Math.Max(montoConCobertura, 0), NudMonto.Maximum);
     }
 
     private void BtnConfirmar_Click(object? sender, EventArgs e)

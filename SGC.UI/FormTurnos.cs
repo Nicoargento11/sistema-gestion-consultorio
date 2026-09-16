@@ -9,11 +9,12 @@ public partial class FormTurnos : Form
     private readonly MedicoService _medicoService = new();
     private readonly HorarioService _horarioService = new();
     private readonly TurnoService _turnoService = new();
-    private readonly NotificacionService _notificacionService = new();
+    private readonly Usuario? _usuarioActivo;
     private int? _idTurnoSeleccionado = null;
 
-    public FormTurnos()
+    public FormTurnos(Usuario? usuarioActivo = null)
     {
+        _usuarioActivo = usuarioActivo;
         InitializeComponent();
         ConfigurarColumnas();
         CargarCombos();
@@ -159,17 +160,24 @@ public partial class FormTurnos : Form
 
     private void ConfigurarColumnas()
     {
+        // AutoSizeColumnsMode = Fill reparte el ancho disponible entre las columnas
+        // segun su FillWeight (proporcional, no en pixeles fijos). Es necesario
+        // desde que FormTurnos se embebe en pnlContenido y ya no tiene un ancho
+        // de ventana fijo: con Width fijo, en una pantalla grande las columnas
+        // quedaban chicas y sobraba canvas en blanco sin usar.
         DgvTurnos.AutoGenerateColumns = false;
-        DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colFecha", HeaderText = "Fecha", DataPropertyName = "Fecha", Width = 100 });
-        DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colMedico", HeaderText = "Medico", DataPropertyName = "MedicoNombre", Width = 220 });
-        DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colPaciente", HeaderText = "Paciente", DataPropertyName = "PacienteNombre", Width = 200 });
-        DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colHorario", HeaderText = "Horario", DataPropertyName = "HorarioRango", Width = 130 });
-        DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colEstado", HeaderText = "Estado", DataPropertyName = "Estado", Width = 100 });
-        DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colMedioPago", HeaderText = "Medio de pago", DataPropertyName = "MedioPago", Width = 120 });
-        DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colMonto", HeaderText = "Monto", DataPropertyName = "Monto", Width = 90 });
+        DgvTurnos.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+        DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colFecha", HeaderText = "Fecha", DataPropertyName = "Fecha", FillWeight = 90 });
+        DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colMedico", HeaderText = "Medico", DataPropertyName = "MedicoNombre", FillWeight = 190 });
+        DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colPaciente", HeaderText = "Paciente", DataPropertyName = "PacienteNombre", FillWeight = 170 });
+        DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colHorario", HeaderText = "Horario", DataPropertyName = "HorarioRango", FillWeight = 130 });
+        DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colEstado", HeaderText = "Estado", DataPropertyName = "Estado", FillWeight = 100 });
+        DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colMedioPago", HeaderText = "Medio de pago", DataPropertyName = "MedioPago", FillWeight = 130 });
+        DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colMonto", HeaderText = "Monto", DataPropertyName = "Monto", FillWeight = 100 });
 
-        DgvAgenda.Columns.Add(new DataGridViewTextBoxColumn { Name = "colAgendaHorario", HeaderText = "Horario", Width = 130 });
-        DgvAgenda.Columns.Add(new DataGridViewTextBoxColumn { Name = "colAgendaEstado", HeaderText = "Estado", Width = 100 });
+        DgvAgenda.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+        DgvAgenda.Columns.Add(new DataGridViewTextBoxColumn { Name = "colAgendaHorario", HeaderText = "Horario", FillWeight = 60 });
+        DgvAgenda.Columns.Add(new DataGridViewTextBoxColumn { Name = "colAgendaEstado", HeaderText = "Estado", FillWeight = 40 });
     }
 
     private void CargarCombos()
@@ -178,8 +186,20 @@ public partial class FormTurnos : Form
         CboPaciente.DisplayMember = "NombreCompleto";
         CboPaciente.ValueMember = "Id";
 
-        CboMedico.DataSource = _medicoService.ObtenerTodos();
-        CboMedico.DisplayMember = "NombreCompleto";
+        // TODO: si _usuarioActivo.Rol == RolUsuario.Recepcionista, esta
+        // recepcionista no deberia ver medicos que no tiene asignados. En vez
+        // de _medicoService.ObtenerTodos(), usa _usuarioActivo.MedicosAsignados
+        // (ya viene resuelto con los objetos Medico completos desde
+        // UsuarioService, no hace falta volver a buscarlos).
+        if (_usuarioActivo != null && _usuarioActivo.Rol == RolUsuario.Recepcionista)
+        {
+            CboMedico.DataSource = _usuarioActivo.MedicosAsignados;
+        } else
+        {
+            CboMedico.DataSource = _medicoService.ObtenerTodos();
+        }
+
+            CboMedico.DisplayMember = "NombreCompleto";
         CboMedico.ValueMember = "Id";
 
         CboHorario.DataSource = _horarioService.ObtenerTodos();
@@ -199,10 +219,30 @@ public partial class FormTurnos : Form
             ? DateOnly.FromDateTime(DtpFecha.Value)
             : null;
 
-        int? pacienteFiltro = null;
-        if (ChkFiltrarPaciente.Checked && CboPaciente.SelectedItem != null)
-            pacienteFiltro = ((Paciente)CboPaciente.SelectedItem).Id;
-
+        // Desconectamos el evento antes de reasignar el DataSource: WinForms
+        // selecciona sola la primera fila al hacerlo, y eso disparaba
+        // SelectionChanged sin que el usuario clickeara nada (el bug de
+        // "se vuelve a Gomez, Laura" y de no poder deseleccionar). Reconectamos
+        // apenas termina, asi el clic manual del usuario sigue funcionando normal.
+        // TODO: si tildaron "Todos los medicos" (ChkTodosMedicos), medicoFiltro
+        // queda en null y ObtenerTodos trae turnos de CUALQUIER medico del
+        // sistema - incluidos los que esta recepcionista no tiene asignados.
+        // Si _usuarioActivo.Rol == RolUsuario.Recepcionista, filtra la lista
+        // resultante quedandote solo con los turnos cuyo MedicoId este en
+        // _usuarioActivo.MedicosAsignados (Select(m => m.Id)) antes de
+        // asignarla a DgvTurnos.DataSource.
+        if (_usuarioActivo != null && _usuarioActivo.Rol == RolUsuario.Recepcionista)
+        {
+            var medicosAsignadosIds = _usuarioActivo.MedicosAsignados.Select(m => m.Id).ToList();
+            var turnosFiltrados = _turnoService.ObtenerTodos(ChkMostrarCancelados.Checked, medicoFiltro, fechaFiltro)
+                .Where(t => medicosAsignadosIds.Contains(t.MedicoId))
+                .ToList();
+            DgvTurnos.SelectionChanged -= DgvTurnos_SelectionChanged;
+            DgvTurnos.DataSource = turnosFiltrados;
+            DgvTurnos.ClearSelection();
+            DgvTurnos.SelectionChanged += DgvTurnos_SelectionChanged;
+            return;
+        }
         DgvTurnos.SelectionChanged -= DgvTurnos_SelectionChanged;
         var lista = _turnoService.ObtenerTodos(ChkMostrarCancelados.Checked, medicoFiltro, fechaFiltro, pacienteFiltro);
         DgvTurnos.DataSource = lista;

@@ -29,6 +29,10 @@ partial class FormMenuPrincipal
     // Todos los botones de nuestro menú
     private Button btnPacientes;
     private Button btnMedicos;
+    private Button btnHorarios;
+    private Button btnUsuarios;
+    private Button btnObrasSociales;
+    private Button btnExcepcionesAgenda;
     private Button btnTurnos;
     private Button btnAgenda;
     private Button btnActividad;
@@ -47,6 +51,10 @@ partial class FormMenuPrincipal
         btnAgenda = new Button();
         btnActividad = new Button();
         btnMedicos = new Button();
+        btnHorarios = new Button();
+        btnUsuarios = new Button();
+        btnObrasSociales = new Button();
+        btnExcepcionesAgenda = new Button();
         btnTurnos = new Button();
         btnHistorial = new Button();
         btnHorarios = new Button();
@@ -65,6 +73,9 @@ partial class FormMenuPrincipal
         pnlSidebar.Controls.Add(btnActividad);
         pnlSidebar.Controls.Add(btnMedicos);
         pnlSidebar.Controls.Add(btnHorarios);
+        pnlSidebar.Controls.Add(btnUsuarios);
+        pnlSidebar.Controls.Add(btnObrasSociales);
+        pnlSidebar.Controls.Add(btnExcepcionesAgenda);
         pnlSidebar.Controls.Add(btnTurnos);
         pnlSidebar.Controls.Add(btnHistorial);
         pnlSidebar.Controls.Add(btnCerrarSesion);
@@ -173,9 +184,9 @@ partial class FormMenuPrincipal
         btnMedicos.Text = "Médicos";
         btnMedicos.TextAlign = ContentAlignment.MiddleLeft;
         btnMedicos.UseVisualStyleBackColor = false;
-        // 
+        //
         // btnHorarios
-        // 
+        //
         btnHorarios.BackColor = Color.FromArgb(27, 42, 74);
         btnHorarios.FlatAppearance.BorderSize = 0;
         btnHorarios.FlatAppearance.MouseOverBackColor = Color.FromArgb(46, 134, 222);
@@ -191,9 +202,63 @@ partial class FormMenuPrincipal
         btnHorarios.Text = "Horarios";
         btnHorarios.TextAlign = ContentAlignment.MiddleLeft;
         btnHorarios.UseVisualStyleBackColor = false;
-        // 
+        //
+        // btnUsuarios
+        //
+        btnUsuarios.BackColor = Color.FromArgb(27, 42, 74);
+        btnUsuarios.FlatAppearance.BorderSize = 0;
+        btnUsuarios.FlatAppearance.MouseOverBackColor = Color.FromArgb(46, 134, 222);
+        btnUsuarios.FlatStyle = FlatStyle.Flat;
+        btnUsuarios.Font = new Font("Segoe UI", 10F);
+        btnUsuarios.ForeColor = Color.White;
+        btnUsuarios.Location = new Point(2, 286);
+        btnUsuarios.Margin = new Padding(2);
+        btnUsuarios.Name = "btnUsuarios";
+        btnUsuarios.Padding = new Padding(16, 0, 0, 0);
+        btnUsuarios.Size = new Size(176, 36);
+        btnUsuarios.TabIndex = 10;
+        btnUsuarios.Text = "Usuarios";
+        btnUsuarios.TextAlign = ContentAlignment.MiddleLeft;
+        btnUsuarios.UseVisualStyleBackColor = false;
+        //
+        // btnObrasSociales
+        //
+        btnObrasSociales.BackColor = Color.FromArgb(27, 42, 74);
+        btnObrasSociales.FlatAppearance.BorderSize = 0;
+        btnObrasSociales.FlatAppearance.MouseOverBackColor = Color.FromArgb(46, 134, 222);
+        btnObrasSociales.FlatStyle = FlatStyle.Flat;
+        btnObrasSociales.Font = new Font("Segoe UI", 10F);
+        btnObrasSociales.ForeColor = Color.White;
+        btnObrasSociales.Location = new Point(2, 326);
+        btnObrasSociales.Margin = new Padding(2);
+        btnObrasSociales.Name = "btnObrasSociales";
+        btnObrasSociales.Padding = new Padding(16, 0, 0, 0);
+        btnObrasSociales.Size = new Size(176, 36);
+        btnObrasSociales.TabIndex = 11;
+        btnObrasSociales.Text = "Obras Sociales";
+        btnObrasSociales.TextAlign = ContentAlignment.MiddleLeft;
+        btnObrasSociales.UseVisualStyleBackColor = false;
+        //
+        // btnExcepcionesAgenda
+        //
+        btnExcepcionesAgenda.BackColor = Color.FromArgb(27, 42, 74);
+        btnExcepcionesAgenda.FlatAppearance.BorderSize = 0;
+        btnExcepcionesAgenda.FlatAppearance.MouseOverBackColor = Color.FromArgb(46, 134, 222);
+        btnExcepcionesAgenda.FlatStyle = FlatStyle.Flat;
+        btnExcepcionesAgenda.Font = new Font("Segoe UI", 10F);
+        btnExcepcionesAgenda.ForeColor = Color.White;
+        btnExcepcionesAgenda.Location = new Point(2, 366);
+        btnExcepcionesAgenda.Margin = new Padding(2);
+        btnExcepcionesAgenda.Name = "btnExcepcionesAgenda";
+        btnExcepcionesAgenda.Padding = new Padding(16, 0, 0, 0);
+        btnExcepcionesAgenda.Size = new Size(176, 36);
+        btnExcepcionesAgenda.TabIndex = 12;
+        btnExcepcionesAgenda.Text = "Vacaciones/Ausencias";
+        btnExcepcionesAgenda.TextAlign = ContentAlignment.MiddleLeft;
+        btnExcepcionesAgenda.UseVisualStyleBackColor = false;
+        //
         // btnTurnos
-        // 
+        //
         btnTurnos.BackColor = Color.FromArgb(27, 42, 74);
         btnTurnos.FlatAppearance.BorderSize = 0;
         btnTurnos.FlatAppearance.MouseOverBackColor = Color.FromArgb(46, 134, 222);

@@ -21,6 +21,10 @@ partial class FormMedicos
         lblSubtitulo = new Label();
         lblTitulo = new Label();
         pnlFormulario = new Panel();
+        ClbObrasSociales = new CheckedListBox();
+        lblObrasSociales = new Label();
+        NudPrecioConsultaParticular = new NumericUpDown();
+        lblPrecio = new Label();
         CboEspecialidad = new ComboBox();
         lblEspecialidad = new Label();
         TxtMatricula = new TextBox();
@@ -41,6 +45,7 @@ partial class FormMedicos
 
         pnlHeader.SuspendLayout();
         pnlFormulario.SuspendLayout();
+        ((System.ComponentModel.ISupportInitialize)NudPrecioConsultaParticular).BeginInit();
         ((System.ComponentModel.ISupportInitialize)DgvMedicos).BeginInit();
         SuspendLayout();
 
@@ -85,6 +90,10 @@ partial class FormMedicos
         // pnlFormulario
         // 
         pnlFormulario.BackColor = Color.FromArgb(245, 246, 250);
+        pnlFormulario.Controls.Add(ClbObrasSociales);
+        pnlFormulario.Controls.Add(lblObrasSociales);
+        pnlFormulario.Controls.Add(NudPrecioConsultaParticular);
+        pnlFormulario.Controls.Add(lblPrecio);
         pnlFormulario.Controls.Add(CboEspecialidad);
         pnlFormulario.Controls.Add(lblEspecialidad);
         pnlFormulario.Controls.Add(TxtMatricula);
@@ -105,7 +114,7 @@ partial class FormMedicos
         pnlFormulario.Location = new Point(0, 75);
         pnlFormulario.Name = "pnlFormulario";
         pnlFormulario.Padding = new Padding(20, 10, 20, 10);
-        pnlFormulario.Size = new Size(1000, 175);
+        pnlFormulario.Size = new Size(1000, 260);
         pnlFormulario.TabIndex = 1;
 
         // 
@@ -140,7 +149,52 @@ partial class FormMedicos
         lblEspecialidad.TabIndex = 16;
         lblEspecialidad.Text = "Especialidad";
 
-        // 
+        //
+        // NudPrecioConsultaParticular
+        //
+        NudPrecioConsultaParticular.DecimalPlaces = 2;
+        NudPrecioConsultaParticular.Font = new Font("Segoe UI", 9.5F);
+        NudPrecioConsultaParticular.Location = new Point(475, 80);
+        NudPrecioConsultaParticular.Maximum = new decimal(new int[] { 1000000, 0, 0, 0 });
+        NudPrecioConsultaParticular.Name = "NudPrecioConsultaParticular";
+        NudPrecioConsultaParticular.Size = new Size(140, 29);
+        NudPrecioConsultaParticular.TabIndex = 17;
+
+        //
+        // lblPrecio
+        //
+        lblPrecio.AutoSize = true;
+        lblPrecio.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+        lblPrecio.ForeColor = Color.FromArgb(50, 60, 75);
+        lblPrecio.Location = new Point(475, 60);
+        lblPrecio.Name = "lblPrecio";
+        lblPrecio.Size = new Size(180, 20);
+        lblPrecio.TabIndex = 18;
+        lblPrecio.Text = "Precio consulta particular";
+
+        //
+        // lblObrasSociales
+        //
+        lblObrasSociales.AutoSize = true;
+        lblObrasSociales.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+        lblObrasSociales.ForeColor = Color.FromArgb(50, 60, 75);
+        lblObrasSociales.Location = new Point(20, 112);
+        lblObrasSociales.Name = "lblObrasSociales";
+        lblObrasSociales.Size = new Size(180, 20);
+        lblObrasSociales.TabIndex = 19;
+        lblObrasSociales.Text = "Obras sociales aceptadas";
+
+        //
+        // ClbObrasSociales
+        //
+        ClbObrasSociales.CheckOnClick = true;
+        ClbObrasSociales.Font = new Font("Segoe UI", 9.5F);
+        ClbObrasSociales.Location = new Point(20, 134);
+        ClbObrasSociales.Name = "ClbObrasSociales";
+        ClbObrasSociales.Size = new Size(595, 82);
+        ClbObrasSociales.TabIndex = 20;
+
+        //
         // TxtMatricula
         // 
         TxtMatricula.Font = new Font("Segoe UI", 9.5F);
@@ -167,7 +221,7 @@ partial class FormMedicos
         // 
         TxtBuscar.Anchor = AnchorStyles.Top | AnchorStyles.Right;
         TxtBuscar.Font = new Font("Segoe UI", 9.5F);
-        TxtBuscar.Location = new Point(710, 125);
+        TxtBuscar.Location = new Point(710, 222);
         TxtBuscar.Name = "TxtBuscar";
         TxtBuscar.PlaceholderText = "Buscar por Especialidad o Apellido...";
         TxtBuscar.Size = new Size(270, 29);
@@ -180,7 +234,7 @@ partial class FormMedicos
         lblBuscar.AutoSize = true;
         lblBuscar.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
         lblBuscar.ForeColor = Color.FromArgb(27, 42, 74);
-        lblBuscar.Location = new Point(595, 129);
+        lblBuscar.Location = new Point(595, 226);
         lblBuscar.Name = "lblBuscar";
         lblBuscar.Size = new Size(111, 20);
         lblBuscar.TabIndex = 14;
@@ -191,7 +245,7 @@ partial class FormMedicos
         // 
         LblMensaje.AutoSize = true;
         LblMensaje.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
-        LblMensaje.Location = new Point(480, 80);
+        LblMensaje.Location = new Point(480, 222);
         LblMensaje.MaximumSize = new Size(400, 0);
         LblMensaje.Name = "LblMensaje";
         LblMensaje.Size = new Size(0, 21);
@@ -205,7 +259,7 @@ partial class FormMedicos
         BtnEliminar.FlatStyle = FlatStyle.Flat;
         BtnEliminar.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
         BtnEliminar.ForeColor = Color.White;
-        BtnEliminar.Location = new Point(240, 125);
+        BtnEliminar.Location = new Point(240, 222);
         BtnEliminar.Name = "BtnEliminar";
         BtnEliminar.Size = new Size(100, 32);
         BtnEliminar.TabIndex = 7;
@@ -221,7 +275,7 @@ partial class FormMedicos
         BtnGuardar.FlatStyle = FlatStyle.Flat;
         BtnGuardar.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
         BtnGuardar.ForeColor = Color.White;
-        BtnGuardar.Location = new Point(130, 125);
+        BtnGuardar.Location = new Point(130, 222);
         BtnGuardar.Name = "BtnGuardar";
         BtnGuardar.Size = new Size(100, 32);
         BtnGuardar.TabIndex = 6;
@@ -237,7 +291,7 @@ partial class FormMedicos
         BtnNuevo.FlatStyle = FlatStyle.Flat;
         BtnNuevo.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
         BtnNuevo.ForeColor = Color.White;
-        BtnNuevo.Location = new Point(20, 125);
+        BtnNuevo.Location = new Point(20, 222);
         BtnNuevo.Name = "BtnNuevo";
         BtnNuevo.Size = new Size(100, 32);
         BtnNuevo.TabIndex = 5;
@@ -317,14 +371,14 @@ partial class FormMedicos
         DgvMedicos.ColumnHeadersHeight = 34;
         DgvMedicos.Dock = DockStyle.Fill;
         DgvMedicos.Font = new Font("Segoe UI", 9.5F);
-        DgvMedicos.Location = new Point(0, 250);
+        DgvMedicos.Location = new Point(0, 335);
         DgvMedicos.MultiSelect = false;
         DgvMedicos.Name = "DgvMedicos";
         DgvMedicos.ReadOnly = true;
         DgvMedicos.RowHeadersVisible = false;
         DgvMedicos.RowHeadersWidth = 51;
         DgvMedicos.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-        DgvMedicos.Size = new Size(1000, 400);
+        DgvMedicos.Size = new Size(1000, 315);
         DgvMedicos.TabIndex = 2;
         
 
@@ -346,6 +400,7 @@ partial class FormMedicos
         pnlHeader.PerformLayout();
         pnlFormulario.ResumeLayout(false);
         pnlFormulario.PerformLayout();
+        ((System.ComponentModel.ISupportInitialize)NudPrecioConsultaParticular).EndInit();
         ((System.ComponentModel.ISupportInitialize)DgvMedicos).EndInit();
         ResumeLayout(false);
     }
@@ -366,6 +421,10 @@ partial class FormMedicos
     private TextBox TxtMatricula;
     private Label lblEspecialidad;
     private ComboBox CboEspecialidad;
+    private Label lblPrecio;
+    private NumericUpDown NudPrecioConsultaParticular;
+    private Label lblObrasSociales;
+    private CheckedListBox ClbObrasSociales;
     private Button BtnNuevo;
     private Button BtnGuardar;
     private Button BtnEliminar;
