@@ -29,19 +29,19 @@ partial class FormAgendaMedico
         BtnFiltroPendientes = new Button();
         BtnFiltroTotal = new Button();
         pnlGrilla = new Panel();
+        DgvTurnos = new DataGridView();
         pnlAcciones = new Panel();
         LblMensaje = new Label();
         BtnHistorialRapido = new Button();
         BtnAtender = new Button();
+        TxtBuscarPaciente = new TextBox();
         lblTurnosContador = new Label();
         lblGrillaTitulo = new Label();
-        TxtBuscarPaciente = new TextBox();
-        DgvTurnos = new DataGridView();
         pnlSuperior.SuspendLayout();
         pnlResumen.SuspendLayout();
         pnlGrilla.SuspendLayout();
-        pnlAcciones.SuspendLayout();
         ((System.ComponentModel.ISupportInitialize)DgvTurnos).BeginInit();
+        pnlAcciones.SuspendLayout();
         SuspendLayout();
         // 
         // pnlSuperior
@@ -91,7 +91,7 @@ partial class FormAgendaMedico
         lblFecha.ForeColor = Color.White;
         lblFecha.Location = new Point(695, 27);
         lblFecha.Name = "lblFecha";
-        lblFecha.Size = new Size(59, 23);
+        lblFecha.Size = new Size(60, 23);
         lblFecha.TabIndex = 2;
         lblFecha.Text = "Fecha:";
         // 
@@ -102,7 +102,7 @@ partial class FormAgendaMedico
         lblMedicoInfo.ForeColor = Color.FromArgb(180, 205, 235);
         lblMedicoInfo.Location = new Point(20, 42);
         lblMedicoInfo.Name = "lblMedicoInfo";
-        lblMedicoInfo.Size = new Size(198, 23);
+        lblMedicoInfo.Size = new Size(190, 23);
         lblMedicoInfo.TabIndex = 1;
         lblMedicoInfo.Text = "Profesional: Dr. / Dra. ...";
         // 
@@ -113,7 +113,7 @@ partial class FormAgendaMedico
         lblTitulo.ForeColor = Color.White;
         lblTitulo.Location = new Point(18, 10);
         lblTitulo.Name = "lblTitulo";
-        lblTitulo.Size = new Size(335, 32);
+        lblTitulo.Size = new Size(186, 32);
         lblTitulo.TabIndex = 0;
         lblTitulo.Text = "Agenda del dia";
         // 
@@ -136,7 +136,6 @@ partial class FormAgendaMedico
         BtnFiltroCancelados.BackColor = Color.FromArgb(250, 235, 235);
         BtnFiltroCancelados.Cursor = Cursors.Hand;
         BtnFiltroCancelados.FlatAppearance.BorderColor = Color.FromArgb(192, 57, 43);
-        BtnFiltroCancelados.FlatAppearance.BorderSize = 1;
         BtnFiltroCancelados.FlatStyle = FlatStyle.Flat;
         BtnFiltroCancelados.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
         BtnFiltroCancelados.ForeColor = Color.FromArgb(192, 57, 43);
@@ -152,7 +151,6 @@ partial class FormAgendaMedico
         BtnFiltroAtendidos.BackColor = Color.FromArgb(235, 250, 240);
         BtnFiltroAtendidos.Cursor = Cursors.Hand;
         BtnFiltroAtendidos.FlatAppearance.BorderColor = Color.FromArgb(39, 174, 96);
-        BtnFiltroAtendidos.FlatAppearance.BorderSize = 1;
         BtnFiltroAtendidos.FlatStyle = FlatStyle.Flat;
         BtnFiltroAtendidos.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
         BtnFiltroAtendidos.ForeColor = Color.FromArgb(39, 174, 96);
@@ -168,7 +166,6 @@ partial class FormAgendaMedico
         BtnFiltroPendientes.BackColor = Color.FromArgb(235, 245, 255);
         BtnFiltroPendientes.Cursor = Cursors.Hand;
         BtnFiltroPendientes.FlatAppearance.BorderColor = Color.FromArgb(41, 128, 185);
-        BtnFiltroPendientes.FlatAppearance.BorderSize = 1;
         BtnFiltroPendientes.FlatStyle = FlatStyle.Flat;
         BtnFiltroPendientes.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
         BtnFiltroPendientes.ForeColor = Color.FromArgb(41, 128, 185);
@@ -194,6 +191,7 @@ partial class FormAgendaMedico
         BtnFiltroTotal.TabIndex = 0;
         BtnFiltroTotal.Text = "TOTAL TURNOS (0)";
         BtnFiltroTotal.UseVisualStyleBackColor = false;
+        BtnFiltroTotal.Click += BtnFiltroTotal_Click;
         // 
         // pnlGrilla
         // 
@@ -209,6 +207,23 @@ partial class FormAgendaMedico
         pnlGrilla.Padding = new Padding(20, 10, 20, 20);
         pnlGrilla.Size = new Size(1000, 480);
         pnlGrilla.TabIndex = 2;
+        // 
+        // DgvTurnos
+        // 
+        DgvTurnos.AllowUserToAddRows = false;
+        DgvTurnos.AllowUserToDeleteRows = false;
+        DgvTurnos.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+        DgvTurnos.BackgroundColor = Color.White;
+        DgvTurnos.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+        DgvTurnos.Location = new Point(20, 44);
+        DgvTurnos.MultiSelect = false;
+        DgvTurnos.Name = "DgvTurnos";
+        DgvTurnos.ReadOnly = true;
+        DgvTurnos.RowHeadersVisible = false;
+        DgvTurnos.RowHeadersWidth = 51;
+        DgvTurnos.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+        DgvTurnos.Size = new Size(960, 360);
+        DgvTurnos.TabIndex = 2;
         // 
         // pnlAcciones
         // 
@@ -261,6 +276,15 @@ partial class FormAgendaMedico
         BtnAtender.Text = "Atender Paciente";
         BtnAtender.UseVisualStyleBackColor = false;
         // 
+        // TxtBuscarPaciente
+        // 
+        TxtBuscarPaciente.Font = new Font("Segoe UI", 9.5F);
+        TxtBuscarPaciente.Location = new Point(280, 8);
+        TxtBuscarPaciente.Name = "TxtBuscarPaciente";
+        TxtBuscarPaciente.PlaceholderText = "Buscar paciente del dia...";
+        TxtBuscarPaciente.Size = new Size(250, 29);
+        TxtBuscarPaciente.TabIndex = 4;
+        // 
         // lblTurnosContador
         // 
         lblTurnosContador.Anchor = AnchorStyles.Top | AnchorStyles.Right;
@@ -280,36 +304,9 @@ partial class FormAgendaMedico
         lblGrillaTitulo.ForeColor = Color.FromArgb(27, 42, 74);
         lblGrillaTitulo.Location = new Point(20, 8);
         lblGrillaTitulo.Name = "lblGrillaTitulo";
-        lblGrillaTitulo.Size = new Size(245, 28);
+        lblGrillaTitulo.Size = new Size(251, 28);
         lblGrillaTitulo.TabIndex = 0;
         lblGrillaTitulo.Text = "Lista de pacientes del dia";
-        // 
-        // TxtBuscarPaciente
-        // 
-        TxtBuscarPaciente.Anchor = AnchorStyles.Top | AnchorStyles.Left;
-        TxtBuscarPaciente.Font = new Font("Segoe UI", 9.5F);
-        TxtBuscarPaciente.Location = new Point(280, 8);
-        TxtBuscarPaciente.Name = "TxtBuscarPaciente";
-        TxtBuscarPaciente.PlaceholderText = "Buscar paciente del dia...";
-        TxtBuscarPaciente.Size = new Size(250, 29);
-        TxtBuscarPaciente.TabIndex = 4;
-        // 
-        // DgvTurnos
-        // 
-        DgvTurnos.AllowUserToAddRows = false;
-        DgvTurnos.AllowUserToDeleteRows = false;
-        DgvTurnos.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-        DgvTurnos.BackgroundColor = Color.White;
-        DgvTurnos.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-        DgvTurnos.Location = new Point(20, 44);
-        DgvTurnos.MultiSelect = false;
-        DgvTurnos.Name = "DgvTurnos";
-        DgvTurnos.ReadOnly = true;
-        DgvTurnos.RowHeadersVisible = false;
-        DgvTurnos.RowHeadersWidth = 51;
-        DgvTurnos.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-        DgvTurnos.Size = new Size(960, 360);
-        DgvTurnos.TabIndex = 2;
         // 
         // FormAgendaMedico
         // 
@@ -327,8 +324,8 @@ partial class FormAgendaMedico
         pnlResumen.ResumeLayout(false);
         pnlGrilla.ResumeLayout(false);
         pnlGrilla.PerformLayout();
-        pnlAcciones.ResumeLayout(false);
         ((System.ComponentModel.ISupportInitialize)DgvTurnos).EndInit();
+        pnlAcciones.ResumeLayout(false);
         ResumeLayout(false);
     }
 

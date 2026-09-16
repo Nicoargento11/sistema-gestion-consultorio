@@ -299,4 +299,9 @@ public partial class FormAgendaMedico : Form
             formHistorial.ShowDialog();
         }
     }
+
+    private void BtnFiltroTotal_Click(object sender, EventArgs e)
+    {
+
+    }
 }
