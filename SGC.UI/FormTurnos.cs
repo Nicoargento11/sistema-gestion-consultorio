@@ -9,6 +9,7 @@ public partial class FormTurnos : Form
     private readonly MedicoService _medicoService = new();
     private readonly HorarioService _horarioService = new();
     private readonly TurnoService _turnoService = new();
+    private readonly NotificacionService _notificacionService = new();
     private readonly Usuario? _usuarioActivo;
     private int? _idTurnoSeleccionado = null;
 
@@ -59,7 +60,14 @@ public partial class FormTurnos : Form
         var horario = (Horario)DgvAgenda.Rows[e.RowIndex].Tag!;
 
         if (CboMedico.SelectedItem != null &&
-            _turnoService.HorarioOcupado(((Medico)CboMedico.SelectedItem).Id, horario.Id, DateOnly.FromDateTime(DtpFecha.Value)))
+            // CORRECCION: TurnoService ya NO usa HorarioId del catalogo.
+            // Ahora validamos superposicion pasando directamente fecha, hora
+            // inicio y duracion (calculada a partir del Horario elegido en la UI).
+            _turnoService.HorarioOcupado(
+                ((Medico)CboMedico.SelectedItem).Id,
+                DateOnly.FromDateTime(DtpFecha.Value),
+                horario.HoraInicio,
+                (int)(horario.HoraFin - horario.HoraInicio).TotalMinutes))
         {
             LblMensaje.ForeColor = Color.Red;
             LblMensaje.Text = "Ese horario ya esta ocupado.";
@@ -81,7 +89,11 @@ public partial class FormTurnos : Form
 
         foreach (var horario in _horarioService.ObtenerTodos())
         {
-            bool ocupado = _turnoService.HorarioOcupado(medico.Id, horario.Id, fecha);
+            // CORRECCION: TurnoService.HorarioOcupado() ya NO usa HorarioId.
+            // Le pasamos directamente la fecha, la hora inicial del slot y
+            // la duracion calculada (hf - hi) del catalogo Horario de la UI.
+            int duracion = (int)(horario.HoraFin - horario.HoraInicio).TotalMinutes;
+            bool ocupado = _turnoService.HorarioOcupado(medico.Id, fecha, horario.HoraInicio, duracion);
             int fila = DgvAgenda.Rows.Add(horario.Rango, ocupado ? "Ocupado" : "Disponible");
 
             DgvAgenda.Rows[fila].Tag = horario;
@@ -102,7 +114,21 @@ public partial class FormTurnos : Form
         _idTurnoSeleccionado = turno.Id;
         CboPaciente.SelectedValue = turno.PacienteId;
         CboMedico.SelectedValue = turno.MedicoId;
-        CboHorario.SelectedValue = turno.HorarioId;
+
+        // CORRECCION (RF#02/RF#04): Turno ya NO tiene "HorarioId" del catalogo.
+        // Buscamos en el catalogo Horario de la UI el slot que COINCIDA con
+        // la hora de inicio del turno y que alcance para la duracion. Si no
+        // hay match (turno de duracion personalizada ej 45min) dejamos sin
+        // seleccion para que el usuario elija uno o modifique.
+        var horariosCombo = (_horarioService.ObtenerTodos()).ToList();
+        var horarioCoincidente = horariosCombo.FirstOrDefault(h =>
+            h.HoraInicio == turno.HoraInicio &&
+            (int)(h.HoraFin - h.HoraInicio).TotalMinutes >= turno.DuracionMinutos);
+        if (horarioCoincidente != null)
+            CboHorario.SelectedValue = horarioCoincidente.Id;
+        else
+            CboHorario.SelectedIndex = -1;
+
         DtpFecha.Value = turno.Fecha.ToDateTime(TimeOnly.MinValue);
 
         // Paciente y medico de un turno ya asignado no se cambian aca (RF#05
@@ -139,8 +165,13 @@ public partial class FormTurnos : Form
         {
             var horario = (Horario)CboHorario.SelectedItem;
             var fecha = DateOnly.FromDateTime(DtpFecha.Value);
+            // CORRECCION (RF#02/RF#04): TurnoService.ModificarTurno ya NO
+            // recibe "Horario", sino (fecha, HoraInicio, DuracionMinutos).
+            // Calculamos la duracion a partir del slot Horario elegido en la UI.
+            TimeOnly horaInicio = horario.HoraInicio;
+            int duracion = (int)(horario.HoraFin - horario.HoraInicio).TotalMinutes;
 
-            _turnoService.ModificarTurno(_idTurnoSeleccionado.Value, horario, fecha);
+            _turnoService.ModificarTurno(_idTurnoSeleccionado.Value, fecha, horaInicio, duracion);
             var turno = _turnoService.ObtenerPorId(_idTurnoSeleccionado.Value);
 
             CargarGrilla();
@@ -219,18 +250,10 @@ public partial class FormTurnos : Form
             ? DateOnly.FromDateTime(DtpFecha.Value)
             : null;
 
-        // Desconectamos el evento antes de reasignar el DataSource: WinForms
-        // selecciona sola la primera fila al hacerlo, y eso disparaba
-        // SelectionChanged sin que el usuario clickeara nada (el bug de
-        // "se vuelve a Gomez, Laura" y de no poder deseleccionar). Reconectamos
-        // apenas termina, asi el clic manual del usuario sigue funcionando normal.
-        // TODO: si tildaron "Todos los medicos" (ChkTodosMedicos), medicoFiltro
-        // queda en null y ObtenerTodos trae turnos de CUALQUIER medico del
-        // sistema - incluidos los que esta recepcionista no tiene asignados.
-        // Si _usuarioActivo.Rol == RolUsuario.Recepcionista, filtra la lista
-        // resultante quedandote solo con los turnos cuyo MedicoId este en
-        // _usuarioActivo.MedicosAsignados (Select(m => m.Id)) antes de
-        // asignarla a DgvTurnos.DataSource.
+        int? pacienteFiltro = null;
+        if (ChkFiltrarPaciente.Checked && CboPaciente.SelectedItem != null)
+            pacienteFiltro = ((Paciente)CboPaciente.SelectedItem).Id;
+
         if (_usuarioActivo != null && _usuarioActivo.Rol == RolUsuario.Recepcionista)
         {
             var medicosAsignadosIds = _usuarioActivo.MedicosAsignados.Select(m => m.Id).ToList();
@@ -271,8 +294,13 @@ public partial class FormTurnos : Form
             var medico = (Medico)CboMedico.SelectedItem;
             var horario = (Horario)CboHorario.SelectedItem;
             var fecha = DateOnly.FromDateTime(DtpFecha.Value);
+            // CORRECCION (RF#02/RF#04): TurnoService.AsignarTurno ya NO usa
+            // la entidad "Horario" del catalogo. Le pasamos directamente la
+            // fecha, hora inicio y duracion (calculada desde el slot elegido).
+            TimeOnly horaInicio = horario.HoraInicio;
+            int duracion = (int)(horario.HoraFin - horario.HoraInicio).TotalMinutes;
 
-            _turnoService.AsignarTurno(paciente, medico, horario, fecha);
+            _turnoService.AsignarTurno(paciente, medico, fecha, horaInicio, duracion);
 
             CargarGrilla();
             LimpiarSeleccion();

@@ -237,9 +237,10 @@ public partial class FormHistorialClinico : Form
         if (_pacienteSeleccionado == null) return;
 
         var edad = CalcularEdad(_pacienteSeleccionado.FechaNacimiento);
-        var obraSocial = string.IsNullOrWhiteSpace(_pacienteSeleccionado.ObraSocial)
+        var obraSocial = string.IsNullOrWhiteSpace(_pacienteSeleccionado.ObraSocial?.Nombre)
+
             ? "Particular"
-            : _pacienteSeleccionado.ObraSocial;
+            : _pacienteSeleccionado.ObraSocial?.Nombre;
 
         lblPacienteDetalle.Text =
             $"{_pacienteSeleccionado.NombreCompleto}  |  DNI {_pacienteSeleccionado.Dni}  |  {edad} anios  |  {obraSocial}  |  {_pacienteSeleccionado.Telefono}";

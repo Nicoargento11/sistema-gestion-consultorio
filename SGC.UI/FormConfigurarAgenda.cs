@@ -1,6 +1,11 @@
 using System.Globalization;
 using SGC.Entidades;
 using SGC.Logica;
+using System;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Windows.Forms;
 
 namespace SGC.UI;
 
@@ -20,16 +25,13 @@ public partial class FormConfigurarAgenda : Form
 
     private void ConfigurarColumnas()
     {
-        // Igual que en FormMedicos/FormTurnos: las columnas van en codigo, no en
-        // el Designer. Y el DataPropertyName apunta a propiedades "aplanadas"
-        // (MedicoNombre, Rango en AgendaMedico) porque el DataGridView no
-        // soporta rutas anidadas tipo "Medico.NombreCompleto" cuando el DataSource
-        // es una List<T> simple.
         DgvAgenda.AutoGenerateColumns = false;
         DgvAgenda.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
         DgvAgenda.Columns.Add(new DataGridViewTextBoxColumn { Name = "colMedico", HeaderText = "Medico", DataPropertyName = "MedicoNombre", FillWeight = 160 });
-        DgvAgenda.Columns.Add(new DataGridViewTextBoxColumn { Name = "colDia", HeaderText = "Dia", DataPropertyName = "DiaSemanaTexto", FillWeight = 90 });
-        DgvAgenda.Columns.Add(new DataGridViewTextBoxColumn { Name = "colRango", HeaderText = "Horario", DataPropertyName = "Rango", FillWeight = 90 });
+
+        // CORRECCI�N 1: Actualizamos los nombres a DiaNombre y HorarioRango
+        DgvAgenda.Columns.Add(new DataGridViewTextBoxColumn { Name = "colDia", HeaderText = "Dia", DataPropertyName = "DiaNombre", FillWeight = 90 });
+        DgvAgenda.Columns.Add(new DataGridViewTextBoxColumn { Name = "colRango", HeaderText = "Horario", DataPropertyName = "HorarioRango", FillWeight = 90 });
     }
 
     private void CargarCombos()
@@ -38,11 +40,6 @@ public partial class FormConfigurarAgenda : Form
         CboMedico.DisplayMember = "NombreCompleto";
         CboMedico.ValueMember = "Id";
 
-        // Enum.GetValues(typeof(DayOfWeek)) mostraria los dias en ingles (el
-        // ComboBox llama ToString() sobre cada item, y DayOfWeek.ToString()
-        // no respeta la cultura). Armamos una lista con el texto en espanol
-        // (GetDayName si respeta la cultura) y usamos DisplayMember/ValueMember,
-        // igual que con CboMedico.
         CboDiaSemana.DataSource = Enum.GetValues(typeof(DayOfWeek))
             .Cast<DayOfWeek>()
             .Select(dia => new { Valor = dia, Texto = CultureInfo.GetCultureInfo("es-AR").DateTimeFormat.GetDayName(dia) })
@@ -80,9 +77,13 @@ public partial class FormConfigurarAgenda : Form
                 Id = _idSeleccionado ?? 0,
                 MedicoId = (int)CboMedico.SelectedValue,
                 DiaSemana = (DayOfWeek)CboDiaSemana.SelectedValue,
+
+                // CORRECCION (RF#02): Ahora AgendaMedico usa HoraInicio y HoraFin PROPIOS
+                // por dia y medico, ya NO depende del catalogo compartido Horario.
                 HoraInicio = TimeOnly.FromDateTime(DtpHoraInicio.Value),
                 HoraFin = TimeOnly.FromDateTime(DtpHoraFin.Value)
             };
+
             if (_idSeleccionado == null)
             {
                 _service.Agregar(agenda);
@@ -114,8 +115,10 @@ public partial class FormConfigurarAgenda : Form
             return;
         }
         var agenda = DgvAgenda.CurrentRow.DataBoundItem as AgendaMedico;
+
+        // CORRECCI�N 3: Ajuste de nombres en el mensaje
         var respuesta = MessageBox.Show(
-            $"Esta seguro que desea eliminar el registro de agenda del medico {agenda?.MedicoNombre} para el dia {agenda?.DiaSemanaTexto} en el horario {agenda?.Rango}?",
+            $"Esta seguro que desea eliminar el registro de agenda del medico {agenda?.MedicoNombre} para el dia {agenda?.DiaNombre} en el horario {agenda?.HorarioRango}?",
             "Confirmar eliminacion", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
         if (respuesta != DialogResult.Yes) return;
 
@@ -142,6 +145,9 @@ public partial class FormConfigurarAgenda : Form
         if (DgvAgenda.CurrentRow == null) return;
         var agenda = DgvAgenda.CurrentRow.DataBoundItem as AgendaMedico;
         _idSeleccionado = agenda?.Id;
+
+        // CORRECCION (RF#02): Ahora leemos HoraInicio/HoraFin DIRECTAMENTE de
+        // AgendaMedico, ya NO tenemos propiedad "Horario" (no mas catalogo compartido).
         if (agenda != null)
         {
             CboMedico.SelectedValue = agenda.MedicoId;

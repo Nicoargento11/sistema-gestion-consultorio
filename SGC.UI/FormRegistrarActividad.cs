@@ -1,4 +1,4 @@
-﻿using SGC.Entidades;
+using SGC.Entidades;
 using SGC.Logica;
 
 namespace SGC.UI;
@@ -82,7 +82,9 @@ public partial class FormRegistrarActividad : Form
         var fechaSeleccionada = DateOnly.FromDateTime(DtpFecha.Value);
         var turnos = _turnoService.ObtenerPorMedicoYFecha(_medicoActual.Id, fechaSeleccionada, false)
             .OrderBy(t => t.ActividadMedica?.Activo == true)
-            .ThenBy(t => t.Horario != null ? t.Horario.HoraInicio : TimeOnly.MinValue)
+            // CORRECCION: Turno ya NO usa la entidad "Horario" del catalogo.
+            // Ahora ordenamos por la propiedad PROPIA Turno.HoraInicio.
+            .ThenBy(t => t.HoraInicio)
             .ToList();
 
         var listaTurnosCombo = turnos.Select(t => new

@@ -6,11 +6,11 @@ public class ActividadMedicaService
 {
     private static readonly List<TipoActividad> _tiposActividad = new()
     {
-        new TipoActividad { Id = 1, NombreTipo = "Consulta General", Descripcion = "Atencion clinica de rutina o primera vez", Activo = true },
-        new TipoActividad { Id = 2, NombreTipo = "Control / Seguimiento", Descripcion = "Control periodico o post-tratamiento", Activo = true },
-        new TipoActividad { Id = 3, NombreTipo = "Estudio / Practica", Descripcion = "Realizacion o evaluacion de estudios clinicos", Activo = true },
-        new TipoActividad { Id = 4, NombreTipo = "Receta / Prescripcion", Descripcion = "Emision o renovacion de recetas farmacologicas", Activo = true },
-        new TipoActividad { Id = 5, NombreTipo = "Certificado Medico", Descripcion = "Emision de apto fisico o certificado medico", Activo = true }
+        new TipoActividad { Id = 1, NombreTipo = "Consulta General", Descripcion = "Atencion clinica de rutina o primera vez", DuracionSugeridaMinutos = 30, Activo = true },
+        new TipoActividad { Id = 2, NombreTipo = "Control / Seguimiento", Descripcion = "Control periodico o post-tratamiento", DuracionSugeridaMinutos = 30, Activo = true },
+        new TipoActividad { Id = 3, NombreTipo = "Estudio / Practica", Descripcion = "Realizacion o evaluacion de estudios clinicos", DuracionSugeridaMinutos = 45, Activo = true },
+        new TipoActividad { Id = 4, NombreTipo = "Receta / Prescripcion", Descripcion = "Emision o renovacion de recetas farmacologicas", DuracionSugeridaMinutos = 20, Activo = true },
+        new TipoActividad { Id = 5, NombreTipo = "Certificado Medico", Descripcion = "Emision de apto fisico o certificado medico", DuracionSugeridaMinutos = 20, Activo = true }
     };
 
     private static readonly List<ActividadMedica> _actividades = new()

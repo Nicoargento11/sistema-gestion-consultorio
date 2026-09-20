@@ -37,7 +37,6 @@ partial class FormMenuPrincipal
     private Button btnAgenda;
     private Button btnActividad;
     private Button btnHistorial;
-    private Button btnHorarios;
     private Button btnCerrarSesion;
 
 

@@ -17,9 +17,7 @@ public class AgendaService
     {
         if (_semillaCargada) return;
 
-        var horarioService = new HorarioService();
         var medicoService = new MedicoService();
-        var horarios = horarioService.ObtenerTodos();
         var medicos = medicoService.ObtenerTodos();
 
         var diasHabiles = new[]
@@ -31,26 +29,23 @@ public class AgendaService
         {
             foreach (var dia in diasHabiles)
             {
-                foreach (var horario in horarios)
+                _agendas.Add(new AgendaMedico
                 {
-                    _agendas.Add(new AgendaMedico
-                    {
-                        Id = _siguienteId++,
-                        MedicoId = medico.Id,
-                        Medico = medico,
-                        HorarioId = horario.Id,
-                        Horario = horario,
-                        DiaSemana = dia,
-                        Activo = true
-                    });
-                }
+                    Id = _siguienteId++,
+                    MedicoId = medico.Id,
+                    Medico = medico,
+                    HoraInicio = new TimeOnly(9, 0),
+                    HoraFin = new TimeOnly(11, 30),
+                    DiaSemana = dia,
+                    Activo = true
+                });
             }
         }
 
         _semillaCargada = true;
     }
 
-    public List<AgendaMedico> Consultar(int? medicoId = null, DayOfWeek? dia = null, int? horarioId = null)
+    public List<AgendaMedico> Consultar(int? medicoId = null, DayOfWeek? dia = null)
     {
         IEnumerable<AgendaMedico> query = _agendas.Where(a => a.Activo);
 
@@ -60,13 +55,10 @@ public class AgendaService
         if (dia.HasValue)
             query = query.Where(a => a.DiaSemana == dia.Value);
 
-        if (horarioId.HasValue)
-            query = query.Where(a => a.HorarioId == horarioId.Value);
-
         return query
             .OrderBy(a => a.MedicoNombre)
             .ThenBy(a => a.DiaSemana)
-            .ThenBy(a => a.Horario != null ? a.Horario.HoraInicio : TimeOnly.MinValue)
+            .ThenBy(a => a.HoraInicio)
             .ToList();
     }
 
@@ -75,58 +67,87 @@ public class AgendaService
         return _agendas.FirstOrDefault(a => a.Id == id);
     }
 
-    public bool MedicoAtiende(int medicoId, DayOfWeek dia, int horarioId)
+    public bool MedicoAtiende(int medicoId, DayOfWeek dia, TimeOnly horaInicioTurno, int duracionMinutos = 30)
     {
+        if (duracionMinutos <= 0) duracionMinutos = 30;
+        TimeOnly horaFinTurno = horaInicioTurno.AddMinutes(duracionMinutos);
+
         return _agendas.Any(a =>
             a.Activo &&
             a.MedicoId == medicoId &&
             a.DiaSemana == dia &&
-            a.HorarioId == horarioId);
+            horaInicioTurno >= a.HoraInicio &&
+            horaFinTurno <= a.HoraFin);
     }
 
-    public void Agregar(Medico medico, DayOfWeek dia, Horario horario)
+    /// <summary>
+    /// Devuelve el rango horario de atencion (HoraInicio, HoraFin) que el admin
+    /// configuro para el medico en el dia indicado. Si el medico NO atiende ese dia,
+    /// devuelve null.
+    /// Sirve para generar los slots correctos en el combo de Turnos.
+    /// </summary>
+    public (TimeOnly Hi, TimeOnly Hf)? ObtenerRangoAtencion(int medicoId, DayOfWeek dia)
+    {
+        var agenda = _agendas.FirstOrDefault(a =>
+            a.Activo &&
+            a.MedicoId == medicoId &&
+            a.DiaSemana == dia);
+
+        if (agenda == null)
+            return null;
+
+        return (agenda.HoraInicio, agenda.HoraFin);
+    }
+
+    public void Agregar(Medico medico, DayOfWeek dia, TimeOnly horaInicio, TimeOnly horaFin)
     {
         if (medico == null)
             throw new ArgumentException("Debe seleccionar un medico.");
 
-        if (horario == null)
-            throw new ArgumentException("Debe completar hora de entrada y hora de salida.");
+        if (horaFin <= horaInicio)
+            throw new ArgumentException("La hora de salida debe ser posterior a la hora de entrada.");
 
-        if (_agendas.Any(a => a.Activo && a.MedicoId == medico.Id && a.DiaSemana == dia && a.HorarioId == horario.Id))
-            throw new InvalidOperationException("Ese medico ya tiene ese bloque horario en el dia seleccionado.");
-
-        _agendas.Add(new AgendaMedico
+        var nueva = new AgendaMedico
         {
-            Id = _siguienteId++,
             MedicoId = medico.Id,
             Medico = medico,
-            HorarioId = horario.Id,
-            Horario = horario,
             DiaSemana = dia,
-            Activo = true
-        });
+            HoraInicio = horaInicio,
+            HoraFin = horaFin
+        };
+
+        ValidarSuperposicion(nueva, null);
+
+        nueva.Id = _siguienteId++;
+        nueva.Activo = true;
+        _agendas.Add(nueva);
     }
 
-    public void Modificar(int agendaId, Medico medico, DayOfWeek dia, Horario horario)
+    public void Modificar(int agendaId, Medico medico, DayOfWeek dia, TimeOnly horaInicio, TimeOnly horaFin)
     {
         var existente = _agendas.FirstOrDefault(a => a.Id == agendaId)
             ?? throw new InvalidOperationException("El horario de agenda que intenta modificar no existe.");
 
-        if (_agendas.Any(a =>
-            a.Activo &&
-            a.Id != agendaId &&
-            a.MedicoId == medico.Id &&
-            a.DiaSemana == dia &&
-            a.HorarioId == horario.Id))
+        if (horaFin <= horaInicio)
+            throw new ArgumentException("La hora de salida debe ser posterior a la hora de entrada.");
+
+        var modificada = new AgendaMedico
         {
-            throw new InvalidOperationException("Ese medico ya tiene ese bloque horario en el dia seleccionado.");
-        }
+            Id = agendaId,
+            MedicoId = medico.Id,
+            Medico = medico,
+            DiaSemana = dia,
+            HoraInicio = horaInicio,
+            HoraFin = horaFin
+        };
+
+        ValidarSuperposicion(modificada, agendaId);
 
         existente.MedicoId = medico.Id;
         existente.Medico = medico;
         existente.DiaSemana = dia;
-        existente.HorarioId = horario.Id;
-        existente.Horario = horario;
+        existente.HoraInicio = horaInicio;
+        existente.HoraFin = horaFin;
     }
 
     public void EliminarLogico(int agendaId)
@@ -135,5 +156,19 @@ public class AgendaService
             ?? throw new InvalidOperationException("Seleccione un horario.");
 
         existente.Activo = false;
+    }
+
+    private static void ValidarSuperposicion(AgendaMedico agenda, int? idAExcluir)
+    {
+        bool haySolape = _agendas.Any(a =>
+            a.Activo &&
+            a.Id != (idAExcluir ?? 0) &&
+            a.MedicoId == agenda.MedicoId &&
+            a.DiaSemana == agenda.DiaSemana &&
+            a.HoraInicio < agenda.HoraFin &&
+            agenda.HoraInicio < a.HoraFin);
+
+        if (haySolape)
+            throw new InvalidOperationException("El rango horario seleccionado se superpone con otro registro de agenda para el mismo medico y dia.");
     }
 }

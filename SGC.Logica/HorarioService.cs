@@ -65,6 +65,41 @@ public class HorarioService
         horario.Activo = false;
     }
 
+    /// <summary>
+    /// Genera slots horarios consecutivos DENTRO de un rango de atencion del medico.
+    /// Cada slot dura "duracionSlotMin" minutos y avanza de "saltoMin" en "saltoMin".
+    /// Los slots se persisten automaticamente (ObtenerOCrear) para que tengan Id y
+    /// se puedan bindear al ComboBox de Turnos.
+    /// Ej: rango 06:00-09:00, duracion 45min, salto 45min → 06:00-06:45, 06:45-07:30, 07:30-08:15, 08:15-09:00
+    /// Ej: rango 09:00-11:00, duracion 120min, salto 30min → 09:00-11:00
+    /// </summary>
+    public List<Horario> GenerarSlotsEnRango(
+        TimeOnly rangoInicio,
+        TimeOnly rangoFin,
+        int duracionSlotMin = 30,
+        int saltoMin = 30)
+    {
+        if (duracionSlotMin <= 0) duracionSlotMin = 30;
+        if (saltoMin <= 0) saltoMin = 30;
+
+        var resultado = new List<Horario>();
+
+        // Si el rango es invalido (fin <= inicio) no generamos nada
+        if (rangoFin <= rangoInicio)
+            return resultado;
+
+        // Vamos avanzando desde rangoInicio, agregando slots que entren completos
+        TimeOnly actual = rangoInicio;
+        while (actual.AddMinutes(duracionSlotMin) <= rangoFin)
+        {
+            TimeOnly finSlot = actual.AddMinutes(duracionSlotMin);
+            resultado.Add(ObtenerOCrear(actual, finSlot));
+            actual = actual.AddMinutes(saltoMin);
+        }
+
+        return resultado;
+    }
+
     private static void ValidarRango(TimeOnly horaInicio, TimeOnly horaFin)
     {
         if (horaFin <= horaInicio)

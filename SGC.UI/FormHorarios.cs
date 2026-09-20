@@ -93,12 +93,18 @@ public partial class FormHorarios : Form
 
         if (filtroPaciente)
         {
-            var horariosDelPaciente = _turnoService.ObtenerTodos(true, null, null, pacienteId)
-                .Select(t => t.HorarioId)
+            // CORRECCION: Turno ya NO tiene "HorarioId" y AgendaMedico tampoco
+            // (no mas catalogo compartido). Buscamos "agendas que coincidan en
+            // (MedicoId, DiaSemana) con los turnos que ya tuvo este paciente".
+            var turnosDelPaciente = _turnoService.ObtenerTodos(true, null, null, pacienteId);
+            var paresMedicoDia = turnosDelPaciente
+                .Select(t => (Medico: t.MedicoId, Dia: t.Fecha.DayOfWeek))
                 .Distinct()
                 .ToHashSet();
 
-            resultado = resultado.Where(a => horariosDelPaciente.Contains(a.HorarioId)).ToList();
+            resultado = resultado
+                .Where(a => paresMedicoDia.Contains((a.MedicoId, a.DiaSemana)))
+                .ToList();
         }
 
         if (resultado.Count == 0)
@@ -132,11 +138,10 @@ public partial class FormHorarios : Form
         _idSeleccionado = agenda.Id;
         CboMedico.SelectedValue = agenda.MedicoId;
         CboDia.SelectedItem = agenda.DiaSemana;
-        if (agenda.Horario != null)
-        {
-            DtpEntrada.Value = DateTime.Today.Add(agenda.Horario.HoraInicio.ToTimeSpan());
-            DtpSalida.Value = DateTime.Today.Add(agenda.Horario.HoraFin.ToTimeSpan());
-        }
+        // CORRECCION (RF#02): AgendaMedico ahora tiene rangos PROPIOS
+        // (HoraInicio/HoraFin), no mas propiedad "Horario" del catalogo viejo.
+        DtpEntrada.Value = DateTime.Today.Add(agenda.HoraInicio.ToTimeSpan());
+        DtpSalida.Value = DateTime.Today.Add(agenda.HoraFin.ToTimeSpan());
     }
 
     private void BtnGuardar_Click(object? sender, EventArgs e)
@@ -152,19 +157,22 @@ public partial class FormHorarios : Form
         {
             var medico = (Medico)CboMedico.SelectedItem;
             var dia = (DayOfWeek)CboDia.SelectedItem;
-            var horario = _horarioService.ObtenerOCrear(
-                TimeOnly.FromDateTime(DtpEntrada.Value),
-                TimeOnly.FromDateTime(DtpSalida.Value));
+            // CORRECCION (RF#02): AgendaService.Agregar/Modificar ya NO reciben
+            // un objeto Horario del catalogo, sino directamente las horas de
+            // inicio y fin (rango propio por medico por dia).
+            TimeOnly horaInicio = TimeOnly.FromDateTime(DtpEntrada.Value);
+            TimeOnly horaFin = TimeOnly.FromDateTime(DtpSalida.Value);
+            string rango = $"{horaInicio:HH:mm} - {horaFin:HH:mm}";
 
             if (_idSeleccionado == null)
             {
-                _agendaService.Agregar(medico, dia, horario);
+                _agendaService.Agregar(medico, dia, horaInicio, horaFin);
                 LblMensaje.ForeColor = Color.Green;
-                LblMensaje.Text = "Horario guardado. " + _notificacionService.AvisarMedico(medico, "Alta de horario", $"{AgendaMedico.NombreDia(dia)} {horario.Rango}");
+                LblMensaje.Text = "Horario guardado. " + _notificacionService.AvisarMedico(medico, "Alta de horario", $"{AgendaMedico.NombreDia(dia)} {rango}");
             }
             else
             {
-                _agendaService.Modificar(_idSeleccionado.Value, medico, dia, horario);
+                _agendaService.Modificar(_idSeleccionado.Value, medico, dia, horaInicio, horaFin);
                 LblMensaje.ForeColor = Color.Green;
                 LblMensaje.Text = "Horario actualizado.";
             }
@@ -202,7 +210,12 @@ public partial class FormHorarios : Form
         try
         {
             var turnosAfectados = _turnoService.ObtenerTodos(false, agenda.MedicoId)
-                .Where(t => t.HorarioId == agenda.HorarioId && t.Fecha.DayOfWeek == agenda.DiaSemana)
+                // CORRECCION (RF#02 + RF#04): Como Turno y AgendaMedico ya NO usan
+                // "HorarioId", detectamos turnos afectados por SUPERPOSICION de
+                // rangos horarios, y solo si coinciden en el mismo DiaSemana de la agenda.
+                .Where(t => t.Fecha.DayOfWeek == agenda.DiaSemana
+                            && t.HoraInicio < agenda.HoraFin
+                            && agenda.HoraInicio < t.HoraFin)
                 .ToList();
 
             foreach (var turno in turnosAfectados)

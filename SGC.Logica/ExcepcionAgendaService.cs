@@ -39,9 +39,6 @@ public class ExcepcionAgendaService
         return CancelarTurnosAfectados(excepcion);
     }
 
-    // Al cargar una ausencia, los turnos que ya estaban agendados en ese
-    // rango dejan de tener sentido: se cancelan y se avisa al paciente
-    // (mismo patron que usaba FormHorarios al eliminar un bloque de horario).
     private List<Turno> CancelarTurnosAfectados(ExcepcionAgenda excepcion)
     {
         var turnosAfectados = _turnoService.ObtenerTodos(false, excepcion.MedicoId, excepcion.Fecha)
@@ -65,10 +62,10 @@ public class ExcepcionAgendaService
 
     private static bool SeSuperponeConRango(Turno turno, ExcepcionAgenda excepcion)
     {
-        if (turno.Horario == null || excepcion.HoraInicio == null || excepcion.HoraFin == null)
+        if (excepcion.HoraInicio == null || excepcion.HoraFin == null)
             return false;
 
-        return turno.Horario.HoraInicio < excepcion.HoraFin && excepcion.HoraInicio < turno.Horario.HoraFin;
+        return turno.HoraInicio < excepcion.HoraFin && excepcion.HoraInicio < turno.HoraFin;
     }
 
     public void Modificar(ExcepcionAgenda excepcion)
