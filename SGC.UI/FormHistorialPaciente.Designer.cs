@@ -54,7 +54,7 @@ partial class FormHistorialPaciente
         lblPacienteInfo.ForeColor = Color.FromArgb(180, 205, 235);
         lblPacienteInfo.Location = new Point(15, 42);
         lblPacienteInfo.Name = "lblPacienteInfo";
-        lblPacienteInfo.Size = new Size(183, 23);
+        lblPacienteInfo.Size = new Size(160, 23);
         lblPacienteInfo.TabIndex = 1;
         lblPacienteInfo.Text = "Paciente: ... | DNI: ...";
         // 
@@ -65,9 +65,9 @@ partial class FormHistorialPaciente
         lblTitulo.ForeColor = Color.White;
         lblTitulo.Location = new Point(14, 12);
         lblTitulo.Name = "lblTitulo";
-        lblTitulo.Size = new Size(385, 30);
+        lblTitulo.Size = new Size(334, 30);
         lblTitulo.TabIndex = 0;
-        lblTitulo.Text = "Historial Clinico de Atenciones (RF#09)";
+        lblTitulo.Text = "Historial Clinico de Atenciones ";
         // 
         // DgvHistorial
         // 
@@ -138,7 +138,7 @@ partial class FormHistorialPaciente
         lblReceta.ForeColor = Color.FromArgb(50, 60, 75);
         lblReceta.Location = new Point(15, 155);
         lblReceta.Name = "lblReceta";
-        lblReceta.Size = new Size(157, 20);
+        lblReceta.Size = new Size(160, 20);
         lblReceta.TabIndex = 5;
         lblReceta.Text = "Prescripcion / Receta:";
         // 
@@ -161,7 +161,7 @@ partial class FormHistorialPaciente
         lblDiagnostico.ForeColor = Color.FromArgb(50, 60, 75);
         lblDiagnostico.Location = new Point(15, 90);
         lblDiagnostico.Name = "lblDiagnostico";
-        lblDiagnostico.Size = new Size(207, 20);
+        lblDiagnostico.Size = new Size(213, 20);
         lblDiagnostico.TabIndex = 3;
         lblDiagnostico.Text = "Diagnostico / Procedimiento:";
         // 
@@ -184,7 +184,7 @@ partial class FormHistorialPaciente
         lblMotivo.ForeColor = Color.FromArgb(50, 60, 75);
         lblMotivo.Location = new Point(15, 25);
         lblMotivo.Name = "lblMotivo";
-        lblMotivo.Size = new Size(146, 20);
+        lblMotivo.Size = new Size(149, 20);
         lblMotivo.TabIndex = 1;
         lblMotivo.Text = "Motivo de Consulta:";
         // 
@@ -195,7 +195,7 @@ partial class FormHistorialPaciente
         lblDetalleTitulo.ForeColor = Color.FromArgb(27, 42, 74);
         lblDetalleTitulo.Location = new Point(15, 2);
         lblDetalleTitulo.Name = "lblDetalleTitulo";
-        lblDetalleTitulo.Size = new Size(276, 23);
+        lblDetalleTitulo.Size = new Size(250, 23);
         lblDetalleTitulo.TabIndex = 0;
         lblDetalleTitulo.Text = "Detalle de la Atencion Clinica:";
         // 

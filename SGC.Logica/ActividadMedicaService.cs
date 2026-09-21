@@ -6,11 +6,11 @@ public class ActividadMedicaService
 {
     private static readonly List<TipoActividad> _tiposActividad = new()
     {
-        new TipoActividad { Id = 1, NombreTipo = "Consulta General", Descripcion = "Atencion clinica de rutina o primera vez", Activo = true },
-        new TipoActividad { Id = 2, NombreTipo = "Control / Seguimiento", Descripcion = "Control periodico o post-tratamiento", Activo = true },
-        new TipoActividad { Id = 3, NombreTipo = "Estudio / Practica", Descripcion = "Realizacion o evaluacion de estudios clinicos", Activo = true },
-        new TipoActividad { Id = 4, NombreTipo = "Receta / Prescripcion", Descripcion = "Emision o renovacion de recetas farmacologicas", Activo = true },
-        new TipoActividad { Id = 5, NombreTipo = "Certificado Medico", Descripcion = "Emision de apto fisico o certificado medico", Activo = true }
+        new TipoActividad { Id = 1, NombreTipo = "Consulta General", Descripcion = "Atencion clinica de rutina o primera vez", DuracionSugeridaMinutos = 30, Activo = true },
+        new TipoActividad { Id = 2, NombreTipo = "Control / Seguimiento", Descripcion = "Control periodico o post-tratamiento", DuracionSugeridaMinutos = 30, Activo = true },
+        new TipoActividad { Id = 3, NombreTipo = "Estudio / Practica", Descripcion = "Realizacion o evaluacion de estudios clinicos", DuracionSugeridaMinutos = 45, Activo = true },
+        new TipoActividad { Id = 4, NombreTipo = "Receta / Prescripcion", Descripcion = "Emision o renovacion de recetas farmacologicas", DuracionSugeridaMinutos = 20, Activo = true },
+        new TipoActividad { Id = 5, NombreTipo = "Certificado Medico", Descripcion = "Emision de apto fisico o certificado medico", DuracionSugeridaMinutos = 20, Activo = true }
     };
 
     private static readonly List<ActividadMedica> _actividades = new()
@@ -57,10 +57,26 @@ public class ActividadMedicaService
 
     public List<ActividadMedica> ObtenerHistorialPorPaciente(int pacienteId)
     {
-        return _actividades
-            .Where(a => a.Activo && a.Turno != null && a.Turno.PacienteId == pacienteId)
-            .OrderByDescending(a => a.Turno!.Fecha)
-            .ToList();
+        return Consultar(pacienteId: pacienteId);
+    }
+
+    public List<ActividadMedica> Consultar(int? pacienteId = null, int? medicoId = null, DateOnly? fecha = null, int? tipoId = null)
+    {
+        IEnumerable<ActividadMedica> query = _actividades.Where(a => a.Activo && a.Turno != null);
+
+        if (pacienteId.HasValue)
+            query = query.Where(a => a.Turno!.PacienteId == pacienteId.Value);
+
+        if (medicoId.HasValue)
+            query = query.Where(a => a.Turno!.MedicoId == medicoId.Value);
+
+        if (fecha.HasValue)
+            query = query.Where(a => a.Turno!.Fecha == fecha.Value);
+
+        if (tipoId.HasValue && tipoId.Value > 0)
+            query = query.Where(a => a.TipoActividadId == tipoId.Value);
+
+        return query.OrderByDescending(a => a.Turno!.Fecha).ToList();
     }
 
     public void RegistrarOModificarActividad(Turno turno, int tipoActividadId, string motivo, string procedimiento, string receta)

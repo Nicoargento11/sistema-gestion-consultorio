@@ -96,7 +96,7 @@ partial class FormRegistrarActividad
         lblTitulo.Name = "lblTitulo";
         lblTitulo.Size = new Size(350, 32);
         lblTitulo.TabIndex = 0;
-        lblTitulo.Text = "Registro de Atencion Clinica";
+        lblTitulo.Text = "Cargar atencion del turno";
         // 
         // pnlSeleccionTurno
         // 
@@ -237,7 +237,7 @@ partial class FormRegistrarActividad
         BtnVerHistorial.Name = "BtnVerHistorial";
         BtnVerHistorial.Size = new Size(150, 38);
         BtnVerHistorial.TabIndex = 10;
-        BtnVerHistorial.Text = "Ver Historial";
+        BtnVerHistorial.Text = "Ver historial";
         BtnVerHistorial.UseVisualStyleBackColor = false;
         // 
         // BtnBorrarRegistro
@@ -292,6 +292,7 @@ partial class FormRegistrarActividad
         TxtReceta.Location = new Point(30, 275);
         TxtReceta.Multiline = true;
         TxtReceta.Name = "TxtReceta";
+        TxtReceta.PlaceholderText = "Ej: ibuprofeno 400 mg cada 8 hs por 3 dias";
         TxtReceta.ScrollBars = ScrollBars.Vertical;
         TxtReceta.Size = new Size(940, 75);
         TxtReceta.TabIndex = 7;
@@ -314,6 +315,7 @@ partial class FormRegistrarActividad
         TxtDiagnostico.Location = new Point(30, 165);
         TxtDiagnostico.Multiline = true;
         TxtDiagnostico.Name = "TxtDiagnostico";
+        TxtDiagnostico.PlaceholderText = "Ej: faringitis. Indicaciones y estudios...";
         TxtDiagnostico.ScrollBars = ScrollBars.Vertical;
         TxtDiagnostico.Size = new Size(940, 75);
         TxtDiagnostico.TabIndex = 5;
@@ -336,6 +338,7 @@ partial class FormRegistrarActividad
         TxtMotivo.Location = new Point(30, 65);
         TxtMotivo.Multiline = true;
         TxtMotivo.Name = "TxtMotivo";
+        TxtMotivo.PlaceholderText = "Ej: dolor de garganta de 3 dias, fiebre...";
         TxtMotivo.ScrollBars = ScrollBars.Vertical;
         TxtMotivo.Size = new Size(940, 65);
         TxtMotivo.TabIndex = 3;

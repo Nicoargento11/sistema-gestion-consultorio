@@ -16,7 +16,10 @@ partial class FormTurnos
     private void InitializeComponent()
     {
         pnlFormulario = new Panel();
+        lblDuracion = new Label();
+        CboDuracion = new ComboBox();
         ChkFiltrarFecha = new CheckBox();
+        ChkFiltrarPaciente = new CheckBox();
         ChkTodosMedicos = new CheckBox();
         BtnNuevoTurno = new Button();
         BtnModificar = new Button();
@@ -46,7 +49,10 @@ partial class FormTurnos
         // pnlFormulario
         // 
         pnlFormulario.BackColor = Color.FromArgb(245, 246, 250);
+        pnlFormulario.Controls.Add(lblDuracion);
+        pnlFormulario.Controls.Add(CboDuracion);
         pnlFormulario.Controls.Add(ChkFiltrarFecha);
+        pnlFormulario.Controls.Add(ChkFiltrarPaciente);
         pnlFormulario.Controls.Add(ChkTodosMedicos);
         pnlFormulario.Controls.Add(BtnNuevoTurno);
         pnlFormulario.Controls.Add(BtnModificar);
@@ -65,31 +71,64 @@ partial class FormTurnos
         pnlFormulario.Controls.Add(lblPaciente);
         pnlFormulario.Dock = DockStyle.Top;
         pnlFormulario.Location = new Point(0, 0);
-        pnlFormulario.Margin = new Padding(2);
+        pnlFormulario.Margin = new Padding(2, 3, 2, 3);
         pnlFormulario.Name = "pnlFormulario";
-        pnlFormulario.Size = new Size(910, 114);
+        pnlFormulario.Size = new Size(1040, 152);
         pnlFormulario.TabIndex = 1;
+        // 
+        // lblDuracion
+        // 
+        lblDuracion.AutoSize = true;
+        lblDuracion.Font = new Font("Segoe UI", 9F);
+        lblDuracion.Location = new Point(326, 72);
+        lblDuracion.Margin = new Padding(2, 0, 2, 0);
+        lblDuracion.Name = "lblDuracion";
+        lblDuracion.Size = new Size(108, 20);
+        lblDuracion.TabIndex = 13;
+        lblDuracion.Text = "Duracion (min)";
+        // 
+        // CboDuracion
+        // 
+        CboDuracion.DropDownStyle = ComboBoxStyle.DropDownList;
+        CboDuracion.Font = new Font("Segoe UI", 10F);
+        CboDuracion.Location = new Point(326, 91);
+        CboDuracion.Margin = new Padding(2, 3, 2, 3);
+        CboDuracion.Name = "CboDuracion";
+        CboDuracion.Size = new Size(90, 31);
+        CboDuracion.TabIndex = 14;
         // 
         // ChkFiltrarFecha
         // 
         ChkFiltrarFecha.AutoSize = true;
         ChkFiltrarFecha.Font = new Font("Segoe UI", 9F);
-        ChkFiltrarFecha.Location = new Point(154, 93);
-        ChkFiltrarFecha.Margin = new Padding(2);
+        ChkFiltrarFecha.Location = new Point(176, 124);
+        ChkFiltrarFecha.Margin = new Padding(2, 3, 2, 3);
         ChkFiltrarFecha.Name = "ChkFiltrarFecha";
-        ChkFiltrarFecha.Size = new Size(109, 19);
+        ChkFiltrarFecha.Size = new Size(136, 24);
         ChkFiltrarFecha.TabIndex = 10;
         ChkFiltrarFecha.Text = "Filtrar por fecha";
         ChkFiltrarFecha.UseVisualStyleBackColor = true;
+        // 
+        // ChkFiltrarPaciente
+        // 
+        ChkFiltrarPaciente.AutoSize = true;
+        ChkFiltrarPaciente.Font = new Font("Segoe UI", 9F);
+        ChkFiltrarPaciente.Location = new Point(366, 165);
+        ChkFiltrarPaciente.Margin = new Padding(2, 3, 2, 3);
+        ChkFiltrarPaciente.Name = "ChkFiltrarPaciente";
+        ChkFiltrarPaciente.Size = new Size(157, 24);
+        ChkFiltrarPaciente.TabIndex = 12;
+        ChkFiltrarPaciente.Text = "Filtrar por paciente";
+        ChkFiltrarPaciente.UseVisualStyleBackColor = true;
         // 
         // ChkTodosMedicos
         // 
         ChkTodosMedicos.AutoSize = true;
         ChkTodosMedicos.Font = new Font("Segoe UI", 9F);
-        ChkTodosMedicos.Location = new Point(427, 24);
-        ChkTodosMedicos.Margin = new Padding(2);
+        ChkTodosMedicos.Location = new Point(488, 32);
+        ChkTodosMedicos.Margin = new Padding(2, 3, 2, 3);
         ChkTodosMedicos.Name = "ChkTodosMedicos";
-        ChkTodosMedicos.Size = new Size(141, 19);
+        ChkTodosMedicos.Size = new Size(177, 24);
         ChkTodosMedicos.TabIndex = 9;
         ChkTodosMedicos.Text = "Ver todos los medicos";
         ChkTodosMedicos.UseVisualStyleBackColor = true;
@@ -101,10 +140,10 @@ partial class FormTurnos
         BtnNuevoTurno.FlatStyle = FlatStyle.Flat;
         BtnNuevoTurno.Font = new Font("Segoe UI", 9.5F);
         BtnNuevoTurno.ForeColor = Color.White;
-        BtnNuevoTurno.Location = new Point(301, 68);
-        BtnNuevoTurno.Margin = new Padding(2);
+        BtnNuevoTurno.Location = new Point(426, 91);
+        BtnNuevoTurno.Margin = new Padding(2, 3, 2, 3);
         BtnNuevoTurno.Name = "BtnNuevoTurno";
-        BtnNuevoTurno.Size = new Size(91, 20);
+        BtnNuevoTurno.Size = new Size(104, 27);
         BtnNuevoTurno.TabIndex = 8;
         BtnNuevoTurno.Text = "Nuevo turno";
         BtnNuevoTurno.UseVisualStyleBackColor = false;
@@ -116,10 +155,10 @@ partial class FormTurnos
         BtnModificar.FlatStyle = FlatStyle.Flat;
         BtnModificar.Font = new Font("Segoe UI", 9.5F);
         BtnModificar.ForeColor = Color.White;
-        BtnModificar.Location = new Point(497, 68);
-        BtnModificar.Margin = new Padding(2);
+        BtnModificar.Location = new Point(650, 91);
+        BtnModificar.Margin = new Padding(2, 3, 2, 3);
         BtnModificar.Name = "BtnModificar";
-        BtnModificar.Size = new Size(91, 20);
+        BtnModificar.Size = new Size(104, 27);
         BtnModificar.TabIndex = 7;
         BtnModificar.Text = "Modificar";
         BtnModificar.UseVisualStyleBackColor = false;
@@ -128,10 +167,10 @@ partial class FormTurnos
         // 
         ChkMostrarCancelados.AutoSize = true;
         ChkMostrarCancelados.Font = new Font("Segoe UI", 9F);
-        ChkMostrarCancelados.Location = new Point(14, 93);
-        ChkMostrarCancelados.Margin = new Padding(2);
+        ChkMostrarCancelados.Location = new Point(16, 124);
+        ChkMostrarCancelados.Margin = new Padding(2, 3, 2, 3);
         ChkMostrarCancelados.Name = "ChkMostrarCancelados";
-        ChkMostrarCancelados.Size = new Size(129, 19);
+        ChkMostrarCancelados.Size = new Size(160, 24);
         ChkMostrarCancelados.TabIndex = 6;
         ChkMostrarCancelados.Text = "Mostrar cancelados";
         ChkMostrarCancelados.UseVisualStyleBackColor = true;
@@ -140,11 +179,11 @@ partial class FormTurnos
         // 
         LblMensaje.AutoSize = true;
         LblMensaje.Font = new Font("Segoe UI", 9F);
-        LblMensaje.Location = new Point(301, 93);
+        LblMensaje.Location = new Point(426, 124);
         LblMensaje.Margin = new Padding(2, 0, 2, 0);
-        LblMensaje.MaximumSize = new Size(350, 0);
+        LblMensaje.MaximumSize = new Size(400, 0);
         LblMensaje.Name = "LblMensaje";
-        LblMensaje.Size = new Size(0, 15);
+        LblMensaje.Size = new Size(0, 20);
         LblMensaje.TabIndex = 0;
         // 
         // BtnCancelar
@@ -154,10 +193,10 @@ partial class FormTurnos
         BtnCancelar.FlatStyle = FlatStyle.Flat;
         BtnCancelar.Font = new Font("Segoe UI", 9.5F);
         BtnCancelar.ForeColor = Color.White;
-        BtnCancelar.Location = new Point(595, 68);
-        BtnCancelar.Margin = new Padding(2);
+        BtnCancelar.Location = new Point(762, 91);
+        BtnCancelar.Margin = new Padding(2, 3, 2, 3);
         BtnCancelar.Name = "BtnCancelar";
-        BtnCancelar.Size = new Size(105, 20);
+        BtnCancelar.Size = new Size(120, 27);
         BtnCancelar.TabIndex = 5;
         BtnCancelar.Text = "Cancelar turno sel.";
         BtnCancelar.UseVisualStyleBackColor = false;
@@ -170,10 +209,10 @@ partial class FormTurnos
         BtnConfirmarAsistencia.FlatStyle = FlatStyle.Flat;
         BtnConfirmarAsistencia.Font = new Font("Segoe UI", 9.5F);
         BtnConfirmarAsistencia.ForeColor = Color.White;
-        BtnConfirmarAsistencia.Location = new Point(707, 68);
-        BtnConfirmarAsistencia.Margin = new Padding(2);
+        BtnConfirmarAsistencia.Location = new Point(890, 91);
+        BtnConfirmarAsistencia.Margin = new Padding(2, 3, 2, 3);
         BtnConfirmarAsistencia.Name = "BtnConfirmarAsistencia";
-        BtnConfirmarAsistencia.Size = new Size(126, 20);
+        BtnConfirmarAsistencia.Size = new Size(144, 27);
         BtnConfirmarAsistencia.TabIndex = 11;
         BtnConfirmarAsistencia.Text = "Confirmar asistencia";
         BtnConfirmarAsistencia.UseVisualStyleBackColor = false;
@@ -186,10 +225,10 @@ partial class FormTurnos
         BtnAsignar.FlatStyle = FlatStyle.Flat;
         BtnAsignar.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
         BtnAsignar.ForeColor = Color.White;
-        BtnAsignar.Location = new Point(399, 68);
-        BtnAsignar.Margin = new Padding(2);
+        BtnAsignar.Location = new Point(538, 91);
+        BtnAsignar.Margin = new Padding(2, 3, 2, 3);
         BtnAsignar.Name = "BtnAsignar";
-        BtnAsignar.Size = new Size(91, 20);
+        BtnAsignar.Size = new Size(104, 27);
         BtnAsignar.TabIndex = 4;
         BtnAsignar.Text = "Asignar turno";
         BtnAsignar.UseVisualStyleBackColor = false;
@@ -199,20 +238,20 @@ partial class FormTurnos
         // 
         CboHorario.DropDownStyle = ComboBoxStyle.DropDownList;
         CboHorario.Font = new Font("Segoe UI", 10F);
-        CboHorario.Location = new Point(154, 68);
-        CboHorario.Margin = new Padding(2);
+        CboHorario.Location = new Point(176, 91);
+        CboHorario.Margin = new Padding(2, 3, 2, 3);
         CboHorario.Name = "CboHorario";
-        CboHorario.Size = new Size(127, 25);
+        CboHorario.Size = new Size(145, 31);
         CboHorario.TabIndex = 3;
         // 
         // lblHorario
         // 
         lblHorario.AutoSize = true;
         lblHorario.Font = new Font("Segoe UI", 9F);
-        lblHorario.Location = new Point(154, 54);
+        lblHorario.Location = new Point(176, 72);
         lblHorario.Margin = new Padding(2, 0, 2, 0);
         lblHorario.Name = "lblHorario";
-        lblHorario.Size = new Size(47, 15);
+        lblHorario.Size = new Size(60, 20);
         lblHorario.TabIndex = 6;
         lblHorario.Text = "Horario";
         // 
@@ -220,20 +259,20 @@ partial class FormTurnos
         // 
         DtpFecha.Font = new Font("Segoe UI", 10F);
         DtpFecha.Format = DateTimePickerFormat.Short;
-        DtpFecha.Location = new Point(14, 68);
-        DtpFecha.Margin = new Padding(2);
+        DtpFecha.Location = new Point(16, 91);
+        DtpFecha.Margin = new Padding(2, 3, 2, 3);
         DtpFecha.Name = "DtpFecha";
-        DtpFecha.Size = new Size(127, 25);
+        DtpFecha.Size = new Size(145, 30);
         DtpFecha.TabIndex = 2;
         // 
         // lblFecha
         // 
         lblFecha.AutoSize = true;
         lblFecha.Font = new Font("Segoe UI", 9F);
-        lblFecha.Location = new Point(14, 54);
+        lblFecha.Location = new Point(16, 72);
         lblFecha.Margin = new Padding(2, 0, 2, 0);
         lblFecha.Name = "lblFecha";
-        lblFecha.Size = new Size(38, 15);
+        lblFecha.Size = new Size(47, 20);
         lblFecha.TabIndex = 7;
         lblFecha.Text = "Fecha";
         // 
@@ -241,20 +280,20 @@ partial class FormTurnos
         // 
         CboMedico.DropDownStyle = ComboBoxStyle.DropDownList;
         CboMedico.Font = new Font("Segoe UI", 10F);
-        CboMedico.Location = new Point(210, 23);
-        CboMedico.Margin = new Padding(2);
+        CboMedico.Location = new Point(240, 31);
+        CboMedico.Margin = new Padding(2, 3, 2, 3);
         CboMedico.Name = "CboMedico";
-        CboMedico.Size = new Size(211, 25);
+        CboMedico.Size = new Size(241, 31);
         CboMedico.TabIndex = 1;
         // 
         // lblMedico
         // 
         lblMedico.AutoSize = true;
         lblMedico.Font = new Font("Segoe UI", 9F);
-        lblMedico.Location = new Point(210, 9);
+        lblMedico.Location = new Point(240, 12);
         lblMedico.Margin = new Padding(2, 0, 2, 0);
         lblMedico.Name = "lblMedico";
-        lblMedico.Size = new Size(47, 15);
+        lblMedico.Size = new Size(59, 20);
         lblMedico.TabIndex = 8;
         lblMedico.Text = "Medico";
         // 
@@ -262,20 +301,20 @@ partial class FormTurnos
         // 
         CboPaciente.DropDownStyle = ComboBoxStyle.DropDownList;
         CboPaciente.Font = new Font("Segoe UI", 10F);
-        CboPaciente.Location = new Point(14, 23);
-        CboPaciente.Margin = new Padding(2);
+        CboPaciente.Location = new Point(16, 31);
+        CboPaciente.Margin = new Padding(2, 3, 2, 3);
         CboPaciente.Name = "CboPaciente";
-        CboPaciente.Size = new Size(183, 25);
+        CboPaciente.Size = new Size(209, 31);
         CboPaciente.TabIndex = 0;
         // 
         // lblPaciente
         // 
         lblPaciente.AutoSize = true;
         lblPaciente.Font = new Font("Segoe UI", 9F);
-        lblPaciente.Location = new Point(14, 9);
+        lblPaciente.Location = new Point(16, 12);
         lblPaciente.Margin = new Padding(2, 0, 2, 0);
         lblPaciente.Name = "lblPaciente";
-        lblPaciente.Size = new Size(52, 15);
+        lblPaciente.Size = new Size(64, 20);
         lblPaciente.TabIndex = 9;
         lblPaciente.Text = "Paciente";
         // 
@@ -286,14 +325,14 @@ partial class FormTurnos
         DgvTurnos.ColumnHeadersHeight = 34;
         DgvTurnos.Dock = DockStyle.Fill;
         DgvTurnos.Font = new Font("Segoe UI", 9.5F);
-        DgvTurnos.Location = new Point(0, 114);
-        DgvTurnos.Margin = new Padding(2);
+        DgvTurnos.Location = new Point(0, 152);
+        DgvTurnos.Margin = new Padding(2, 3, 2, 3);
         DgvTurnos.MultiSelect = false;
         DgvTurnos.Name = "DgvTurnos";
         DgvTurnos.ReadOnly = true;
         DgvTurnos.RowHeadersWidth = 62;
         DgvTurnos.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-        DgvTurnos.Size = new Size(700, 276);
+        DgvTurnos.Size = new Size(800, 368);
         DgvTurnos.TabIndex = 0;
         // 
         // pnlAgenda
@@ -302,11 +341,11 @@ partial class FormTurnos
         pnlAgenda.Controls.Add(DgvAgenda);
         pnlAgenda.Controls.Add(lblAgendaTitulo);
         pnlAgenda.Dock = DockStyle.Right;
-        pnlAgenda.Location = new Point(700, 114);
-        pnlAgenda.Margin = new Padding(2);
+        pnlAgenda.Location = new Point(800, 152);
+        pnlAgenda.Margin = new Padding(2, 3, 2, 3);
         pnlAgenda.Name = "pnlAgenda";
-        pnlAgenda.Padding = new Padding(7, 6, 7, 6);
-        pnlAgenda.Size = new Size(210, 276);
+        pnlAgenda.Padding = new Padding(8);
+        pnlAgenda.Size = new Size(240, 368);
         pnlAgenda.TabIndex = 2;
         // 
         // DgvAgenda
@@ -316,13 +355,13 @@ partial class FormTurnos
         DgvAgenda.ColumnHeadersHeight = 34;
         DgvAgenda.Dock = DockStyle.Fill;
         DgvAgenda.Font = new Font("Segoe UI", 9.5F);
-        DgvAgenda.Location = new Point(7, 30);
-        DgvAgenda.Margin = new Padding(2);
+        DgvAgenda.Location = new Point(8, 38);
+        DgvAgenda.Margin = new Padding(2, 3, 2, 3);
         DgvAgenda.Name = "DgvAgenda";
         DgvAgenda.ReadOnly = true;
         DgvAgenda.RowHeadersWidth = 20;
         DgvAgenda.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-        DgvAgenda.Size = new Size(196, 240);
+        DgvAgenda.Size = new Size(224, 322);
         DgvAgenda.TabIndex = 1;
         // 
         // lblAgendaTitulo
@@ -331,23 +370,23 @@ partial class FormTurnos
         lblAgendaTitulo.Dock = DockStyle.Top;
         lblAgendaTitulo.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
         lblAgendaTitulo.ForeColor = Color.FromArgb(27, 42, 74);
-        lblAgendaTitulo.Location = new Point(7, 6);
+        lblAgendaTitulo.Location = new Point(8, 8);
         lblAgendaTitulo.Margin = new Padding(2, 0, 2, 0);
         lblAgendaTitulo.Name = "lblAgendaTitulo";
-        lblAgendaTitulo.Padding = new Padding(0, 0, 0, 5);
-        lblAgendaTitulo.Size = new Size(106, 24);
+        lblAgendaTitulo.Padding = new Padding(0, 0, 0, 7);
+        lblAgendaTitulo.Size = new Size(128, 30);
         lblAgendaTitulo.TabIndex = 0;
         lblAgendaTitulo.Text = "Disponibilidad";
         // 
         // FormTurnos
         // 
-        AutoScaleDimensions = new SizeF(7F, 15F);
+        AutoScaleDimensions = new SizeF(8F, 20F);
         AutoScaleMode = AutoScaleMode.Font;
-        ClientSize = new Size(910, 390);
+        ClientSize = new Size(1040, 520);
         Controls.Add(DgvTurnos);
         Controls.Add(pnlAgenda);
         Controls.Add(pnlFormulario);
-        Margin = new Padding(2);
+        Margin = new Padding(2, 3, 2, 3);
         Name = "FormTurnos";
         StartPosition = FormStartPosition.CenterScreen;
         Text = "Gestion de Turnos";
@@ -367,6 +406,7 @@ partial class FormTurnos
     private Button BtnNuevoTurno;
     private CheckBox ChkTodosMedicos;
     private CheckBox ChkFiltrarFecha;
+    private CheckBox ChkFiltrarPaciente;
     private Button BtnModificar;
     private CheckBox ChkMostrarCancelados;
     private Label lblPaciente;
@@ -382,4 +422,6 @@ partial class FormTurnos
     private Button BtnConfirmarAsistencia;
     private Label LblMensaje;
     private DataGridView DgvTurnos;
+    private Label lblDuracion;
+    private ComboBox CboDuracion;
 }

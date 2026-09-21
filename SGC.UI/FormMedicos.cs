@@ -14,7 +14,9 @@ public partial class FormMedicos : Form
         ConfigurarColumnas();
         CargarCombos();
         CargarGrilla();
+        AcceptButton = BtnGuardar;
         DgvMedicos.SelectionChanged += DgvMedicos_SelectionChanged_1;
+        TxtBuscar.TextChanged += (s, e) => CargarGrilla();
     }
 
     private void CargarCombos()
@@ -44,7 +46,20 @@ public partial class FormMedicos : Form
 
     private void CargarGrilla()
     {
-        DgvMedicos.DataSource = _service.ObtenerTodos();
+        var medicos = _service.ObtenerTodos();
+        var filtro = TxtBuscar.Text?.Trim() ?? "";
+        if (!string.IsNullOrWhiteSpace(filtro))
+        {
+            var f = filtro.ToLower();
+            medicos = medicos.Where(m =>
+                m.Apellido.ToLower().Contains(f) ||
+                m.Nombre.ToLower().Contains(f) ||
+                m.Especialidad.ToLower().Contains(f) ||
+                m.Matricula.ToLower().Contains(f) ||
+                m.Dni.Contains(f)).ToList();
+        }
+
+        DgvMedicos.DataSource = medicos;
     }
 
     private void LimpiarChecksObrasSociales()

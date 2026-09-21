@@ -56,6 +56,7 @@ partial class FormMenuPrincipal
         btnExcepcionesAgenda = new Button();
         btnTurnos = new Button();
         btnHistorial = new Button();
+        btnHorarios = new Button();
         btnCerrarSesion = new Button();
         pnlContenido = new Panel();
         pnlSidebar.SuspendLayout();
@@ -161,7 +162,7 @@ partial class FormMenuPrincipal
         btnActividad.Padding = new Padding(16, 0, 0, 0);
         btnActividad.Size = new Size(176, 36);
         btnActividad.TabIndex = 2;
-        btnActividad.Text = "Registrar Actividad";
+        btnActividad.Text = "Cargar atencion";
         btnActividad.TextAlign = ContentAlignment.MiddleLeft;
         btnActividad.UseVisualStyleBackColor = false;
         // 
@@ -287,7 +288,7 @@ partial class FormMenuPrincipal
         btnHistorial.Padding = new Padding(16, 0, 0, 0);
         btnHistorial.Size = new Size(176, 36);
         btnHistorial.TabIndex = 1;
-        btnHistorial.Text = "Historial Clínico";
+        btnHistorial.Text = "Consultar historial";
         btnHistorial.TextAlign = ContentAlignment.MiddleLeft;
         btnHistorial.UseVisualStyleBackColor = false;
         // 

@@ -21,7 +21,8 @@ public partial class FormAgendaMedico : Form
 
     private Medico? _medicoActual;
     private Turno? _turnoSeleccionado;
-    private FiltroTurno _filtroActual = FiltroTurno.Todos;
+    private FiltroTurno _filtroActual = FiltroTurno.Pendientes;
+    private List<Turno> _turnosDelDia = new();
 
     public FormAgendaMedico(Usuario? usuarioActivo = null, Action<Form>? navegador = null)
     {
@@ -45,6 +46,7 @@ public partial class FormAgendaMedico : Form
         DgvTurnos.CellDoubleClick += (s, e) => BtnAtender_Click(s, e);
         BtnAtender.Click += BtnAtender_Click;
         BtnHistorialRapido.Click += BtnHistorialRapido_Click;
+        TxtBuscarPaciente.TextChanged += (s, e) => PintarGrilla();
 
         CargarTurnos();
     }
@@ -75,6 +77,16 @@ public partial class FormAgendaMedico : Form
     {
         DgvTurnos.AutoGenerateColumns = false;
         DgvTurnos.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+        DgvTurnos.EnableHeadersVisualStyles = false;
+        DgvTurnos.ColumnHeadersHeight = 34;
+        DgvTurnos.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(27, 42, 74);
+        DgvTurnos.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
+        DgvTurnos.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+        DgvTurnos.DefaultCellStyle.SelectionBackColor = Color.FromArgb(46, 134, 222);
+        DgvTurnos.DefaultCellStyle.SelectionForeColor = Color.White;
+        DgvTurnos.AlternatingRowsDefaultCellStyle.BackColor = Color.FromArgb(245, 248, 252);
+        DgvTurnos.RowTemplate.Height = 30;
+        DgvTurnos.GridColor = Color.FromArgb(225, 230, 238);
 
         DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colHorario", HeaderText = "Horario", DataPropertyName = "HorarioRango", FillWeight = 16 });
         DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colPaciente", HeaderText = "Paciente", DataPropertyName = "PacienteNombre", FillWeight = 32 });
@@ -135,6 +147,24 @@ public partial class FormAgendaMedico : Form
         }
 
         var listaVisible = filtrados.ToList();
+        _turnosDelDia = listaVisible;
+        PintarGrilla();
+    }
+
+    private void PintarGrilla()
+    {
+        var filtro = TxtBuscarPaciente.Text?.Trim() ?? "";
+        IEnumerable<Turno> visible = _turnosDelDia;
+        if (!string.IsNullOrWhiteSpace(filtro))
+        {
+            var f = filtro.ToLower();
+            visible = _turnosDelDia.Where(t =>
+                t.PacienteNombre.ToLower().Contains(f) ||
+                t.PacienteDni.Contains(f));
+        }
+
+        var listaVisible = visible.ToList();
+        var fechaSeleccionada = DateOnly.FromDateTime(DtpFecha.Value);
 
         DgvTurnos.SelectionChanged -= DgvTurnos_SelectionChanged;
         DgvTurnos.DataSource = listaVisible;
@@ -160,7 +190,7 @@ public partial class FormAgendaMedico : Form
         _turnoSeleccionado = null;
         BtnAtender.Enabled = false;
         BtnHistorialRapido.Enabled = false;
-        LblMensaje.Text = "Haga clic en una tarjeta arriba para filtrar, o seleccione un paciente de la lista.";
+        LblMensaje.Text = "Sala de espera: atienda para escribir la consulta. Historial solo se consulta.";
         LblMensaje.ForeColor = Color.FromArgb(100, 110, 120);
 
         DgvTurnos.SelectionChanged += DgvTurnos_SelectionChanged;
@@ -184,8 +214,9 @@ public partial class FormAgendaMedico : Form
         _turnoSeleccionado = (Turno)DgvTurnos.CurrentRow.DataBoundItem;
         bool cancelado = _turnoSeleccionado.Estado == EstadoTurno.Cancelado;
         bool yaAtendido = _turnoSeleccionado.ActividadMedica?.Activo == true;
+        bool fechaFutura = _turnoSeleccionado.Fecha > DateOnly.FromDateTime(DateTime.Today);
 
-        BtnAtender.Enabled = !cancelado;
+        BtnAtender.Enabled = !cancelado && !fechaFutura;
         BtnAtender.Text = yaAtendido ? "Ver / Modificar Atencion" : "Atender Paciente";
         BtnHistorialRapido.Enabled = _turnoSeleccionado.Paciente != null;
 
@@ -193,6 +224,11 @@ public partial class FormAgendaMedico : Form
         {
             LblMensaje.ForeColor = Color.Red;
             LblMensaje.Text = $"Turno cancelado para {_turnoSeleccionado.PacienteNombre}.";
+        }
+        else if (fechaFutura)
+        {
+            LblMensaje.ForeColor = Color.FromArgb(180, 120, 20);
+            LblMensaje.Text = "Ese turno todavia no llego. Puede consultar el historial, pero no cargar la atencion.";
         }
         else if (yaAtendido)
         {
@@ -219,6 +255,13 @@ public partial class FormAgendaMedico : Form
         {
             MessageBox.Show("No se puede registrar atencion medica para un turno cancelado.",
                 "Turno cancelado", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
+
+        if (_turnoSeleccionado.Fecha > DateOnly.FromDateTime(DateTime.Today))
+        {
+            MessageBox.Show("No se puede cargar la atencion de un turno futuro.",
+                "Fecha no alcanzada", MessageBoxButtons.OK, MessageBoxIcon.Information);
             return;
         }
 
@@ -255,5 +298,10 @@ public partial class FormAgendaMedico : Form
             var formHistorial = new FormHistorialPaciente(_turnoSeleccionado.Paciente);
             formHistorial.ShowDialog();
         }
+    }
+
+    private void BtnFiltroTotal_Click(object sender, EventArgs e)
+    {
+
     }
 }

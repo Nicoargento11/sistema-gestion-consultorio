@@ -19,10 +19,12 @@ public class Turno
     public int MedicoId { get; set; }
     public Medico? Medico { get; set; }
 
-    public int HorarioId { get; set; }
-    public Horario? Horario { get; set; }
-
     public DateOnly Fecha { get; set; }
+    public TimeOnly HoraInicio { get; set; }
+    public int DuracionMinutos { get; set; } = 30;
+
+    public TimeOnly HoraFin => HoraInicio.AddMinutes(DuracionMinutos);
+
     public EstadoTurno Estado { get; set; } = EstadoTurno.Pendiente;
     public string? MedioPago { get; set; }
     public decimal? Monto { get; set; }
@@ -31,7 +33,7 @@ public class Turno
     public string PacienteNombre => Paciente?.NombreCompleto ?? "";
     public string PacienteDni => Paciente?.Dni ?? "";
     public string MedicoNombre => Medico?.NombreCompleto ?? "";
-    public string HorarioRango => Horario?.Rango ?? "";
+    public string HorarioRango => $"{HoraInicio:HH:mm} - {HoraFin:HH:mm}";
     public string EstadoAtencion => ActividadMedica != null && ActividadMedica.Activo ? "Atendido" : Estado.ToString();
 
     public ActividadMedica? ActividadMedica { get; set; }
