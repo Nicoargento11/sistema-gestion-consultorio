@@ -4,7 +4,7 @@ namespace SGC.Logica;
 
 public class TurnoService
 {
-    private readonly AgendaService _agendaService = new();
+    private readonly AgendaMedicoService _agendaMedicoService = new();
 
     private static readonly List<Turno> _turnos = new()
     {
@@ -103,7 +103,7 @@ public class TurnoService
         if (fecha < DateOnly.FromDateTime(DateTime.Today))
             throw new ArgumentException("No se puede asignar un turno en una fecha pasada.");
 
-        if (!_agendaService.MedicoAtiende(medico.Id, fecha.DayOfWeek, horaInicio, duracionMinutos))
+        if (!_agendaMedicoService.MedicoAtiende(medico.Id, fecha.DayOfWeek, horaInicio, duracionMinutos))
             throw new InvalidOperationException(
                 $"El profesional no atiende el {AgendaMedico.NombreDia(fecha.DayOfWeek)} en el horario {horaInicio:HH:mm} - {horaFin:HH:mm}.");
 
@@ -142,7 +142,7 @@ public class TurnoService
         if (nuevaFecha < DateOnly.FromDateTime(DateTime.Today))
             throw new ArgumentException("No se puede modificar un turno a una fecha pasada.");
 
-        if (!_agendaService.MedicoAtiende(turno.MedicoId, nuevaFecha.DayOfWeek, nuevaHoraInicio, nuevaDuracionMinutos))
+        if (!_agendaMedicoService.MedicoAtiende(turno.MedicoId, nuevaFecha.DayOfWeek, nuevaHoraInicio, nuevaDuracionMinutos))
             throw new InvalidOperationException(
                 $"El profesional no atiende el {AgendaMedico.NombreDia(nuevaFecha.DayOfWeek)} en el horario {nuevaHoraInicio:HH:mm} - {nuevaHoraFin:HH:mm}.");
 

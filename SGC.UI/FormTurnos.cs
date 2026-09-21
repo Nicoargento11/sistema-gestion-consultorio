@@ -8,10 +8,16 @@ public partial class FormTurnos : Form
     private readonly PacienteService _pacienteService = new();
     private readonly MedicoService _medicoService = new();
     private readonly HorarioService _horarioService = new();
+    private readonly AgendaMedicoService _agendaMedicoService = new();
     private readonly TurnoService _turnoService = new();
     private readonly NotificacionService _notificacionService = new();
     private readonly Usuario? _usuarioActivo;
     private int? _idTurnoSeleccionado = null;
+
+    // Duraciones habituales para elegir en CboDuracion. Si un turno ya
+    // guardado tiene una duracion distinta (por ejemplo, cargada por otra
+    // pantalla), se agrega dinamicamente en DgvTurnos_SelectionChanged.
+    private readonly List<int> _duracionesDisponibles = new() { 15, 20, 30, 45, 60, 90 };
 
     public FormTurnos(Usuario? usuarioActivo = null)
     {
@@ -37,6 +43,7 @@ public partial class FormTurnos : Form
             if (ChkFiltrarPaciente.Checked) CargarGrilla();
         };
         CboMedico.SelectedIndexChanged += (s, e) => { ActualizarAgenda(); CargarGrilla(); };
+        CboDuracion.SelectedIndexChanged += (s, e) => ActualizarAgenda();
         DtpFecha.ValueChanged += (s, e) => { ActualizarAgenda(); CargarGrilla(); };
         DgvAgenda.CellClick += DgvAgenda_CellClick;
         DgvAgenda.CellDoubleClick += DgvAgenda_CellDoubleClick;
@@ -60,9 +67,6 @@ public partial class FormTurnos : Form
         var horario = (Horario)DgvAgenda.Rows[e.RowIndex].Tag!;
 
         if (CboMedico.SelectedItem != null &&
-            // CORRECCION: TurnoService ya NO usa HorarioId del catalogo.
-            // Ahora validamos superposicion pasando directamente fecha, hora
-            // inicio y duracion (calculada a partir del Horario elegido en la UI).
             _turnoService.HorarioOcupado(
                 ((Medico)CboMedico.SelectedItem).Id,
                 DateOnly.FromDateTime(DtpFecha.Value),
@@ -78,30 +82,50 @@ public partial class FormTurnos : Form
         BtnAsignar_Click(this, e);
     }
 
+    // Arma la lista de horarios realmente disponibles para el medico y la
+    // fecha elegidos: toma el/los bloque(s) de AgendaMedico configurados
+    // por el Administrador para ese dia de la semana, y dentro de cada
+    // bloque genera slots consecutivos del largo indicado en CboDuracion.
+    // Si el medico no tiene ningun bloque cargado para ese dia, la lista
+    // queda vacia (no atiende ese dia).
     private void ActualizarAgenda()
     {
         DgvAgenda.Rows.Clear();
+        CboHorario.DataSource = null;
 
-        if (CboMedico.SelectedItem == null) return;
+        if (CboMedico.SelectedItem == null || CboDuracion.SelectedItem == null) return;
 
         var medico = (Medico)CboMedico.SelectedItem;
         var fecha = DateOnly.FromDateTime(DtpFecha.Value);
+        int duracion = (int)CboDuracion.SelectedItem;
 
-        foreach (var horario in _horarioService.ObtenerTodos())
+        var bloquesDelDia = _agendaMedicoService.ObtenerPorMedicoYDia(medico.Id, fecha.DayOfWeek);
+
+        var horariosDisponibles = new List<Horario>();
+        foreach (var bloque in bloquesDelDia)
+            horariosDisponibles.AddRange(_horarioService.GenerarSlotsEnRango(bloque.HoraInicio, bloque.HoraFin, duracion, duracion));
+
+        horariosDisponibles = horariosDisponibles.OrderBy(h => h.HoraInicio).ToList();
+
+        foreach (var horario in horariosDisponibles)
         {
-            // CORRECCION: TurnoService.HorarioOcupado() ya NO usa HorarioId.
-            // Le pasamos directamente la fecha, la hora inicial del slot y
-            // la duracion calculada (hf - hi) del catalogo Horario de la UI.
-            int duracion = (int)(horario.HoraFin - horario.HoraInicio).TotalMinutes;
             bool ocupado = _turnoService.HorarioOcupado(medico.Id, fecha, horario.HoraInicio, duracion);
             int fila = DgvAgenda.Rows.Add(horario.Rango, ocupado ? "Ocupado" : "Disponible");
 
             DgvAgenda.Rows[fila].Tag = horario;
-
-            // Mismo patron de fila coloreada que ya usaste en el TP4 (saldo < 50 = fila roja).
             DgvAgenda.Rows[fila].DefaultCellStyle.BackColor = ocupado
                 ? Color.FromArgb(250, 220, 220)
                 : Color.FromArgb(220, 245, 225);
+        }
+
+        CboHorario.DataSource = horariosDisponibles;
+        CboHorario.DisplayMember = "Rango";
+        CboHorario.ValueMember = "Id";
+
+        if (bloquesDelDia.Count == 0)
+        {
+            LblMensaje.ForeColor = Color.DarkOrange;
+            LblMensaje.Text = $"{medico.NombreCompleto} no atiende los {AgendaMedico.NombreDia(fecha.DayOfWeek)}.";
         }
     }
 
@@ -114,22 +138,30 @@ public partial class FormTurnos : Form
         _idTurnoSeleccionado = turno.Id;
         CboPaciente.SelectedValue = turno.PacienteId;
         CboMedico.SelectedValue = turno.MedicoId;
+        DtpFecha.Value = turno.Fecha.ToDateTime(TimeOnly.MinValue);
 
-        // CORRECCION (RF#02/RF#04): Turno ya NO tiene "HorarioId" del catalogo.
-        // Buscamos en el catalogo Horario de la UI el slot que COINCIDA con
-        // la hora de inicio del turno y que alcance para la duracion. Si no
-        // hay match (turno de duracion personalizada ej 45min) dejamos sin
-        // seleccion para que el usuario elija uno o modifique.
-        var horariosCombo = (_horarioService.ObtenerTodos()).ToList();
-        var horarioCoincidente = horariosCombo.FirstOrDefault(h =>
-            h.HoraInicio == turno.HoraInicio &&
-            (int)(h.HoraFin - h.HoraInicio).TotalMinutes >= turno.DuracionMinutos);
-        if (horarioCoincidente != null)
-            CboHorario.SelectedValue = horarioCoincidente.Id;
+        // Si el turno tiene una duracion que no esta en la lista habitual
+        // (por ejemplo, cargada antes de que existiera este combo), la
+        // sumamos para poder mostrarla seleccionada.
+        if (!_duracionesDisponibles.Contains(turno.DuracionMinutos))
+        {
+            _duracionesDisponibles.Add(turno.DuracionMinutos);
+            _duracionesDisponibles.Sort();
+            CboDuracion.DataSource = null;
+            CboDuracion.DataSource = _duracionesDisponibles;
+        }
+        CboDuracion.SelectedItem = turno.DuracionMinutos;
+
+        // ActualizarAgenda() ya se disparo con la duracion correcta (evento
+        // de CboDuracion), asi que CboHorario ya tiene los slots armados.
+        // Buscamos el que coincide con la hora de inicio del turno.
+        var horarioActual = (CboHorario.DataSource as List<Horario>)?
+            .FirstOrDefault(h => h.HoraInicio == turno.HoraInicio);
+
+        if (horarioActual != null)
+            CboHorario.SelectedValue = horarioActual.Id;
         else
             CboHorario.SelectedIndex = -1;
-
-        DtpFecha.Value = turno.Fecha.ToDateTime(TimeOnly.MinValue);
 
         // Paciente y medico de un turno ya asignado no se cambian aca (RF#05
         // solo permite modificar fecha/horario). Se deshabilitan para que
@@ -154,10 +186,10 @@ public partial class FormTurnos : Form
             return;
         }
 
-        if (CboHorario.SelectedItem == null)
+        if (CboHorario.SelectedItem == null || CboDuracion.SelectedItem == null)
         {
             LblMensaje.ForeColor = Color.Red;
-            LblMensaje.Text = "Seleccione un horario.";
+            LblMensaje.Text = "Seleccione un horario y una duracion.";
             return;
         }
 
@@ -165,13 +197,9 @@ public partial class FormTurnos : Form
         {
             var horario = (Horario)CboHorario.SelectedItem;
             var fecha = DateOnly.FromDateTime(DtpFecha.Value);
-            // CORRECCION (RF#02/RF#04): TurnoService.ModificarTurno ya NO
-            // recibe "Horario", sino (fecha, HoraInicio, DuracionMinutos).
-            // Calculamos la duracion a partir del slot Horario elegido en la UI.
-            TimeOnly horaInicio = horario.HoraInicio;
-            int duracion = (int)(horario.HoraFin - horario.HoraInicio).TotalMinutes;
+            int duracion = (int)CboDuracion.SelectedItem;
 
-            _turnoService.ModificarTurno(_idTurnoSeleccionado.Value, fecha, horaInicio, duracion);
+            _turnoService.ModificarTurno(_idTurnoSeleccionado.Value, fecha, horario.HoraInicio, duracion);
             var turno = _turnoService.ObtenerPorId(_idTurnoSeleccionado.Value);
 
             CargarGrilla();
@@ -191,11 +219,6 @@ public partial class FormTurnos : Form
 
     private void ConfigurarColumnas()
     {
-        // AutoSizeColumnsMode = Fill reparte el ancho disponible entre las columnas
-        // segun su FillWeight (proporcional, no en pixeles fijos). Es necesario
-        // desde que FormTurnos se embebe en pnlContenido y ya no tiene un ancho
-        // de ventana fijo: con Width fijo, en una pantalla grande las columnas
-        // quedaban chicas y sobraba canvas en blanco sin usar.
         DgvTurnos.AutoGenerateColumns = false;
         DgvTurnos.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
         DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colFecha", HeaderText = "Fecha", DataPropertyName = "Fecha", FillWeight = 90 });
@@ -225,17 +248,17 @@ public partial class FormTurnos : Form
         if (_usuarioActivo != null && _usuarioActivo.Rol == RolUsuario.Recepcionista)
         {
             CboMedico.DataSource = _usuarioActivo.MedicosAsignados;
-        } else
+        }
+        else
         {
             CboMedico.DataSource = _medicoService.ObtenerTodos();
         }
 
-            CboMedico.DisplayMember = "NombreCompleto";
+        CboMedico.DisplayMember = "NombreCompleto";
         CboMedico.ValueMember = "Id";
 
-        CboHorario.DataSource = _horarioService.ObtenerTodos();
-        CboHorario.DisplayMember = "Rango";
-        CboHorario.ValueMember = "Id";
+        CboDuracion.DataSource = _duracionesDisponibles;
+        CboDuracion.SelectedItem = 30;
 
         DtpFecha.MinDate = DateTime.Today;
     }
@@ -281,10 +304,11 @@ public partial class FormTurnos : Form
 
     private void BtnAsignar_Click(object sender, EventArgs e)
     {
-        if (CboPaciente.SelectedItem == null || CboMedico.SelectedItem == null || CboHorario.SelectedItem == null)
+        if (CboPaciente.SelectedItem == null || CboMedico.SelectedItem == null ||
+            CboHorario.SelectedItem == null || CboDuracion.SelectedItem == null)
         {
             LblMensaje.ForeColor = Color.Red;
-            LblMensaje.Text = "Debe seleccionar paciente, medico y horario.";
+            LblMensaje.Text = "Debe seleccionar paciente, medico, duracion y horario.";
             return;
         }
 
@@ -294,13 +318,9 @@ public partial class FormTurnos : Form
             var medico = (Medico)CboMedico.SelectedItem;
             var horario = (Horario)CboHorario.SelectedItem;
             var fecha = DateOnly.FromDateTime(DtpFecha.Value);
-            // CORRECCION (RF#02/RF#04): TurnoService.AsignarTurno ya NO usa
-            // la entidad "Horario" del catalogo. Le pasamos directamente la
-            // fecha, hora inicio y duracion (calculada desde el slot elegido).
-            TimeOnly horaInicio = horario.HoraInicio;
-            int duracion = (int)(horario.HoraFin - horario.HoraInicio).TotalMinutes;
+            int duracion = (int)CboDuracion.SelectedItem;
 
-            _turnoService.AsignarTurno(paciente, medico, fecha, horaInicio, duracion);
+            _turnoService.AsignarTurno(paciente, medico, fecha, horario.HoraInicio, duracion);
 
             CargarGrilla();
             LimpiarSeleccion();

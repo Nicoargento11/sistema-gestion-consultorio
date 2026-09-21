@@ -24,6 +24,21 @@ public class AgendaMedicoService
         return _agenda.FirstOrDefault(a => a.Id == id);
     }
 
+    public List<AgendaMedico> ObtenerPorMedicoYDia(int medicoId, DayOfWeek dia)
+    {
+        return _agenda.Where(a => a.Activo && a.MedicoId == medicoId && a.DiaSemana == dia).ToList();
+    }
+
+    public bool MedicoAtiende(int medicoId, DayOfWeek dia, TimeOnly horaInicioTurno, int duracionMinutos)
+    {
+        if (duracionMinutos <= 0) duracionMinutos = 30;
+        TimeOnly horaFinTurno = horaInicioTurno.AddMinutes(duracionMinutos);
+
+        return ObtenerPorMedicoYDia(medicoId, dia).Any(a =>
+            horaInicioTurno >= a.HoraInicio &&
+            horaFinTurno <= a.HoraFin);
+    }
+
     public void Agregar(AgendaMedico agenda)
     {
         var medico = ValidarDatosBasicos(agenda);

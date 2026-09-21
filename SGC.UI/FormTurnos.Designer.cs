@@ -16,6 +16,8 @@ partial class FormTurnos
     private void InitializeComponent()
     {
         pnlFormulario = new Panel();
+        lblDuracion = new Label();
+        CboDuracion = new ComboBox();
         ChkFiltrarFecha = new CheckBox();
         ChkFiltrarPaciente = new CheckBox();
         ChkTodosMedicos = new CheckBox();
@@ -26,9 +28,6 @@ partial class FormTurnos
         BtnCancelar = new Button();
         BtnConfirmarAsistencia = new Button();
         BtnAsignar = new Button();
-        // NUEVO: ComboBox Duracion (min) + Label
-        CboDuracion = new ComboBox();
-        lblDuracion = new Label();
         CboHorario = new ComboBox();
         lblHorario = new Label();
         DtpFecha = new DateTimePicker();
@@ -76,6 +75,27 @@ partial class FormTurnos
         pnlFormulario.Name = "pnlFormulario";
         pnlFormulario.Size = new Size(1040, 152);
         pnlFormulario.TabIndex = 1;
+        // 
+        // lblDuracion
+        // 
+        lblDuracion.AutoSize = true;
+        lblDuracion.Font = new Font("Segoe UI", 9F);
+        lblDuracion.Location = new Point(326, 72);
+        lblDuracion.Margin = new Padding(2, 0, 2, 0);
+        lblDuracion.Name = "lblDuracion";
+        lblDuracion.Size = new Size(108, 20);
+        lblDuracion.TabIndex = 13;
+        lblDuracion.Text = "Duracion (min)";
+        // 
+        // CboDuracion
+        // 
+        CboDuracion.DropDownStyle = ComboBoxStyle.DropDownList;
+        CboDuracion.Font = new Font("Segoe UI", 10F);
+        CboDuracion.Location = new Point(326, 91);
+        CboDuracion.Margin = new Padding(2, 3, 2, 3);
+        CboDuracion.Name = "CboDuracion";
+        CboDuracion.Size = new Size(90, 31);
+        CboDuracion.TabIndex = 14;
         // 
         // ChkFiltrarFecha
         // 
@@ -213,27 +233,6 @@ partial class FormTurnos
         BtnAsignar.Text = "Asignar turno";
         BtnAsignar.UseVisualStyleBackColor = false;
         BtnAsignar.Click += BtnAsignar_Click;
-        // 
-        // lblDuracion
-        // 
-        lblDuracion.AutoSize = true;
-        lblDuracion.Font = new Font("Segoe UI", 9F);
-        lblDuracion.Location = new Point(326, 72);
-        lblDuracion.Margin = new Padding(2, 0, 2, 0);
-        lblDuracion.Name = "lblDuracion";
-        lblDuracion.Size = new Size(99, 20);
-        lblDuracion.TabIndex = 13;
-        lblDuracion.Text = "Duracion (min)";
-        // 
-        // CboDuracion
-        // 
-        CboDuracion.DropDownStyle = ComboBoxStyle.DropDownList;
-        CboDuracion.Font = new Font("Segoe UI", 10F);
-        CboDuracion.Location = new Point(326, 91);
-        CboDuracion.Margin = new Padding(2, 3, 2, 3);
-        CboDuracion.Name = "CboDuracion";
-        CboDuracion.Size = new Size(90, 31);
-        CboDuracion.TabIndex = 14;
         // 
         // CboHorario
         // 

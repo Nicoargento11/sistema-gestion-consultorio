@@ -29,7 +29,7 @@ public partial class FormConfigurarAgenda : Form
         DgvAgenda.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
         DgvAgenda.Columns.Add(new DataGridViewTextBoxColumn { Name = "colMedico", HeaderText = "Medico", DataPropertyName = "MedicoNombre", FillWeight = 160 });
 
-        // CORRECCI�N 1: Actualizamos los nombres a DiaNombre y HorarioRango
+        // Usamos DiaNombre y HorarioRango, ya calculados en la entidad AgendaMedico
         DgvAgenda.Columns.Add(new DataGridViewTextBoxColumn { Name = "colDia", HeaderText = "Dia", DataPropertyName = "DiaNombre", FillWeight = 90 });
         DgvAgenda.Columns.Add(new DataGridViewTextBoxColumn { Name = "colRango", HeaderText = "Horario", DataPropertyName = "HorarioRango", FillWeight = 90 });
     }
@@ -116,7 +116,7 @@ public partial class FormConfigurarAgenda : Form
         }
         var agenda = DgvAgenda.CurrentRow.DataBoundItem as AgendaMedico;
 
-        // CORRECCI�N 3: Ajuste de nombres en el mensaje
+        // Mensaje usando los nombres actuales de la entidad
         var respuesta = MessageBox.Show(
             $"Esta seguro que desea eliminar el registro de agenda del medico {agenda?.MedicoNombre} para el dia {agenda?.DiaNombre} en el horario {agenda?.HorarioRango}?",
             "Confirmar eliminacion", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
