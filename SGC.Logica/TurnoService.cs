@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using SGC.Datos;
 using SGC.Entidades;
 
 namespace SGC.Logica;
@@ -6,66 +8,15 @@ public class TurnoService
 {
     private readonly AgendaMedicoService _agendaMedicoService = new();
 
-    private static readonly List<Turno> _turnos = new()
-    {
-        new Turno
-        {
-            Id = 1,
-            PacienteId = 1,
-            Paciente = new Paciente { Id = 1, Nombre = "Carlos", Apellido = "Fernandez", Dni = "35123456", Email = "carlos.f@email.com", Telefono = "3794123456", Activo = true },
-            MedicoId = 1,
-            Medico = new Medico { Id = 1, Dni = "20111222", Nombre = "Laura", Apellido = "Gomez", Matricula = "MP1234", Especialidad = "Clinica General", Activo = true },
-            Fecha = DateOnly.FromDateTime(DateTime.Today),
-            HoraInicio = new TimeOnly(9, 0),
-            DuracionMinutos = 30,
-            Estado = EstadoTurno.Confirmado,
-            Activo = true
-        },
-        new Turno
-        {
-            Id = 2,
-            PacienteId = 2,
-            Paciente = new Paciente { Id = 2, Nombre = "Ana", Apellido = "Martinez", Dni = "38987654", Email = "ana.martinez@email.com", Telefono = "3794987654", Activo = true },
-            MedicoId = 1,
-            Medico = new Medico { Id = 1, Dni = "20111222", Nombre = "Laura", Apellido = "Gomez", Matricula = "MP1234", Especialidad = "Clinica General", Activo = true },
-            Fecha = DateOnly.FromDateTime(DateTime.Today),
-            HoraInicio = new TimeOnly(9, 30),
-            DuracionMinutos = 30,
-            Estado = EstadoTurno.Confirmado,
-            Activo = true
-        },
-        new Turno
-        {
-            Id = 3,
-            PacienteId = 3,
-            Paciente = new Paciente { Id = 3, Nombre = "Luis", Apellido = "Torres", Dni = "40555666", Email = "luis.torres@email.com", Telefono = "3794555666", Activo = true },
-            MedicoId = 1,
-            Medico = new Medico { Id = 1, Dni = "20111222", Nombre = "Laura", Apellido = "Gomez", Matricula = "MP1234", Especialidad = "Clinica General", Activo = true },
-            Fecha = DateOnly.FromDateTime(DateTime.Today),
-            HoraInicio = new TimeOnly(10, 0),
-            DuracionMinutos = 30,
-            Estado = EstadoTurno.Confirmado,
-            Activo = true
-        },
-        new Turno
-        {
-            Id = 4,
-            PacienteId = 4,
-            Paciente = new Paciente { Id = 4, Nombre = "Sofia", Apellido = "Herrera", Dni = "42111222", Email = "sofia.herrera@email.com", Telefono = "3794111222", Activo = true },
-            MedicoId = 1,
-            Medico = new Medico { Id = 1, Dni = "20111222", Nombre = "Laura", Apellido = "Gomez", Matricula = "MP1234", Especialidad = "Clinica General", Activo = true },
-            Fecha = DateOnly.FromDateTime(DateTime.Today),
-            HoraInicio = new TimeOnly(10, 30),
-            DuracionMinutos = 30,
-            Estado = EstadoTurno.Confirmado,
-            Activo = true
-        }
-    };
-    private static int _siguienteId = 5;
-
     public List<Turno> ObtenerTodos(bool incluirCancelados = false, int? medicoId = null, DateOnly? fecha = null, int? pacienteId = null)
     {
-        IEnumerable<Turno> query = incluirCancelados ? _turnos : _turnos.Where(t => t.Activo);
+        using var contexto = SGCContextFactory.Crear();
+        IQueryable<Turno> query = contexto.Turnos
+            .Include(t => t.Paciente)
+            .Include(t => t.Medico)
+            .Include(t => t.ActividadMedica);
+
+        query = incluirCancelados ? query : query.Where(t => t.Activo);
 
         if (medicoId != null)
             query = query.Where(t => t.MedicoId == medicoId);
@@ -81,8 +32,13 @@ public class TurnoService
 
     public List<Turno> ObtenerPorMedicoYFecha(int medicoId, DateOnly? fecha = null, bool incluirCancelados = false)
     {
-        IEnumerable<Turno> query = incluirCancelados ? _turnos : _turnos.Where(t => t.Activo);
-        query = query.Where(t => t.MedicoId == medicoId);
+        using var contexto = SGCContextFactory.Crear();
+        IQueryable<Turno> query = contexto.Turnos
+            .Include(t => t.Paciente)
+            .Include(t => t.Medico)
+            .Where(t => t.MedicoId == medicoId);
+
+        query = incluirCancelados ? query : query.Where(t => t.Activo);
 
         if (fecha.HasValue)
             query = query.Where(t => t.Fecha == fecha.Value);
@@ -92,7 +48,12 @@ public class TurnoService
 
     public Turno? ObtenerPorId(int id)
     {
-        return _turnos.FirstOrDefault(t => t.Id == id);
+        using var contexto = SGCContextFactory.Crear();
+        return contexto.Turnos
+            .Include(t => t.Paciente)
+            .Include(t => t.Medico)
+            .Include(t => t.ActividadMedica)
+            .FirstOrDefault(t => t.Id == id);
     }
 
     public void AsignarTurno(Paciente paciente, Medico medico, DateOnly fecha, TimeOnly horaInicio, int duracionMinutos = 30)
@@ -107,17 +68,16 @@ public class TurnoService
             throw new InvalidOperationException(
                 $"El profesional no atiende el {AgendaMedico.NombreDia(fecha.DayOfWeek)} en el horario {horaInicio:HH:mm} - {horaFin:HH:mm}.");
 
-        if (HaySuperposicion(medico.Id, fecha, horaInicio, duracionMinutos))
+        using var contexto = SGCContextFactory.Crear();
+
+        if (HaySuperposicion(contexto, medico.Id, fecha, horaInicio, duracionMinutos, excluirTurnoId: null))
             throw new InvalidOperationException(
                 $"El Dr./Dra. {medico.Apellido} ya tiene un turno asignado el {fecha:dd/MM/yyyy} que se superpone con {horaInicio:HH:mm} - {horaFin:HH:mm}.");
 
         var turno = new Turno
         {
-            Id = _siguienteId++,
             PacienteId = paciente.Id,
-            Paciente = paciente,
             MedicoId = medico.Id,
-            Medico = medico,
             Fecha = fecha,
             HoraInicio = horaInicio,
             DuracionMinutos = duracionMinutos,
@@ -125,44 +85,49 @@ public class TurnoService
             Activo = true
         };
 
-        _turnos.Add(turno);
+        contexto.Turnos.Add(turno);
+        contexto.SaveChanges();
     }
 
     public void ModificarTurno(int turnoId, DateOnly nuevaFecha, TimeOnly nuevaHoraInicio, int nuevaDuracionMinutos = 30)
     {
-        var turno = _turnos.FirstOrDefault(t => t.Id == turnoId)
-            ?? throw new InvalidOperationException("El turno que intenta modificar no existe.");
-
-        if (turno.Estado == EstadoTurno.Cancelado)
-            throw new InvalidOperationException("No se puede modificar un turno cancelado.");
-
         if (nuevaDuracionMinutos <= 0) nuevaDuracionMinutos = 30;
         TimeOnly nuevaHoraFin = nuevaHoraInicio.AddMinutes(nuevaDuracionMinutos);
 
         if (nuevaFecha < DateOnly.FromDateTime(DateTime.Today))
             throw new ArgumentException("No se puede modificar un turno a una fecha pasada.");
 
+        using var contexto = SGCContextFactory.Crear();
+        var turno = contexto.Turnos.Include(t => t.Medico).FirstOrDefault(t => t.Id == turnoId)
+            ?? throw new InvalidOperationException("El turno que intenta modificar no existe.");
+
+        if (turno.Estado == EstadoTurno.Cancelado)
+            throw new InvalidOperationException("No se puede modificar un turno cancelado.");
+
         if (!_agendaMedicoService.MedicoAtiende(turno.MedicoId, nuevaFecha.DayOfWeek, nuevaHoraInicio, nuevaDuracionMinutos))
             throw new InvalidOperationException(
                 $"El profesional no atiende el {AgendaMedico.NombreDia(nuevaFecha.DayOfWeek)} en el horario {nuevaHoraInicio:HH:mm} - {nuevaHoraFin:HH:mm}.");
 
-        if (HaySuperposicion(turno.MedicoId, nuevaFecha, nuevaHoraInicio, nuevaDuracionMinutos, turnoId))
+        if (HaySuperposicion(contexto, turno.MedicoId, nuevaFecha, nuevaHoraInicio, nuevaDuracionMinutos, excluirTurnoId: turnoId))
             throw new InvalidOperationException(
                 $"El Dr./Dra. {turno.Medico?.Apellido} ya tiene otro turno asignado el {nuevaFecha:dd/MM/yyyy} que se superpone con {nuevaHoraInicio:HH:mm} - {nuevaHoraFin:HH:mm}.");
 
         turno.Fecha = nuevaFecha;
         turno.HoraInicio = nuevaHoraInicio;
         turno.DuracionMinutos = nuevaDuracionMinutos;
+        contexto.SaveChanges();
     }
 
     public bool HorarioOcupado(int medicoId, DateOnly fecha, TimeOnly horaInicio, int duracionMinutos = 30)
     {
-        return HaySuperposicion(medicoId, fecha, horaInicio, duracionMinutos);
+        using var contexto = SGCContextFactory.Crear();
+        return HaySuperposicion(contexto, medicoId, fecha, horaInicio, duracionMinutos, excluirTurnoId: null);
     }
 
     public void ConfirmarAsistencia(int turnoId, bool asistio, string? medioPago, decimal? monto)
     {
-        var turno = _turnos.FirstOrDefault(t => t.Id == turnoId)
+        using var contexto = SGCContextFactory.Crear();
+        var turno = contexto.Turnos.FirstOrDefault(t => t.Id == turnoId)
             ?? throw new InvalidOperationException("El turno no existe.");
 
         if (turno.Estado != EstadoTurno.Confirmado)
@@ -189,11 +154,14 @@ public class TurnoService
             turno.MedioPago = null;
             turno.Monto = null;
         }
+
+        contexto.SaveChanges();
     }
 
     public void CancelarTurno(int id)
     {
-        var turno = _turnos.FirstOrDefault(t => t.Id == id)
+        using var contexto = SGCContextFactory.Crear();
+        var turno = contexto.Turnos.FirstOrDefault(t => t.Id == id)
             ?? throw new InvalidOperationException("El turno que intenta cancelar no existe.");
 
         if (turno.Estado == EstadoTurno.Cancelado)
@@ -201,17 +169,20 @@ public class TurnoService
 
         turno.Estado = EstadoTurno.Cancelado;
         turno.Activo = false;
+        contexto.SaveChanges();
     }
 
-    private bool HaySuperposicion(int medicoId, DateOnly fecha, TimeOnly horaInicio, int duracionMinutos, int? excluirTurnoId = null)
+    // HoraFin es una propiedad calculada (no existe como columna), asi que
+    // la superposicion no se puede traducir a SQL directo: se trae el dia
+    // completo del medico (consulta chica, se filtra bien por indice) y se
+    // resuelve el solapamiento de rangos en memoria.
+    private static bool HaySuperposicion(SGCContext contexto, int medicoId, DateOnly fecha, TimeOnly horaInicio, int duracionMinutos, int? excluirTurnoId)
     {
         TimeOnly horaFin = horaInicio.AddMinutes(duracionMinutos);
-        return _turnos.Any(t =>
-            t.Activo &&
-            t.MedicoId == medicoId &&
-            t.Fecha == fecha &&
-            t.Id != (excluirTurnoId ?? 0) &&
-            t.HoraInicio < horaFin &&
-            t.HoraFin > horaInicio);
+
+        return contexto.Turnos
+            .Where(t => t.Activo && t.MedicoId == medicoId && t.Fecha == fecha && t.Id != (excluirTurnoId ?? 0))
+            .AsEnumerable()
+            .Any(t => t.HoraInicio < horaFin && t.HoraFin > horaInicio);
     }
 }

@@ -151,7 +151,7 @@ public partial class FormUsuarios : Form
         }
 
         var usuarioSeleccionado = (Usuario)DgvUsuarios.CurrentRow.DataBoundItem;
-        var respuesta = MessageBox.Show("�Est� seguro que desea eliminar el usuario seleccionado?", "Confirmar eliminaci�n", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+        var respuesta = MessageBox.Show("¿Está seguro que desea eliminar el usuario seleccionado?", "Confirmar eliminación", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
         if (respuesta != DialogResult.Yes) return;
         try
         {
@@ -180,7 +180,10 @@ public partial class FormUsuarios : Form
         var usuarioSeleccionado = (Usuario)DgvUsuarios.CurrentRow.DataBoundItem;
         _idSeleccionado = usuarioSeleccionado.Id;
         TxtNombreUsuario.Text = usuarioSeleccionado.NombreUsuario;
-        TxtContrasena.Text = usuarioSeleccionado.Contrasena;
+
+        // Nunca se prellena: el valor guardado es un hash, no la contrasena
+        // real. Dejarlo en blanco significa "no cambiarla" al guardar.
+        TxtContrasena.Text = "";
         CboRol.SelectedItem = usuarioSeleccionado.Rol;
         if (usuarioSeleccionado.Rol == RolUsuario.Medico)
         {

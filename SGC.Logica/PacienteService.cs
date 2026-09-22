@@ -1,47 +1,38 @@
+using Microsoft.EntityFrameworkCore;
+using SGC.Datos;
 using SGC.Entidades;
 
 namespace SGC.Logica;
 
 public class PacienteService
 {
-    // Datos iniciales de prueba para desarrollo y demostracion
-    private static readonly List<Paciente> _pacientes = new()
-    {
-        new Paciente { Id = 1, Nombre = "Carlos", Apellido = "Fernandez", Dni = "35123456", Email = "carlos.f@email.com", Telefono = "3794123456", FechaNacimiento = new DateOnly(1990, 4, 12), ObraSocialId = 1, Activo = true },
-        new Paciente { Id = 2, Nombre = "Ana", Apellido = "Martinez", Dni = "38987654", Email = "ana.martinez@email.com", Telefono = "3794987654", FechaNacimiento = new DateOnly(1985, 9, 3), ObraSocialId = 2, Activo = true },
-        new Paciente { Id = 3, Nombre = "Luis", Apellido = "Torres", Dni = "40555666", Email = "luis.torres@email.com", Telefono = "3794555666", FechaNacimiento = new DateOnly(1998, 1, 27), ObraSocialId = 3, Activo = true },
-        new Paciente { Id = 4, Nombre = "Sofia", Apellido = "Herrera", Dni = "42111222", Email = "sofia.herrera@email.com", Telefono = "3794111222", FechaNacimiento = new DateOnly(2001, 11, 15), ObraSocialId = null, Activo = true }
-    };
-    private static int _siguienteId = 5;
-
-    private readonly ObraSocialService _obraSocialService = new();
-
     public List<Paciente> ObtenerTodos()
     {
-        return _pacientes.Where(p => p.Activo).Select(ResolverNavegacion).ToList();
+        using var contexto = SGCContextFactory.Crear();
+        return contexto.Pacientes
+            .Where(p => p.Activo)
+            .Include(p => p.ObraSocial)
+            .ToList();
     }
 
     public void Agregar(Paciente paciente)
     {
-        Validar(paciente);
+        using var contexto = SGCContextFactory.Crear();
+        Validar(paciente, contexto);
 
-        if (_pacientes.Any(p => p.Activo && p.Dni == paciente.Dni))
-            throw new InvalidOperationException($"Ya existe un paciente activo con el DNI {paciente.Dni}.");
-
-        paciente.Id = _siguienteId++;
+        paciente.Id = 0;
         paciente.Activo = true;
-        _pacientes.Add(paciente);
+        contexto.Pacientes.Add(paciente);
+        contexto.SaveChanges();
     }
 
     public void Modificar(Paciente paciente)
     {
-        Validar(paciente);
+        using var contexto = SGCContextFactory.Crear();
+        Validar(paciente, contexto);
 
-        var existente = _pacientes.FirstOrDefault(p => p.Id == paciente.Id)
+        var existente = contexto.Pacientes.FirstOrDefault(p => p.Id == paciente.Id)
             ?? throw new InvalidOperationException("El paciente que intenta modificar no existe.");
-
-        if (_pacientes.Any(p => p.Activo && p.Dni == paciente.Dni && p.Id != paciente.Id))
-            throw new InvalidOperationException($"Ya existe otro paciente activo con el DNI {paciente.Dni}.");
 
         existente.Nombre = paciente.Nombre;
         existente.Apellido = paciente.Apellido;
@@ -50,23 +41,21 @@ public class PacienteService
         existente.Telefono = paciente.Telefono;
         existente.FechaNacimiento = paciente.FechaNacimiento;
         existente.ObraSocialId = paciente.ObraSocialId;
+
+        contexto.SaveChanges();
     }
 
     public void EliminarLogico(int id)
     {
-        var paciente = _pacientes.FirstOrDefault(p => p.Id == id)
+        using var contexto = SGCContextFactory.Crear();
+        var paciente = contexto.Pacientes.FirstOrDefault(p => p.Id == id)
             ?? throw new InvalidOperationException("El paciente que intenta eliminar no existe.");
 
         paciente.Activo = false;
+        contexto.SaveChanges();
     }
 
-    private Paciente ResolverNavegacion(Paciente paciente)
-    {
-        paciente.ObraSocial = paciente.ObraSocialId is int id ? _obraSocialService.ObtenerPorId(id) : null;
-        return paciente;
-    }
-
-    private void Validar(Paciente paciente)
+    private void Validar(Paciente paciente, SGCContext contexto)
     {
         if (string.IsNullOrWhiteSpace(paciente.Nombre))
             throw new ArgumentException("El nombre es obligatorio.");
@@ -93,10 +82,13 @@ public class PacienteService
         if (paciente.FechaNacimiento < DateOnly.FromDateTime(DateTime.Today).AddYears(-120))
             throw new ArgumentException("La fecha de nacimiento no es válida.");
 
+        if (contexto.Pacientes.Any(p => p.Activo && p.Dni == paciente.Dni && p.Id != paciente.Id))
+            throw new InvalidOperationException($"Ya existe un paciente activo con el DNI {paciente.Dni}.");
+
         // ObraSocialId es opcional: null se interpreta como "Particular".
         if (paciente.ObraSocialId is int obraSocialId)
         {
-            var obraSocial = _obraSocialService.ObtenerPorId(obraSocialId);
+            var obraSocial = contexto.ObrasSociales.FirstOrDefault(o => o.Id == obraSocialId);
             if (obraSocial is null || !obraSocial.Activo)
                 throw new ArgumentException("La obra social seleccionada no es valida.");
         }

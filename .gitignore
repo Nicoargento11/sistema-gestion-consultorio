@@ -12,3 +12,7 @@
 
 # Documentos de referencia (ERS, entregas de otros grupos) - solo local
 docs/referencia/
+
+# Connection string local de cada desarrollador - NUNCA se sube (cada uno
+# tiene su propia instancia de SQL Server). Ver appsettings.example.json.
+appsettings.Local.json

@@ -28,9 +28,9 @@ public partial class FormMedicos : Form
 
     private void ConfigurarColumnas()
     {
-        // Se configura ac�, en c�digo, y no en el Designer, porque el dise�ador
+        // Se configura aca, en codigo, y no en el Designer, porque el disenador
         // visual de Visual Studio borra las columnas de un DataGridView cada vez
-        // que se abre el formulario. Ac� es inmune a eso.
+        // que se abre el formulario. Aca es inmune a eso.
         // AutoSizeColumnsMode = Fill reparte el ancho disponible segun FillWeight
         // (proporcional) en vez de pixeles fijos - necesario porque FormMedicos
         // ahora se embebe en pnlContenido y ya no tiene un ancho de ventana fijo.
