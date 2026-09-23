@@ -36,6 +36,7 @@ public class TurnoService
         IQueryable<Turno> query = contexto.Turnos
             .Include(t => t.Paciente)
             .Include(t => t.Medico)
+            .Include(t => t.ActividadMedica)
             .Where(t => t.MedicoId == medicoId);
 
         query = incluirCancelados ? query : query.Where(t => t.Activo);
