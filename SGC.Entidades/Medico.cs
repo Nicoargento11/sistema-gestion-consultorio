@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace SGC.Entidades;
 
 public class Medico
@@ -14,6 +16,10 @@ public class Medico
 
     // Que obras sociales acepta este medico (M:N, mismo patron que
     // Usuario.MedicosAsignadosIds para Recepcionista).
+    // ObrasSocialesAceptadasIds es solo para pegamento con la UI
+    // (CheckedListBox) - la relacion real en la base es la coleccion
+    // de navegacion ObrasSocialesAceptadas, mapeada M:N por EF Core.
+    [NotMapped]
     public List<int> ObrasSocialesAceptadasIds { get; set; } = new();
     public List<ObraSocial> ObrasSocialesAceptadas { get; set; } = new();
 

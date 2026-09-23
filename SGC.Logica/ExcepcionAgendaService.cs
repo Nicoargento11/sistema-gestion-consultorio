@@ -1,62 +1,74 @@
+using Microsoft.EntityFrameworkCore;
+using SGC.Datos;
 using SGC.Entidades;
 
 namespace SGC.Logica;
 
 public class ExcepcionAgendaService
 {
-    private static readonly List<ExcepcionAgenda> _excepciones = new();
-    private static int _siguienteId = 1;
-
-    private readonly MedicoService _medicoService = new();
-    private readonly TurnoService _turnoService = new();
-    private readonly NotificacionService _notificacionService = new();
-
     public List<ExcepcionAgenda> ObtenerTodos()
     {
-       return _excepciones.Where(e => e.Activo).Select(ResolverNavegacion).ToList();
+        using var contexto = SGCContextFactory.Crear();
+        return contexto.ExcepcionesAgenda.Where(e => e.Activo).Include(e => e.Medico).ToList();
     }
 
     public List<ExcepcionAgenda> ObtenerPorMedico(int medicoId)
     {
-        return _excepciones.Where(e => e.Activo && e.MedicoId == medicoId).Select(ResolverNavegacion).ToList();
+        using var contexto = SGCContextFactory.Crear();
+        return contexto.ExcepcionesAgenda
+            .Where(e => e.Activo && e.MedicoId == medicoId)
+            .Include(e => e.Medico)
+            .ToList();
     }
 
     public ExcepcionAgenda? ObtenerPorId(int id)
     {
-        var excepcion = _excepciones.FirstOrDefault(e => e.Id == id);
-        return excepcion is null ? null : ResolverNavegacion(excepcion);
+        using var contexto = SGCContextFactory.Crear();
+        return contexto.ExcepcionesAgenda.Include(e => e.Medico).FirstOrDefault(e => e.Id == id);
     }
 
     public List<Turno> Agregar(ExcepcionAgenda excepcion)
     {
-        var medico = Validar(excepcion);
+        using var contexto = SGCContextFactory.Crear();
+        var medico = Validar(excepcion, contexto);
 
-        excepcion.Id = _siguienteId++;
+        excepcion.Id = 0;
         excepcion.Activo = true;
         excepcion.Medico = medico;
-        _excepciones.Add(excepcion);
+        contexto.ExcepcionesAgenda.Add(excepcion);
+        contexto.SaveChanges();
 
-        return CancelarTurnosAfectados(excepcion);
+        return CancelarTurnosAfectados(excepcion, contexto);
     }
 
-    private List<Turno> CancelarTurnosAfectados(ExcepcionAgenda excepcion)
+    // Al cargar una ausencia, los turnos que ya estaban agendados en ese
+    // rango dejan de tener sentido: se cancelan y se avisa al paciente
+    // (mismo patron que usaba FormHorarios al eliminar un bloque de horario).
+    private List<Turno> CancelarTurnosAfectados(ExcepcionAgenda excepcion, SGCContext contexto)
     {
-        var turnosAfectados = _turnoService.ObtenerTodos(false, excepcion.MedicoId, excepcion.Fecha)
-            .Where(t => t.Estado is EstadoTurno.Pendiente or EstadoTurno.Confirmado)
+        var notificacionService = new NotificacionService();
+
+        var turnosAfectados = contexto.Turnos
+            .Include(t => t.Paciente)
+            .Where(t => t.Activo && t.MedicoId == excepcion.MedicoId && t.Fecha == excepcion.Fecha)
+            .Where(t => t.Estado == EstadoTurno.Pendiente || t.Estado == EstadoTurno.Confirmado)
+            .AsEnumerable()
             .Where(t => excepcion.Tipo == TipoExcepcionAgenda.DiaCompleto || SeSuperponeConRango(t, excepcion))
             .ToList();
 
         foreach (var turno in turnosAfectados)
         {
-            _turnoService.CancelarTurno(turno.Id);
+            turno.Estado = EstadoTurno.Cancelado;
+            turno.Activo = false;
 
             if (turno.Paciente != null)
             {
-                _notificacionService.AvisarTurno(turno.Paciente, "Cancelacion",
+                notificacionService.AvisarTurno(turno.Paciente, "Cancelacion",
                     $"Se cancelo su turno del {turno.Fecha:dd/MM/yyyy} con el Dr./Dra. {excepcion.Medico?.Apellido} por ausencia del profesional.");
             }
         }
 
+        contexto.SaveChanges();
         return turnosAfectados;
     }
 
@@ -70,9 +82,10 @@ public class ExcepcionAgendaService
 
     public void Modificar(ExcepcionAgenda excepcion)
     {
-        var medico = Validar(excepcion);
+        using var contexto = SGCContextFactory.Crear();
+        var medico = Validar(excepcion, contexto);
 
-        var existente = _excepciones.FirstOrDefault(e => e.Id == excepcion.Id)
+        var existente = contexto.ExcepcionesAgenda.FirstOrDefault(e => e.Id == excepcion.Id)
             ?? throw new InvalidOperationException("La excepcion que intenta modificar no existe.");
 
         existente.MedicoId = excepcion.MedicoId;
@@ -82,25 +95,22 @@ public class ExcepcionAgendaService
         existente.HoraInicio = excepcion.HoraInicio;
         existente.HoraFin = excepcion.HoraFin;
         existente.Motivo = excepcion.Motivo;
+        contexto.SaveChanges();
     }
 
     public void EliminarLogico(int id)
     {
-        var excepcion = _excepciones.FirstOrDefault(e => e.Id == id)
+        using var contexto = SGCContextFactory.Crear();
+        var excepcion = contexto.ExcepcionesAgenda.FirstOrDefault(e => e.Id == id)
             ?? throw new InvalidOperationException("La excepcion que intenta eliminar no existe.");
 
         excepcion.Activo = false;
+        contexto.SaveChanges();
     }
 
-    private ExcepcionAgenda ResolverNavegacion(ExcepcionAgenda excepcion)
+    private Medico Validar(ExcepcionAgenda excepcion, SGCContext contexto)
     {
-        excepcion.Medico = _medicoService.ObtenerPorId(excepcion.MedicoId);
-        return excepcion;
-    }
-
-    private Medico Validar(ExcepcionAgenda excepcion)
-    {
-        var medico = _medicoService.ObtenerPorId(excepcion.MedicoId);
+        var medico = contexto.Medicos.FirstOrDefault(m => m.Id == excepcion.MedicoId);
         if (medico is null || !medico.Activo)
             throw new ArgumentException("Debe seleccionar un medico valido.");
 

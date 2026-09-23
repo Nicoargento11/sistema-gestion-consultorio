@@ -230,8 +230,8 @@ public partial class FormTurnos : Form
         DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colMonto", HeaderText = "Monto", DataPropertyName = "Monto", FillWeight = 100 });
 
         DgvAgenda.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-        DgvAgenda.Columns.Add(new DataGridViewTextBoxColumn { Name = "colAgendaHorario", HeaderText = "Horario", FillWeight = 60 });
-        DgvAgenda.Columns.Add(new DataGridViewTextBoxColumn { Name = "colAgendaEstado", HeaderText = "Estado", FillWeight = 40 });
+        DgvAgenda.Columns.Add(new DataGridViewTextBoxColumn { Name = "colAgendaHorario", HeaderText = "Horario", FillWeight = 50 });
+        DgvAgenda.Columns.Add(new DataGridViewTextBoxColumn { Name = "colAgendaEstado", HeaderText = "Estado", FillWeight = 50 });
     }
 
     private void CargarCombos()
@@ -240,11 +240,7 @@ public partial class FormTurnos : Form
         CboPaciente.DisplayMember = "NombreCompleto";
         CboPaciente.ValueMember = "Id";
 
-        // TODO: si _usuarioActivo.Rol == RolUsuario.Recepcionista, esta
-        // recepcionista no deberia ver medicos que no tiene asignados. En vez
-        // de _medicoService.ObtenerTodos(), usa _usuarioActivo.MedicosAsignados
-        // (ya viene resuelto con los objetos Medico completos desde
-        // UsuarioService, no hace falta volver a buscarlos).
+        // Una recepcionista solo ve los medicos que tiene asignados.
         if (_usuarioActivo != null && _usuarioActivo.Rol == RolUsuario.Recepcionista)
         {
             CboMedico.DataSource = _usuarioActivo.MedicosAsignados;

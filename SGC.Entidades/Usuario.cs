@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace SGC.Entidades;
 
 public enum RolUsuario
@@ -22,9 +24,13 @@ public class Usuario
     // Para Rol = Recepcionista: a que medicos tiene acceso (una recepcionista
     // puede atender a varios medicos, y un medico puede ser atendido por
     // varias recepcionistas en distintos turnos de trabajo).
+    // MedicosAsignadosIds es solo pegamento con la UI (CheckedListBox);
+    // la relacion real es MedicosAsignados, mapeada M:N por EF Core.
+    [NotMapped]
     public List<int> MedicosAsignadosIds { get; set; } = new();
     public List<Medico> MedicosAsignados { get; set; } = new();
 
     public string MedicoAsignadoNombre => Medico?.NombreCompleto ?? "";
     public string MedicosAsignadosTexto => string.Join(", ", MedicosAsignados.Select(m => m.NombreCompleto));
+    public string EstadoTexto => Activo ? "Activo" : "Inactivo";
 }
