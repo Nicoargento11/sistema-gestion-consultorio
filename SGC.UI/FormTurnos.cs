@@ -255,8 +255,6 @@ public partial class FormTurnos : Form
 
         CboDuracion.DataSource = _duracionesDisponibles;
         CboDuracion.SelectedItem = 30;
-
-        DtpFecha.MinDate = DateTime.Today;
     }
 
     private void CargarGrilla()
