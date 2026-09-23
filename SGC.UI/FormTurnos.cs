@@ -25,6 +25,13 @@ public partial class FormTurnos : Form
         InitializeComponent();
         ConfigurarColumnas();
         CargarCombos();
+
+        // Al entrar (por ejemplo la Recepcionista al iniciar sesion), la
+        // grilla arranca mostrando los turnos de HOY, no el historial
+        // completo - el filtro de fecha ya viene activado.
+        DtpFecha.Value = DateTime.Today;
+        ChkFiltrarFecha.Checked = true;
+
         DgvTurnos.SelectionChanged += DgvTurnos_SelectionChanged;
         BtnModificar.Click += BtnModificar_Click;
         BtnNuevoTurno.Click += (s, e) =>
