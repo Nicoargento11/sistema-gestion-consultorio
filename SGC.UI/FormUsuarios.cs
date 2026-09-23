@@ -9,6 +9,9 @@ public partial class FormUsuarios : Form
     private readonly MedicoService _medicoService = new();
     private int? _idSeleccionado = null;
 
+    private static readonly Color ColorEliminar = Color.FromArgb(231, 76, 60);
+    private static readonly Color ColorReactivar = Color.FromArgb(39, 174, 96);
+
     public FormUsuarios()
     {
         InitializeComponent();
@@ -16,6 +19,9 @@ public partial class FormUsuarios : Form
         CargarCombos();
         CargarGrilla();
         ActualizarVisibilidadPorRol();
+        AcceptButton = BtnGuardar;
+        TxtBuscar.TextChanged += (s, e) => CargarGrilla();
+        ChkMostrarInactivos.CheckedChanged += (s, e) => CargarGrilla();
     }
 
     private void ConfigurarColumnas()
@@ -29,6 +35,7 @@ public partial class FormUsuarios : Form
         DgvUsuarios.Columns.Add(new DataGridViewTextBoxColumn { Name = "colRol", HeaderText = "Rol", DataPropertyName = "Rol", FillWeight = 100 });
         DgvUsuarios.Columns.Add(new DataGridViewTextBoxColumn { Name = "colMedico", HeaderText = "Medico (si Rol=Medico)", DataPropertyName = "MedicoAsignadoNombre", FillWeight = 170 });
         DgvUsuarios.Columns.Add(new DataGridViewTextBoxColumn { Name = "colMedicosAsignados", HeaderText = "Medicos asignados (si Rol=Recepcionista)", DataPropertyName = "MedicosAsignadosTexto", FillWeight = 220 });
+        DgvUsuarios.Columns.Add(new DataGridViewTextBoxColumn { Name = "colEstado", HeaderText = "Estado", DataPropertyName = "EstadoTexto", FillWeight = 80 });
     }
 
     private void CargarCombos()
@@ -46,50 +53,57 @@ public partial class FormUsuarios : Form
 
     private void CargarGrilla()
     {
-        DgvUsuarios.DataSource = _service.ObtenerTodos();
+        var usuarios = _service.ObtenerTodos(ChkMostrarInactivos.Checked);
+        var filtro = TxtBuscar.Text?.Trim() ?? "";
+        if (!string.IsNullOrWhiteSpace(filtro))
+        {
+            var f = filtro.ToLower();
+            usuarios = usuarios.Where(u =>
+                u.NombreUsuario.ToLower().Contains(f) ||
+                u.Rol.ToString().ToLower().Contains(f) ||
+                u.MedicoAsignadoNombre.ToLower().Contains(f) ||
+                u.MedicosAsignadosTexto.ToLower().Contains(f)).ToList();
+        }
+
+        DgvUsuarios.DataSource = usuarios;
     }
 
     private void ActualizarVisibilidadPorRol()
     {
-        // TODO: mostrar CboMedico solo si CboRol.SelectedItem es RolUsuario.Medico,
-        // y ClbMedicosAsignados solo si es RolUsuario.Recepcionista. Si es
-        // Administrador, ocultar los dos. Usa esto tanto al cargar el form como
-        // desde CboRol_SelectedIndexChanged.
+        // Si no hay rol seleccionado (ej: recien apretaste "+ Nuevo"), se
+        // ocultan los dos - antes se quedaba pegado el que estuviera visible
+        // del usuario anterior que tenias seleccionado.
         if (CboRol.SelectedItem is RolUsuario rol)
         {
             CboMedico.Visible = rol == RolUsuario.Medico;
             ClbMedicosAsignados.Visible = rol == RolUsuario.Recepcionista;
         }
-
+        else
+        {
+            CboMedico.Visible = false;
+            ClbMedicosAsignados.Visible = false;
+        }
     }
 
     private void BtnNuevo_Click(object sender, EventArgs e)
     {
-        // TODO: limpiar _idSeleccionado, TxtNombreUsuario, TxtContrasena,
-        // CboRol, CboMedico y los checks de ClbMedicosAsignados (mismo patron
-        // que BtnNuevo_Click en FormMedicos/FormConfigurarAgenda).
         _idSeleccionado = null;
         TxtNombreUsuario.Text = "";
         TxtContrasena.Text = "";
         CboRol.SelectedIndex = -1;
         CboMedico.SelectedIndex = -1;
-        for (int i = 0; i < ClbMedicosAsignados.Items.Count ; i++)
+        for (int i = 0; i < ClbMedicosAsignados.Items.Count; i++)
         {
             ClbMedicosAsignados.SetItemChecked(i, false);
         }
+        ActualizarVisibilidadPorRol();
+
+        BtnEliminar.Text = "Eliminar";
+        BtnEliminar.BackColor = ColorEliminar;
     }
 
     private void BtnGuardar_Click(object sender, EventArgs e)
     {
-        // TODO: armar un Usuario con TxtNombreUsuario.Text, TxtContrasena.Text,
-        // (RolUsuario)CboRol.SelectedItem, y segun el rol:
-        //  - Medico: MedicoId = (int)CboMedico.SelectedValue
-        //  - Recepcionista: MedicosAsignadosIds = los items marcados de
-        //    ClbMedicosAsignados (mira ClbMedicosAsignados.CheckedItems, cada
-        //    item es un Medico porque le pusimos DataSource+ValueMember).
-        // Llamar a _service.Agregar(...) o _service.Modificar(...) segun
-        // _idSeleccionado, con try/catch y feedback en LblMensaje.
-
         try
         {
             if (string.IsNullOrWhiteSpace(TxtNombreUsuario.Text))
@@ -100,7 +114,6 @@ public partial class FormUsuarios : Form
             {
                 throw new ArgumentException("Debe seleccionar un rol.");
             }
-
 
             var usuario = new Usuario
             {
@@ -138,11 +151,11 @@ public partial class FormUsuarios : Form
         }
     }
 
+    // Un solo boton que alterna entre "Eliminar" (usuario activo
+    // seleccionado) y "Reactivar" (usuario inactivo seleccionado) - ver
+    // DgvUsuarios_SelectionChanged, que le cambia texto/color.
     private void BtnEliminar_Click(object sender, EventArgs e)
     {
-        // TODO: validar seleccion en DgvUsuarios, confirmar con MessageBox,
-        // y llamar a _service.EliminarLogico(...) (mismo patron que las
-        // otras pantallas ABM).
         if (DgvUsuarios.CurrentRow == null)
         {
             LblMensaje.ForeColor = Color.Red;
@@ -151,32 +164,55 @@ public partial class FormUsuarios : Form
         }
 
         var usuarioSeleccionado = (Usuario)DgvUsuarios.CurrentRow.DataBoundItem;
-        var respuesta = MessageBox.Show("¿Está seguro que desea eliminar el usuario seleccionado?", "Confirmar eliminación", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
-        if (respuesta != DialogResult.Yes) return;
-        try
+
+        if (usuarioSeleccionado.Activo)
         {
-            _service.EliminarLogico(usuarioSeleccionado.Id);
-            CargarGrilla();
-            BtnNuevo_Click(sender, e);
-            LblMensaje.ForeColor = Color.Green;
-            LblMensaje.Text = "Usuario eliminado correctamente.";
+            var respuesta = MessageBox.Show(
+                $"¿Está seguro que desea eliminar al usuario \"{usuarioSeleccionado.NombreUsuario}\"?",
+                "Confirmar eliminación", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+            if (respuesta != DialogResult.Yes) return;
+
+            try
+            {
+                _service.EliminarLogico(usuarioSeleccionado.Id);
+                CargarGrilla();
+                BtnNuevo_Click(sender, e);
+                LblMensaje.ForeColor = Color.Green;
+                LblMensaje.Text = "Usuario eliminado correctamente.";
+            }
+            catch (Exception ex)
+            {
+                LblMensaje.ForeColor = Color.Red;
+                LblMensaje.Text = $"Error: {ex.Message}";
+            }
         }
-        catch (Exception ex)
+        else
         {
-            LblMensaje.ForeColor = Color.Red;
-            LblMensaje.Text = $"Error: {ex.Message}";
+            var respuesta = MessageBox.Show(
+                $"¿Reactivar al usuario \"{usuarioSeleccionado.NombreUsuario}\"?",
+                "Confirmar reactivación", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (respuesta != DialogResult.Yes) return;
 
-
-        }    
+            try
+            {
+                _service.Reactivar(usuarioSeleccionado.Id);
+                CargarGrilla();
+                BtnNuevo_Click(sender, e);
+                LblMensaje.ForeColor = Color.Green;
+                LblMensaje.Text = "Usuario reactivado correctamente.";
+            }
+            catch (Exception ex)
+            {
+                LblMensaje.ForeColor = Color.Red;
+                LblMensaje.Text = $"Error: {ex.Message}";
+            }
         }
-
+    }
 
     private void DgvUsuarios_SelectionChanged(object sender, EventArgs e)
     {
-        // TODO: al seleccionar una fila, cargar TxtNombreUsuario, TxtContrasena,
-        // CboRol, CboMedico y los checks de ClbMedicosAsignados con los datos
-        // del Usuario seleccionado, y guardar el Id en _idSeleccionado.
         if (DgvUsuarios.CurrentRow == null) return;
+
         var usuarioSeleccionado = (Usuario)DgvUsuarios.CurrentRow.DataBoundItem;
         _idSeleccionado = usuarioSeleccionado.Id;
         TxtNombreUsuario.Text = usuarioSeleccionado.NombreUsuario;
@@ -196,8 +232,13 @@ public partial class FormUsuarios : Form
                 var medico = (Medico)ClbMedicosAsignados.Items[i];
                 ClbMedicosAsignados.SetItemChecked(i, usuarioSeleccionado.MedicosAsignadosIds.Contains(medico.Id));
             }
-            }
         }
+
+        ActualizarVisibilidadPorRol();
+
+        BtnEliminar.Text = usuarioSeleccionado.Activo ? "Eliminar" : "Reactivar";
+        BtnEliminar.BackColor = usuarioSeleccionado.Activo ? ColorEliminar : ColorReactivar;
+    }
 
     private void CboRol_SelectedIndexChanged(object sender, EventArgs e)
     {

@@ -33,6 +33,8 @@ partial class FormUsuarios
         lblContrasena = new Label();
         TxtNombreUsuario = new TextBox();
         lblNombreUsuario = new Label();
+        TxtBuscar = new TextBox();
+        ChkMostrarInactivos = new CheckBox();
         DgvUsuarios = new DataGridView();
         pnlHeader.SuspendLayout();
         pnlFormulario.SuspendLayout();
@@ -90,6 +92,8 @@ partial class FormUsuarios
         pnlFormulario.Controls.Add(lblContrasena);
         pnlFormulario.Controls.Add(TxtNombreUsuario);
         pnlFormulario.Controls.Add(lblNombreUsuario);
+        pnlFormulario.Controls.Add(TxtBuscar);
+        pnlFormulario.Controls.Add(ChkMostrarInactivos);
         pnlFormulario.Dock = DockStyle.Top;
         pnlFormulario.Location = new Point(0, 75);
         pnlFormulario.Name = "pnlFormulario";
@@ -124,7 +128,7 @@ partial class FormUsuarios
         CboMedico.Location = new Point(20, 80);
         CboMedico.Name = "CboMedico";
         CboMedico.Size = new Size(300, 29);
-        CboMedico.TabIndex = 2;
+        CboMedico.TabIndex = 3;
         //
         // lblMedico
         //
@@ -217,6 +221,7 @@ partial class FormUsuarios
         //
         TxtContrasena.Font = new Font("Segoe UI", 9.5F);
         TxtContrasena.Location = new Point(215, 28);
+        TxtContrasena.MaxLength = 200;
         TxtContrasena.Name = "TxtContrasena";
         TxtContrasena.PasswordChar = '*';
         TxtContrasena.Size = new Size(160, 29);
@@ -237,6 +242,7 @@ partial class FormUsuarios
         //
         TxtNombreUsuario.Font = new Font("Segoe UI", 9.5F);
         TxtNombreUsuario.Location = new Point(20, 28);
+        TxtNombreUsuario.MaxLength = 50;
         TxtNombreUsuario.Name = "TxtNombreUsuario";
         TxtNombreUsuario.Size = new Size(180, 29);
         TxtNombreUsuario.TabIndex = 0;
@@ -251,6 +257,28 @@ partial class FormUsuarios
         lblNombreUsuario.Size = new Size(130, 20);
         lblNombreUsuario.TabIndex = 10;
         lblNombreUsuario.Text = "Nombre de usuario";
+        //
+        // TxtBuscar
+        //
+        TxtBuscar.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+        TxtBuscar.Font = new Font("Segoe UI", 9.5F);
+        TxtBuscar.Location = new Point(710, 183);
+        TxtBuscar.Name = "TxtBuscar";
+        TxtBuscar.PlaceholderText = "Buscar por usuario, rol o medico...";
+        TxtBuscar.Size = new Size(270, 29);
+        TxtBuscar.TabIndex = 7;
+        //
+        // ChkMostrarInactivos
+        //
+        ChkMostrarInactivos.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+        ChkMostrarInactivos.AutoSize = true;
+        ChkMostrarInactivos.Font = new Font("Segoe UI", 9F);
+        ChkMostrarInactivos.Location = new Point(570, 188);
+        ChkMostrarInactivos.Name = "ChkMostrarInactivos";
+        ChkMostrarInactivos.Size = new Size(134, 24);
+        ChkMostrarInactivos.TabIndex = 8;
+        ChkMostrarInactivos.Text = "Mostrar inactivos";
+        ChkMostrarInactivos.UseVisualStyleBackColor = true;
         //
         // DgvUsuarios
         //
@@ -309,5 +337,7 @@ partial class FormUsuarios
     private Button BtnGuardar;
     private Button BtnEliminar;
     private Label LblMensaje;
+    private TextBox TxtBuscar;
+    private CheckBox ChkMostrarInactivos;
     private DataGridView DgvUsuarios;
 }

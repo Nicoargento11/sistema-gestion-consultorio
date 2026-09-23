@@ -32,4 +32,5 @@ public class Usuario
 
     public string MedicoAsignadoNombre => Medico?.NombreCompleto ?? "";
     public string MedicosAsignadosTexto => string.Join(", ", MedicosAsignados.Select(m => m.NombreCompleto));
+    public string EstadoTexto => Activo ? "Activo" : "Inactivo";
 }

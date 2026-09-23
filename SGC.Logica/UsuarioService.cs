@@ -6,14 +6,14 @@ namespace SGC.Logica;
 
 public class UsuarioService
 {
-    public List<Usuario> ObtenerTodos()
+    public List<Usuario> ObtenerTodos(bool incluirInactivos = false)
     {
         using var contexto = SGCContextFactory.Crear();
-        return contexto.Usuarios
-            .Where(u => u.Activo)
+        IQueryable<Usuario> query = contexto.Usuarios
             .Include(u => u.Medico)
-            .Include(u => u.MedicosAsignados)
-            .ToList();
+            .Include(u => u.MedicosAsignados);
+
+        return (incluirInactivos ? query : query.Where(u => u.Activo)).ToList();
     }
 
     public Usuario? ObtenerPorId(int id)
@@ -89,7 +89,33 @@ public class UsuarioService
         var usuario = contexto.Usuarios.FirstOrDefault(u => u.Id == id)
             ?? throw new InvalidOperationException("El usuario que intenta eliminar no existe.");
 
+        if (!usuario.Activo)
+            throw new InvalidOperationException("Ese usuario ya estaba eliminado.");
+
         usuario.Activo = false;
+        contexto.SaveChanges();
+    }
+
+    public void Reactivar(int id)
+    {
+        using var contexto = SGCContextFactory.Crear();
+        var usuario = contexto.Usuarios.FirstOrDefault(u => u.Id == id)
+            ?? throw new InvalidOperationException("El usuario que intenta reactivar no existe.");
+
+        if (usuario.Activo)
+            throw new InvalidOperationException("Ese usuario ya estaba activo.");
+
+        // Puede haber pasado tiempo desde que se elimino: si alguien creo
+        // mientras tanto otro usuario activo con el mismo nombre, o un
+        // usuario de Rol=Medico para el mismo medico, reactivar este
+        // generaria un duplicado - mismas reglas que Agregar/Modificar.
+        if (contexto.Usuarios.Any(u => u.Activo && u.NombreUsuario == usuario.NombreUsuario))
+            throw new InvalidOperationException($"Ya existe un usuario activo con el nombre {usuario.NombreUsuario}. Cambiale el nombre antes de reactivarlo.");
+
+        if (usuario.Rol == RolUsuario.Medico && contexto.Usuarios.Any(u => u.Activo && u.Rol == RolUsuario.Medico && u.MedicoId == usuario.MedicoId))
+            throw new InvalidOperationException("Ese medico ya tiene otro usuario activo asignado.");
+
+        usuario.Activo = true;
         contexto.SaveChanges();
     }
 

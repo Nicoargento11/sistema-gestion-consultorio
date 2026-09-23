@@ -240,11 +240,7 @@ public partial class FormTurnos : Form
         CboPaciente.DisplayMember = "NombreCompleto";
         CboPaciente.ValueMember = "Id";
 
-        // TODO: si _usuarioActivo.Rol == RolUsuario.Recepcionista, esta
-        // recepcionista no deberia ver medicos que no tiene asignados. En vez
-        // de _medicoService.ObtenerTodos(), usa _usuarioActivo.MedicosAsignados
-        // (ya viene resuelto con los objetos Medico completos desde
-        // UsuarioService, no hace falta volver a buscarlos).
+        // Una recepcionista solo ve los medicos que tiene asignados.
         if (_usuarioActivo != null && _usuarioActivo.Rol == RolUsuario.Recepcionista)
         {
             CboMedico.DataSource = _usuarioActivo.MedicosAsignados;
