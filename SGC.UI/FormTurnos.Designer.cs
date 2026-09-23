@@ -40,6 +40,7 @@ partial class FormTurnos
         pnlAgenda = new Panel();
         DgvAgenda = new DataGridView();
         lblAgendaTitulo = new Label();
+        lblAgendaHint = new Label();
         pnlFormulario.SuspendLayout();
         ((System.ComponentModel.ISupportInitialize)DgvTurnos).BeginInit();
         pnlAgenda.SuspendLayout();
@@ -134,8 +135,11 @@ partial class FormTurnos
         ChkTodosMedicos.UseVisualStyleBackColor = true;
         // 
         // BtnNuevoTurno
-        // 
-        BtnNuevoTurno.BackColor = Color.FromArgb(120, 130, 145);
+        //
+        // Azul: mismo color que "Nuevo" en las pantallas de ABM (Medicos,
+        // ObrasSociales, Usuarios, ExcepcionesAgenda) - cumple el mismo rol
+        // (reiniciar el formulario), asi que usa el mismo color en toda la app.
+        BtnNuevoTurno.BackColor = Color.FromArgb(46, 134, 222);
         BtnNuevoTurno.FlatAppearance.BorderSize = 0;
         BtnNuevoTurno.FlatStyle = FlatStyle.Flat;
         BtnNuevoTurno.Font = new Font("Segoe UI", 9.5F);
@@ -144,22 +148,26 @@ partial class FormTurnos
         BtnNuevoTurno.Margin = new Padding(2, 3, 2, 3);
         BtnNuevoTurno.Name = "BtnNuevoTurno";
         BtnNuevoTurno.Size = new Size(104, 27);
-        BtnNuevoTurno.TabIndex = 8;
-        BtnNuevoTurno.Text = "Nuevo turno";
+        BtnNuevoTurno.TabIndex = 20;
+        BtnNuevoTurno.Text = "Limpiar";
         BtnNuevoTurno.UseVisualStyleBackColor = false;
-        // 
+        //
         // BtnModificar
-        // 
-        BtnModificar.BackColor = Color.FromArgb(120, 130, 145);
+        //
+        // Ambar/naranja: color propio para "editar" - es un rol que no
+        // existe en las pantallas de ABM (ahi Guardar hace alta y
+        // modificacion en un solo boton), asi que no tiene un color
+        // "heredado" con el que igualarse.
+        BtnModificar.BackColor = Color.FromArgb(230, 145, 45);
         BtnModificar.FlatAppearance.BorderSize = 0;
         BtnModificar.FlatStyle = FlatStyle.Flat;
         BtnModificar.Font = new Font("Segoe UI", 9.5F);
         BtnModificar.ForeColor = Color.White;
-        BtnModificar.Location = new Point(650, 91);
+        BtnModificar.Location = new Point(686, 91);
         BtnModificar.Margin = new Padding(2, 3, 2, 3);
         BtnModificar.Name = "BtnModificar";
         BtnModificar.Size = new Size(104, 27);
-        BtnModificar.TabIndex = 7;
+        BtnModificar.TabIndex = 22;
         BtnModificar.Text = "Modificar";
         BtnModificar.UseVisualStyleBackColor = false;
         // 
@@ -188,39 +196,41 @@ partial class FormTurnos
         // 
         // BtnCancelar
         // 
-        BtnCancelar.BackColor = Color.FromArgb(200, 60, 60);
+        BtnCancelar.BackColor = Color.FromArgb(231, 76, 60);
         BtnCancelar.FlatAppearance.BorderSize = 0;
         BtnCancelar.FlatStyle = FlatStyle.Flat;
         BtnCancelar.Font = new Font("Segoe UI", 9.5F);
         BtnCancelar.ForeColor = Color.White;
-        BtnCancelar.Location = new Point(762, 91);
+        BtnCancelar.Location = new Point(798, 91);
         BtnCancelar.Margin = new Padding(2, 3, 2, 3);
         BtnCancelar.Name = "BtnCancelar";
-        BtnCancelar.Size = new Size(120, 27);
-        BtnCancelar.TabIndex = 5;
-        BtnCancelar.Text = "Cancelar turno sel.";
+        BtnCancelar.Size = new Size(150, 27);
+        BtnCancelar.TabIndex = 23;
+        BtnCancelar.Text = "Cancelar turno";
         BtnCancelar.UseVisualStyleBackColor = false;
         BtnCancelar.Click += BtnCancelar_Click;
         // 
         // BtnConfirmarAsistencia
         // 
-        BtnConfirmarAsistencia.BackColor = Color.FromArgb(60, 160, 100);
+        BtnConfirmarAsistencia.BackColor = Color.FromArgb(39, 174, 96);
         BtnConfirmarAsistencia.FlatAppearance.BorderSize = 0;
         BtnConfirmarAsistencia.FlatStyle = FlatStyle.Flat;
         BtnConfirmarAsistencia.Font = new Font("Segoe UI", 9.5F);
         BtnConfirmarAsistencia.ForeColor = Color.White;
-        BtnConfirmarAsistencia.Location = new Point(890, 91);
+        BtnConfirmarAsistencia.Location = new Point(956, 91);
         BtnConfirmarAsistencia.Margin = new Padding(2, 3, 2, 3);
         BtnConfirmarAsistencia.Name = "BtnConfirmarAsistencia";
-        BtnConfirmarAsistencia.Size = new Size(144, 27);
-        BtnConfirmarAsistencia.TabIndex = 11;
+        BtnConfirmarAsistencia.Size = new Size(180, 27);
+        BtnConfirmarAsistencia.TabIndex = 24;
         BtnConfirmarAsistencia.Text = "Confirmar asistencia";
         BtnConfirmarAsistencia.UseVisualStyleBackColor = false;
         BtnConfirmarAsistencia.Click += BtnConfirmarAsistencia_Click;
         // 
         // BtnAsignar
         // 
-        BtnAsignar.BackColor = Color.FromArgb(46, 134, 222);
+        // Verde: mismo color que "Guardar" en el resto de la app - Asignar
+        // cumple el mismo rol (persistir un registro nuevo).
+        BtnAsignar.BackColor = Color.FromArgb(39, 174, 96);
         BtnAsignar.FlatAppearance.BorderSize = 0;
         BtnAsignar.FlatStyle = FlatStyle.Flat;
         BtnAsignar.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
@@ -228,8 +238,8 @@ partial class FormTurnos
         BtnAsignar.Location = new Point(538, 91);
         BtnAsignar.Margin = new Padding(2, 3, 2, 3);
         BtnAsignar.Name = "BtnAsignar";
-        BtnAsignar.Size = new Size(104, 27);
-        BtnAsignar.TabIndex = 4;
+        BtnAsignar.Size = new Size(140, 27);
+        BtnAsignar.TabIndex = 21;
         BtnAsignar.Text = "Asignar turno";
         BtnAsignar.UseVisualStyleBackColor = false;
         BtnAsignar.Click += BtnAsignar_Click;
@@ -340,6 +350,7 @@ partial class FormTurnos
         pnlAgenda.BackColor = Color.FromArgb(245, 246, 250);
         pnlAgenda.Controls.Add(DgvAgenda);
         pnlAgenda.Controls.Add(lblAgendaTitulo);
+        pnlAgenda.Controls.Add(lblAgendaHint);
         pnlAgenda.Dock = DockStyle.Right;
         pnlAgenda.Location = new Point(800, 152);
         pnlAgenda.Margin = new Padding(2, 3, 2, 3);
@@ -377,7 +388,21 @@ partial class FormTurnos
         lblAgendaTitulo.Size = new Size(128, 30);
         lblAgendaTitulo.TabIndex = 0;
         lblAgendaTitulo.Text = "Disponibilidad";
-        // 
+        //
+        // lblAgendaHint
+        //
+        lblAgendaHint.AutoSize = true;
+        lblAgendaHint.Dock = DockStyle.Top;
+        lblAgendaHint.Font = new Font("Segoe UI", 8F, FontStyle.Italic);
+        lblAgendaHint.ForeColor = Color.FromArgb(110, 120, 135);
+        lblAgendaHint.Location = new Point(8, 38);
+        lblAgendaHint.Margin = new Padding(2, 0, 2, 0);
+        lblAgendaHint.Name = "lblAgendaHint";
+        lblAgendaHint.Padding = new Padding(0, 0, 0, 6);
+        lblAgendaHint.Size = new Size(210, 17);
+        lblAgendaHint.TabIndex = 2;
+        lblAgendaHint.Text = "Clic en un horario para seleccionarlo";
+        //
         // FormTurnos
         // 
         AutoScaleDimensions = new SizeF(8F, 20F);
@@ -402,6 +427,7 @@ partial class FormTurnos
     private Panel pnlFormulario;
     private Panel pnlAgenda;
     private Label lblAgendaTitulo;
+    private Label lblAgendaHint;
     private DataGridView DgvAgenda;
     private Button BtnNuevoTurno;
     private CheckBox ChkTodosMedicos;

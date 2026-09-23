@@ -99,7 +99,7 @@ partial class FormConfirmarAsistencia
         LblMensaje.Name = "LblMensaje";
 
         // BtnConfirmar
-        BtnConfirmar.BackColor = Color.FromArgb(46, 134, 222);
+        BtnConfirmar.BackColor = Color.FromArgb(39, 174, 96);
         BtnConfirmar.FlatAppearance.BorderSize = 0;
         BtnConfirmar.FlatStyle = FlatStyle.Flat;
         BtnConfirmar.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);

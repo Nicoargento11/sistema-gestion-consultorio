@@ -113,7 +113,7 @@ partial class FormPacientes
         //
         // BtnEliminar
         //
-        BtnEliminar.BackColor = Color.FromArgb(200, 60, 60);
+        BtnEliminar.BackColor = Color.FromArgb(231, 76, 60);
         BtnEliminar.FlatAppearance.BorderSize = 0;
         BtnEliminar.FlatStyle = FlatStyle.Flat;
         BtnEliminar.Font = new Font("Segoe UI", 9.5F);
@@ -128,7 +128,7 @@ partial class FormPacientes
         // 
         // BtnGuardar
         // 
-        BtnGuardar.BackColor = Color.FromArgb(46, 134, 222);
+        BtnGuardar.BackColor = Color.FromArgb(39, 174, 96);
         BtnGuardar.FlatAppearance.BorderSize = 0;
         BtnGuardar.FlatStyle = FlatStyle.Flat;
         BtnGuardar.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
@@ -143,7 +143,7 @@ partial class FormPacientes
         // 
         // BtnNuevo
         // 
-        BtnNuevo.BackColor = Color.FromArgb(120, 130, 145);
+        BtnNuevo.BackColor = Color.FromArgb(46, 134, 222);
         BtnNuevo.FlatAppearance.BorderSize = 0;
         BtnNuevo.FlatStyle = FlatStyle.Flat;
         BtnNuevo.Font = new Font("Segoe UI", 9.5F);
