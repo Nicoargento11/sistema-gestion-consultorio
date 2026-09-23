@@ -146,8 +146,7 @@ public partial class FormConfigurarAgenda : Form
         var agenda = DgvAgenda.CurrentRow.DataBoundItem as AgendaMedico;
         _idSeleccionado = agenda?.Id;
 
-        // CORRECCION (RF#02): Ahora leemos HoraInicio/HoraFin DIRECTAMENTE de
-        // AgendaMedico, ya NO tenemos propiedad "Horario" (no mas catalogo compartido).
+        
         if (agenda != null)
         {
             CboMedico.SelectedValue = agenda.MedicoId;
