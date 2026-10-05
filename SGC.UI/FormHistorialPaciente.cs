@@ -21,6 +21,11 @@ public partial class FormHistorialPaciente : Form
         AcceptButton = BtnCerrar;
 
         CargarHistorial();
+
+        // WinForms selecciona sola la primera fila recien cuando el control
+        // se muestra de verdad en pantalla (no en el constructor) - limpiar
+        // ahi mismo no sirve, hay que hacerlo en Load, que corre despues.
+        Load += (s, e) => CargarHistorial();
     }
 
     private void ConfigurarColumnas()
