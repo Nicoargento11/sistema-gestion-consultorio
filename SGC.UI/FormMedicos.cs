@@ -21,6 +21,11 @@ public partial class FormMedicos : Form
         // ahi mismo no sirve, hay que hacerlo en Load, que corre despues.
         Load += (s, e) => BtnNuevo_Click(this, EventArgs.Empty);
         TxtBuscar.TextChanged += (s, e) => CargarGrilla();
+
+        TxtNombre.KeyPress += FiltrosTexto.SoloLetras;
+        TxtApellido.KeyPress += FiltrosTexto.SoloLetras;
+        TxtDni.KeyPress += FiltrosTexto.SoloNumeros;
+        CboEspecialidad.KeyPress += FiltrosTexto.SoloLetras;
     }
 
     private void CargarCombos()

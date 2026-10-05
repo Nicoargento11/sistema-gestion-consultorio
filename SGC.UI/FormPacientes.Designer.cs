@@ -160,6 +160,7 @@ partial class FormPacientes
         // 
         TxtTelefono.Font = new Font("Segoe UI", 10F);
         TxtTelefono.Location = new Point(295, 103);
+        TxtTelefono.MaxLength = 15;
         TxtTelefono.Name = "TxtTelefono";
         TxtTelefono.Size = new Size(180, 34);
         TxtTelefono.TabIndex = 4;
@@ -196,6 +197,7 @@ partial class FormPacientes
         // 
         TxtDni.Font = new Font("Segoe UI", 10F);
         TxtDni.Location = new Point(410, 38);
+        TxtDni.MaxLength = 8;
         TxtDni.Name = "TxtDni";
         TxtDni.Size = new Size(150, 34);
         TxtDni.TabIndex = 2;
@@ -214,6 +216,7 @@ partial class FormPacientes
         // 
         TxtApellido.Font = new Font("Segoe UI", 10F);
         TxtApellido.Location = new Point(215, 38);
+        TxtApellido.MaxLength = 80;
         TxtApellido.Name = "TxtApellido";
         TxtApellido.Size = new Size(180, 34);
         TxtApellido.TabIndex = 1;
@@ -232,6 +235,7 @@ partial class FormPacientes
         // 
         TxtNombre.Font = new Font("Segoe UI", 10F);
         TxtNombre.Location = new Point(20, 38);
+        TxtNombre.MaxLength = 80;
         TxtNombre.Name = "TxtNombre";
         TxtNombre.Size = new Size(180, 34);
         TxtNombre.TabIndex = 0;

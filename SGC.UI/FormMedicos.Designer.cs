@@ -133,6 +133,7 @@ partial class FormMedicos
             "Oftalmologia"
         });
         CboEspecialidad.Location = new Point(215, 80);
+        CboEspecialidad.MaxLength = 80;
         CboEspecialidad.Name = "CboEspecialidad";
         CboEspecialidad.Size = new Size(240, 29);
         CboEspecialidad.TabIndex = 4;
@@ -304,6 +305,7 @@ partial class FormMedicos
         // 
         TxtDni.Font = new Font("Segoe UI", 9.5F);
         TxtDni.Location = new Point(410, 28);
+        TxtDni.MaxLength = 8;
         TxtDni.Name = "TxtDni";
         TxtDni.Size = new Size(140, 29);
         TxtDni.TabIndex = 2;
@@ -325,6 +327,7 @@ partial class FormMedicos
         // 
         TxtApellido.Font = new Font("Segoe UI", 9.5F);
         TxtApellido.Location = new Point(215, 28);
+        TxtApellido.MaxLength = 80;
         TxtApellido.Name = "TxtApellido";
         TxtApellido.Size = new Size(180, 29);
         TxtApellido.TabIndex = 1;
@@ -346,6 +349,7 @@ partial class FormMedicos
         // 
         TxtNombre.Font = new Font("Segoe UI", 9.5F);
         TxtNombre.Location = new Point(20, 28);
+        TxtNombre.MaxLength = 80;
         TxtNombre.Name = "TxtNombre";
         TxtNombre.Size = new Size(180, 29);
         TxtNombre.TabIndex = 0;

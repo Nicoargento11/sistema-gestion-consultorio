@@ -18,6 +18,11 @@ public partial class FormPacientes : Form
         // se muestra de verdad en pantalla (no en el constructor) - limpiar
         // ahi mismo no sirve, hay que hacerlo en Load, que corre despues.
         Load += (s, e) => BtnNuevo_Click(this, EventArgs.Empty);
+
+        TxtNombre.KeyPress += FiltrosTexto.SoloLetras;
+        TxtApellido.KeyPress += FiltrosTexto.SoloLetras;
+        TxtDni.KeyPress += FiltrosTexto.SoloNumeros;
+        TxtTelefono.KeyPress += FiltrosTexto.SoloNumeros;
     }
 
     private void CargarCombos()
