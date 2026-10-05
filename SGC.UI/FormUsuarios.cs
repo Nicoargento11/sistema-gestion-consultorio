@@ -18,7 +18,7 @@ public partial class FormUsuarios : Form
         ConfigurarColumnas();
         CargarCombos();
         CargarGrilla();
-        ActualizarVisibilidadPorRol();
+        BtnNuevo_Click(this, EventArgs.Empty);
         AcceptButton = BtnGuardar;
         TxtBuscar.TextChanged += (s, e) => CargarGrilla();
         ChkMostrarInactivos.CheckedChanged += (s, e) => CargarGrilla();
@@ -66,6 +66,11 @@ public partial class FormUsuarios : Form
         }
 
         DgvUsuarios.DataSource = usuarios;
+
+        // Sin esto, WinForms selecciona sola la primera fila al asignar el
+        // DataSource y precarga el formulario con ese registro.
+        DgvUsuarios.ClearSelection();
+        DgvUsuarios.CurrentCell = null;
     }
 
     private void ActualizarVisibilidadPorRol()

@@ -57,8 +57,9 @@ partial class FormRegistrarActividad
         pnlHeader.Controls.Add(lblTitulo);
         pnlHeader.Dock = DockStyle.Top;
         pnlHeader.Location = new Point(0, 0);
+        pnlHeader.Margin = new Padding(4, 4, 4, 4);
         pnlHeader.Name = "pnlHeader";
-        pnlHeader.Size = new Size(1000, 75);
+        pnlHeader.Size = new Size(1250, 94);
         pnlHeader.TabIndex = 0;
         // 
         // BtnVolverAgenda
@@ -69,9 +70,10 @@ partial class FormRegistrarActividad
         BtnVolverAgenda.FlatStyle = FlatStyle.Flat;
         BtnVolverAgenda.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
         BtnVolverAgenda.ForeColor = Color.White;
-        BtnVolverAgenda.Location = new Point(835, 23);
+        BtnVolverAgenda.Location = new Point(1044, 29);
+        BtnVolverAgenda.Margin = new Padding(4, 4, 4, 4);
         BtnVolverAgenda.Name = "BtnVolverAgenda";
-        BtnVolverAgenda.Size = new Size(140, 30);
+        BtnVolverAgenda.Size = new Size(175, 38);
         BtnVolverAgenda.TabIndex = 2;
         BtnVolverAgenda.Text = "<- Volver a Agenda";
         BtnVolverAgenda.UseVisualStyleBackColor = false;
@@ -81,9 +83,10 @@ partial class FormRegistrarActividad
         lblMedicoInfo.AutoSize = true;
         lblMedicoInfo.Font = new Font("Segoe UI", 10F);
         lblMedicoInfo.ForeColor = Color.FromArgb(180, 205, 235);
-        lblMedicoInfo.Location = new Point(20, 42);
+        lblMedicoInfo.Location = new Point(25, 52);
+        lblMedicoInfo.Margin = new Padding(4, 0, 4, 0);
         lblMedicoInfo.Name = "lblMedicoInfo";
-        lblMedicoInfo.Size = new Size(198, 23);
+        lblMedicoInfo.Size = new Size(213, 28);
         lblMedicoInfo.TabIndex = 1;
         lblMedicoInfo.Text = "Profesional: Dr. / Dra. ...";
         // 
@@ -92,9 +95,10 @@ partial class FormRegistrarActividad
         lblTitulo.AutoSize = true;
         lblTitulo.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
         lblTitulo.ForeColor = Color.White;
-        lblTitulo.Location = new Point(18, 10);
+        lblTitulo.Location = new Point(22, 12);
+        lblTitulo.Margin = new Padding(4, 0, 4, 0);
         lblTitulo.Name = "lblTitulo";
-        lblTitulo.Size = new Size(350, 32);
+        lblTitulo.Size = new Size(353, 38);
         lblTitulo.TabIndex = 0;
         lblTitulo.Text = "Cargar atencion del turno";
         // 
@@ -107,10 +111,11 @@ partial class FormRegistrarActividad
         pnlSeleccionTurno.Controls.Add(DtpFecha);
         pnlSeleccionTurno.Controls.Add(lblFecha);
         pnlSeleccionTurno.Dock = DockStyle.Top;
-        pnlSeleccionTurno.Location = new Point(0, 75);
+        pnlSeleccionTurno.Location = new Point(0, 94);
+        pnlSeleccionTurno.Margin = new Padding(4, 4, 4, 4);
         pnlSeleccionTurno.Name = "pnlSeleccionTurno";
-        pnlSeleccionTurno.Padding = new Padding(20, 15, 20, 10);
-        pnlSeleccionTurno.Size = new Size(1000, 65);
+        pnlSeleccionTurno.Padding = new Padding(25, 19, 25, 12);
+        pnlSeleccionTurno.Size = new Size(1250, 81);
         pnlSeleccionTurno.TabIndex = 1;
         // 
         // BtnRefrescar
@@ -120,9 +125,10 @@ partial class FormRegistrarActividad
         BtnRefrescar.FlatStyle = FlatStyle.Flat;
         BtnRefrescar.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
         BtnRefrescar.ForeColor = Color.White;
-        BtnRefrescar.Location = new Point(870, 17);
+        BtnRefrescar.Location = new Point(1088, 21);
+        BtnRefrescar.Margin = new Padding(4, 4, 4, 4);
         BtnRefrescar.Name = "BtnRefrescar";
-        BtnRefrescar.Size = new Size(95, 30);
+        BtnRefrescar.Size = new Size(119, 38);
         BtnRefrescar.TabIndex = 4;
         BtnRefrescar.Text = "Actualizar";
         BtnRefrescar.UseVisualStyleBackColor = false;
@@ -132,9 +138,10 @@ partial class FormRegistrarActividad
         CboTurnos.DropDownStyle = ComboBoxStyle.DropDownList;
         CboTurnos.Font = new Font("Segoe UI", 9.5F);
         CboTurnos.FormattingEnabled = true;
-        CboTurnos.Location = new Point(365, 18);
+        CboTurnos.Location = new Point(456, 22);
+        CboTurnos.Margin = new Padding(4, 4, 4, 4);
         CboTurnos.Name = "CboTurnos";
-        CboTurnos.Size = new Size(490, 29);
+        CboTurnos.Size = new Size(612, 33);
         CboTurnos.TabIndex = 3;
         // 
         // lblSeleccionarTurno
@@ -142,9 +149,10 @@ partial class FormRegistrarActividad
         lblSeleccionarTurno.AutoSize = true;
         lblSeleccionarTurno.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
         lblSeleccionarTurno.ForeColor = Color.FromArgb(27, 42, 74);
-        lblSeleccionarTurno.Location = new Point(225, 22);
+        lblSeleccionarTurno.Location = new Point(281, 28);
+        lblSeleccionarTurno.Margin = new Padding(4, 0, 4, 0);
         lblSeleccionarTurno.Name = "lblSeleccionarTurno";
-        lblSeleccionarTurno.Size = new Size(134, 21);
+        lblSeleccionarTurno.Size = new Size(164, 25);
         lblSeleccionarTurno.TabIndex = 2;
         lblSeleccionarTurno.Text = "Turno / Paciente:";
         // 
@@ -152,9 +160,10 @@ partial class FormRegistrarActividad
         // 
         DtpFecha.Font = new Font("Segoe UI", 9.5F);
         DtpFecha.Format = DateTimePickerFormat.Short;
-        DtpFecha.Location = new Point(80, 18);
+        DtpFecha.Location = new Point(100, 22);
+        DtpFecha.Margin = new Padding(4, 4, 4, 4);
         DtpFecha.Name = "DtpFecha";
-        DtpFecha.Size = new Size(130, 29);
+        DtpFecha.Size = new Size(162, 33);
         DtpFecha.TabIndex = 1;
         // 
         // lblFecha
@@ -162,9 +171,10 @@ partial class FormRegistrarActividad
         lblFecha.AutoSize = true;
         lblFecha.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
         lblFecha.ForeColor = Color.FromArgb(27, 42, 74);
-        lblFecha.Location = new Point(20, 22);
+        lblFecha.Location = new Point(25, 28);
+        lblFecha.Margin = new Padding(4, 0, 4, 0);
         lblFecha.Name = "lblFecha";
-        lblFecha.Size = new Size(58, 21);
+        lblFecha.Size = new Size(67, 25);
         lblFecha.TabIndex = 0;
         lblFecha.Text = "Fecha:";
         // 
@@ -174,10 +184,11 @@ partial class FormRegistrarActividad
         pnlDetalleTurno.BorderStyle = BorderStyle.FixedSingle;
         pnlDetalleTurno.Controls.Add(lblInfoPaciente);
         pnlDetalleTurno.Dock = DockStyle.Top;
-        pnlDetalleTurno.Location = new Point(0, 140);
+        pnlDetalleTurno.Location = new Point(0, 175);
+        pnlDetalleTurno.Margin = new Padding(4, 4, 4, 4);
         pnlDetalleTurno.Name = "pnlDetalleTurno";
-        pnlDetalleTurno.Padding = new Padding(15, 10, 15, 10);
-        pnlDetalleTurno.Size = new Size(1000, 48);
+        pnlDetalleTurno.Padding = new Padding(19, 12, 19, 12);
+        pnlDetalleTurno.Size = new Size(1250, 60);
         pnlDetalleTurno.TabIndex = 2;
         // 
         // lblInfoPaciente
@@ -185,9 +196,10 @@ partial class FormRegistrarActividad
         lblInfoPaciente.Dock = DockStyle.Fill;
         lblInfoPaciente.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
         lblInfoPaciente.ForeColor = Color.FromArgb(27, 42, 74);
-        lblInfoPaciente.Location = new Point(15, 10);
+        lblInfoPaciente.Location = new Point(19, 12);
+        lblInfoPaciente.Margin = new Padding(4, 0, 4, 0);
         lblInfoPaciente.Name = "lblInfoPaciente";
-        lblInfoPaciente.Size = new Size(968, 26);
+        lblInfoPaciente.Size = new Size(1210, 34);
         lblInfoPaciente.TabIndex = 0;
         lblInfoPaciente.Text = "Seleccione un turno para comenzar la atencion clinica.";
         lblInfoPaciente.TextAlign = ContentAlignment.MiddleLeft;
@@ -210,19 +222,21 @@ partial class FormRegistrarActividad
         pnlFormulario.Controls.Add(CboTipoActividad);
         pnlFormulario.Controls.Add(lblTipoActividad);
         pnlFormulario.Dock = DockStyle.Fill;
-        pnlFormulario.Location = new Point(0, 188);
+        pnlFormulario.Location = new Point(0, 235);
+        pnlFormulario.Margin = new Padding(4, 4, 4, 4);
         pnlFormulario.Name = "pnlFormulario";
-        pnlFormulario.Padding = new Padding(30, 20, 30, 20);
-        pnlFormulario.Size = new Size(1000, 462);
+        pnlFormulario.Padding = new Padding(38, 25, 38, 25);
+        pnlFormulario.Size = new Size(1250, 577);
         pnlFormulario.TabIndex = 3;
         // 
         // LblMensaje
         // 
         LblMensaje.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
         LblMensaje.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
-        LblMensaje.Location = new Point(30, 420);
+        LblMensaje.Location = new Point(38, 524);
+        LblMensaje.Margin = new Padding(4, 0, 4, 0);
         LblMensaje.Name = "LblMensaje";
-        LblMensaje.Size = new Size(940, 28);
+        LblMensaje.Size = new Size(1175, 35);
         LblMensaje.TabIndex = 12;
         // 
         // BtnVerHistorial
@@ -233,9 +247,10 @@ partial class FormRegistrarActividad
         BtnVerHistorial.FlatStyle = FlatStyle.Flat;
         BtnVerHistorial.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
         BtnVerHistorial.ForeColor = Color.White;
-        BtnVerHistorial.Location = new Point(715, 375);
+        BtnVerHistorial.Location = new Point(894, 468);
+        BtnVerHistorial.Margin = new Padding(4, 4, 4, 4);
         BtnVerHistorial.Name = "BtnVerHistorial";
-        BtnVerHistorial.Size = new Size(150, 38);
+        BtnVerHistorial.Size = new Size(188, 48);
         BtnVerHistorial.TabIndex = 10;
         BtnVerHistorial.Text = "Ver historial";
         BtnVerHistorial.UseVisualStyleBackColor = false;
@@ -248,9 +263,10 @@ partial class FormRegistrarActividad
         BtnBorrarRegistro.FlatStyle = FlatStyle.Flat;
         BtnBorrarRegistro.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
         BtnBorrarRegistro.ForeColor = Color.White;
-        BtnBorrarRegistro.Location = new Point(230, 375);
+        BtnBorrarRegistro.Location = new Point(288, 468);
+        BtnBorrarRegistro.Margin = new Padding(4, 4, 4, 4);
         BtnBorrarRegistro.Name = "BtnBorrarRegistro";
-        BtnBorrarRegistro.Size = new Size(150, 38);
+        BtnBorrarRegistro.Size = new Size(188, 48);
         BtnBorrarRegistro.TabIndex = 9;
         BtnBorrarRegistro.Text = "Borrar Registro";
         BtnBorrarRegistro.UseVisualStyleBackColor = false;
@@ -263,9 +279,10 @@ partial class FormRegistrarActividad
         BtnLimpiar.FlatStyle = FlatStyle.Flat;
         BtnLimpiar.Font = new Font("Segoe UI", 9.5F);
         BtnLimpiar.ForeColor = Color.White;
-        BtnLimpiar.Location = new Point(875, 375);
+        BtnLimpiar.Location = new Point(1094, 468);
+        BtnLimpiar.Margin = new Padding(4, 4, 4, 4);
         BtnLimpiar.Name = "BtnLimpiar";
-        BtnLimpiar.Size = new Size(95, 38);
+        BtnLimpiar.Size = new Size(119, 48);
         BtnLimpiar.TabIndex = 11;
         BtnLimpiar.Text = "Limpiar";
         BtnLimpiar.UseVisualStyleBackColor = false;
@@ -278,9 +295,10 @@ partial class FormRegistrarActividad
         BtnGuardar.FlatStyle = FlatStyle.Flat;
         BtnGuardar.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
         BtnGuardar.ForeColor = Color.White;
-        BtnGuardar.Location = new Point(30, 375);
+        BtnGuardar.Location = new Point(38, 468);
+        BtnGuardar.Margin = new Padding(4, 4, 4, 4);
         BtnGuardar.Name = "BtnGuardar";
-        BtnGuardar.Size = new Size(185, 38);
+        BtnGuardar.Size = new Size(231, 48);
         BtnGuardar.TabIndex = 8;
         BtnGuardar.Text = "Guardar Atencion";
         BtnGuardar.UseVisualStyleBackColor = false;
@@ -289,12 +307,13 @@ partial class FormRegistrarActividad
         // 
         TxtReceta.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
         TxtReceta.Font = new Font("Segoe UI", 9.5F);
-        TxtReceta.Location = new Point(30, 275);
+        TxtReceta.Location = new Point(38, 344);
+        TxtReceta.Margin = new Padding(4, 4, 4, 4);
         TxtReceta.Multiline = true;
         TxtReceta.Name = "TxtReceta";
         TxtReceta.PlaceholderText = "Ej: ibuprofeno 400 mg cada 8 hs por 3 dias";
         TxtReceta.ScrollBars = ScrollBars.Vertical;
-        TxtReceta.Size = new Size(940, 75);
+        TxtReceta.Size = new Size(1174, 93);
         TxtReceta.TabIndex = 7;
         // 
         // lblReceta
@@ -302,9 +321,10 @@ partial class FormRegistrarActividad
         lblReceta.AutoSize = true;
         lblReceta.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
         lblReceta.ForeColor = Color.FromArgb(50, 60, 75);
-        lblReceta.Location = new Point(30, 252);
+        lblReceta.Location = new Point(38, 315);
+        lblReceta.Margin = new Padding(4, 0, 4, 0);
         lblReceta.Name = "lblReceta";
-        lblReceta.Size = new Size(309, 21);
+        lblReceta.Size = new Size(365, 25);
         lblReceta.TabIndex = 6;
         lblReceta.Text = "Prescripcion / Receta de Medicamentos:";
         // 
@@ -312,12 +332,13 @@ partial class FormRegistrarActividad
         // 
         TxtDiagnostico.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
         TxtDiagnostico.Font = new Font("Segoe UI", 9.5F);
-        TxtDiagnostico.Location = new Point(30, 165);
+        TxtDiagnostico.Location = new Point(38, 206);
+        TxtDiagnostico.Margin = new Padding(4, 4, 4, 4);
         TxtDiagnostico.Multiline = true;
         TxtDiagnostico.Name = "TxtDiagnostico";
         TxtDiagnostico.PlaceholderText = "Ej: faringitis. Indicaciones y estudios...";
         TxtDiagnostico.ScrollBars = ScrollBars.Vertical;
-        TxtDiagnostico.Size = new Size(940, 75);
+        TxtDiagnostico.Size = new Size(1174, 93);
         TxtDiagnostico.TabIndex = 5;
         // 
         // lblDiagnostico
@@ -325,9 +346,10 @@ partial class FormRegistrarActividad
         lblDiagnostico.AutoSize = true;
         lblDiagnostico.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
         lblDiagnostico.ForeColor = Color.FromArgb(50, 60, 75);
-        lblDiagnostico.Location = new Point(30, 142);
+        lblDiagnostico.Location = new Point(38, 178);
+        lblDiagnostico.Margin = new Padding(4, 0, 4, 0);
         lblDiagnostico.Name = "lblDiagnostico";
-        lblDiagnostico.Size = new Size(300, 21);
+        lblDiagnostico.Size = new Size(337, 25);
         lblDiagnostico.TabIndex = 4;
         lblDiagnostico.Text = "Diagnostico / Procedimiento Clinico:";
         // 
@@ -335,22 +357,25 @@ partial class FormRegistrarActividad
         // 
         TxtMotivo.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
         TxtMotivo.Font = new Font("Segoe UI", 9.5F);
-        TxtMotivo.Location = new Point(30, 65);
+        TxtMotivo.Location = new Point(38, 81);
+        TxtMotivo.Margin = new Padding(4, 4, 4, 4);
         TxtMotivo.Multiline = true;
         TxtMotivo.Name = "TxtMotivo";
         TxtMotivo.PlaceholderText = "Ej: dolor de garganta de 3 dias, fiebre...";
         TxtMotivo.ScrollBars = ScrollBars.Vertical;
-        TxtMotivo.Size = new Size(940, 65);
+        TxtMotivo.Size = new Size(1174, 80);
         TxtMotivo.TabIndex = 3;
+        TxtMotivo.TextChanged += TxtMotivo_TextChanged;
         // 
         // lblMotivo
         // 
         lblMotivo.AutoSize = true;
         lblMotivo.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
         lblMotivo.ForeColor = Color.FromArgb(50, 60, 75);
-        lblMotivo.Location = new Point(30, 42);
+        lblMotivo.Location = new Point(38, 52);
+        lblMotivo.Margin = new Padding(4, 0, 4, 0);
         lblMotivo.Name = "lblMotivo";
-        lblMotivo.Size = new Size(198, 21);
+        lblMotivo.Size = new Size(219, 25);
         lblMotivo.TabIndex = 2;
         lblMotivo.Text = "Motivo de Consulta (*):";
         // 
@@ -359,9 +384,10 @@ partial class FormRegistrarActividad
         CboTipoActividad.DropDownStyle = ComboBoxStyle.DropDownList;
         CboTipoActividad.Font = new Font("Segoe UI", 9.5F);
         CboTipoActividad.FormattingEnabled = true;
-        CboTipoActividad.Location = new Point(190, 8);
+        CboTipoActividad.Location = new Point(238, 10);
+        CboTipoActividad.Margin = new Padding(4, 4, 4, 4);
         CboTipoActividad.Name = "CboTipoActividad";
-        CboTipoActividad.Size = new Size(400, 29);
+        CboTipoActividad.Size = new Size(499, 33);
         CboTipoActividad.TabIndex = 1;
         // 
         // lblTipoActividad
@@ -369,22 +395,24 @@ partial class FormRegistrarActividad
         lblTipoActividad.AutoSize = true;
         lblTipoActividad.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
         lblTipoActividad.ForeColor = Color.FromArgb(50, 60, 75);
-        lblTipoActividad.Location = new Point(30, 12);
+        lblTipoActividad.Location = new Point(38, 15);
+        lblTipoActividad.Margin = new Padding(4, 0, 4, 0);
         lblTipoActividad.Name = "lblTipoActividad";
-        lblTipoActividad.Size = new Size(153, 21);
+        lblTipoActividad.Size = new Size(172, 25);
         lblTipoActividad.TabIndex = 0;
         lblTipoActividad.Text = "Tipo de Actividad:";
         // 
         // FormRegistrarActividad
         // 
-        AutoScaleDimensions = new SizeF(8F, 20F);
+        AutoScaleDimensions = new SizeF(10F, 25F);
         AutoScaleMode = AutoScaleMode.Font;
         BackColor = Color.FromArgb(245, 246, 250);
-        ClientSize = new Size(1000, 650);
+        ClientSize = new Size(1250, 812);
         Controls.Add(pnlFormulario);
         Controls.Add(pnlDetalleTurno);
         Controls.Add(pnlSeleccionTurno);
         Controls.Add(pnlHeader);
+        Margin = new Padding(4, 4, 4, 4);
         Name = "FormRegistrarActividad";
         Text = "Registro de Atencion Clinica";
         pnlHeader.ResumeLayout(false);

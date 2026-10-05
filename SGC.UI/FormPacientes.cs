@@ -13,6 +13,7 @@ public partial class FormPacientes : Form
         ConfigurarColumnas();
         CargarCombos();
         CargarGrilla();
+        BtnNuevo_Click(this, EventArgs.Empty);
         AcceptButton = BtnGuardar;
     }
 
@@ -56,6 +57,11 @@ public partial class FormPacientes : Form
     private void CargarGrilla()
     {
         DgvPacientes.DataSource = _service.ObtenerTodos();
+
+        // Sin esto, WinForms selecciona sola la primera fila al asignar el
+        // DataSource y precarga el formulario con ese registro.
+        DgvPacientes.ClearSelection();
+        DgvPacientes.CurrentCell = null;
     }
 
     private void BtnNuevo_Click(object sender, EventArgs e)

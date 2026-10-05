@@ -15,6 +15,7 @@ public partial class FormExcepcionesAgenda : Form
         ConfigurarColumnas();
         CargarCombos();
         CargarGrilla();
+        BtnNuevo_Click(this, EventArgs.Empty);
         ActualizarVisibilidadPorTipo();
     }
 
@@ -45,7 +46,6 @@ public partial class FormExcepcionesAgenda : Form
         CboTipo.DisplayMember = "Texto";
         CboTipo.ValueMember = "Valor";
 
-        DtpFecha.MinDate = DateTime.Today;
         DtpHoraInicio.Value = DateTime.Today.AddHours(8);
         DtpHoraFin.Value = DateTime.Today.AddHours(9);
     }
@@ -53,6 +53,11 @@ public partial class FormExcepcionesAgenda : Form
     private void CargarGrilla()
     {
         DgvExcepciones.DataSource = _service.ObtenerTodos();
+
+        // Sin esto, WinForms selecciona sola la primera fila al asignar el
+        // DataSource y precarga el formulario con ese registro.
+        DgvExcepciones.ClearSelection();
+        DgvExcepciones.CurrentCell = null;
     }
 
     private void ActualizarVisibilidadPorTipo()

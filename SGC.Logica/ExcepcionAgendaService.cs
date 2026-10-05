@@ -117,6 +117,9 @@ public class ExcepcionAgendaService
         if (excepcion.Fecha < DateOnly.FromDateTime(DateTime.Today))
             throw new ArgumentException("No se puede cargar una excepcion en una fecha pasada.");
 
+        if (string.IsNullOrWhiteSpace(excepcion.Motivo))
+            throw new ArgumentException("Debe indicar el motivo de la ausencia.");
+
         if (excepcion.Tipo == TipoExcepcionAgenda.RangoHorario)
         {
             if (excepcion.HoraInicio is null || excepcion.HoraFin is null)

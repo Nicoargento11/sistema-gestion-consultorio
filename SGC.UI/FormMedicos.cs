@@ -14,6 +14,7 @@ public partial class FormMedicos : Form
         ConfigurarColumnas();
         CargarCombos();
         CargarGrilla();
+        BtnNuevo_Click(this, EventArgs.Empty);
         AcceptButton = BtnGuardar;
         DgvMedicos.SelectionChanged += DgvMedicos_SelectionChanged_1;
         TxtBuscar.TextChanged += (s, e) => CargarGrilla();
@@ -60,6 +61,13 @@ public partial class FormMedicos : Form
         }
 
         DgvMedicos.DataSource = medicos;
+
+        // Sin esto, WinForms selecciona sola la primera fila al asignar el
+        // DataSource y precarga el formulario con ese registro - confunde
+        // (parece una pantalla vacia que no lo es) y es facil sobrescribir
+        // el primer registro de la lista sin querer.
+        DgvMedicos.ClearSelection();
+        DgvMedicos.CurrentCell = null;
     }
 
     private void LimpiarChecksObrasSociales()

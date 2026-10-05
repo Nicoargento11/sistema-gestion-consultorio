@@ -290,4 +290,9 @@ public partial class FormRegistrarActividad : Form
             Close();
         }
     }
+
+    private void TxtMotivo_TextChanged(object sender, EventArgs e)
+    {
+
+    }
 }

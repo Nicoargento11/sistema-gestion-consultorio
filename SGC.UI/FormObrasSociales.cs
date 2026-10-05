@@ -13,6 +13,7 @@ public partial class FormObrasSociales : Form
         InitializeComponent();
         ConfigurarColumnas();
         CargarGrilla();
+        BtnNuevo_Click(this, EventArgs.Empty);
     }
 
     private void ConfigurarColumnas()
@@ -26,6 +27,11 @@ public partial class FormObrasSociales : Form
     private void CargarGrilla()
     {
         DgvObrasSociales.DataSource = _service.ObtenerTodos();
+
+        // Sin esto, WinForms selecciona sola la primera fila al asignar el
+        // DataSource y precarga el formulario con ese registro.
+        DgvObrasSociales.ClearSelection();
+        DgvObrasSociales.CurrentCell = null;
     }
 
     private void BtnNuevo_Click(object sender, EventArgs e)

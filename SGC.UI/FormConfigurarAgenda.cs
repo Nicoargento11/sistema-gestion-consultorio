@@ -21,6 +21,7 @@ public partial class FormConfigurarAgenda : Form
         ConfigurarColumnas();
         CargarCombos();
         CargarGrilla();
+        BtnNuevo_Click(this, EventArgs.Empty);
     }
 
     private void ConfigurarColumnas()
@@ -54,6 +55,11 @@ public partial class FormConfigurarAgenda : Form
     private void CargarGrilla()
     {
         DgvAgenda.DataSource = _service.ObtenerTodos();
+
+        // Sin esto, WinForms selecciona sola la primera fila al asignar el
+        // DataSource y precarga el formulario con ese registro.
+        DgvAgenda.ClearSelection();
+        DgvAgenda.CurrentCell = null;
     }
 
     private void BtnNuevo_Click(object sender, EventArgs e)

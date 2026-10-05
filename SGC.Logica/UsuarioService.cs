@@ -13,16 +13,21 @@ public class UsuarioService
             .Include(u => u.Medico)
             .Include(u => u.MedicosAsignados);
 
-        return (incluirInactivos ? query : query.Where(u => u.Activo)).ToList();
+        var usuarios = (incluirInactivos ? query : query.Where(u => u.Activo)).ToList();
+        usuarios.ForEach(SincronizarIds);
+        return usuarios;
     }
 
     public Usuario? ObtenerPorId(int id)
     {
         using var contexto = SGCContextFactory.Crear();
-        return contexto.Usuarios
+        var usuario = contexto.Usuarios
             .Include(u => u.Medico)
             .Include(u => u.MedicosAsignados)
             .FirstOrDefault(u => u.Id == id);
+
+        if (usuario != null) SincronizarIds(usuario);
+        return usuario;
     }
 
     public Usuario? BuscarPorCredenciales(string nombreUsuario, string contrasena)
@@ -40,7 +45,17 @@ public class UsuarioService
         if (usuario == null || !PasswordHasher.Verificar(contrasena, usuario.Contrasena))
             return null;
 
+        SincronizarIds(usuario);
         return usuario;
+    }
+
+    // MedicosAsignadosIds es [NotMapped] (pegamento con la UI, el
+    // CheckedListBox) - mismo problema que Medico.ObrasSocialesAceptadasIds:
+    // hay que sincronizarlo a mano desde la navegacion real despues de leer,
+    // si no el checklist de FormUsuarios siempre aparece vacio al editar.
+    private static void SincronizarIds(Usuario usuario)
+    {
+        usuario.MedicosAsignadosIds = usuario.MedicosAsignados.Select(m => m.Id).ToList();
     }
 
     public void Agregar(Usuario usuario)
@@ -131,8 +146,9 @@ public class UsuarioService
 
     private void Validar(Usuario usuario, SGCContext contexto, bool esNuevo)
     {
-        if (string.IsNullOrWhiteSpace(usuario.NombreUsuario))
-            throw new ArgumentException("El nombre de usuario es obligatorio.");
+        if (string.IsNullOrWhiteSpace(usuario.NombreUsuario) || usuario.NombreUsuario.Length < 3 ||
+            !usuario.NombreUsuario.All(c => char.IsLetterOrDigit(c) || c == '_' || c == '.'))
+            throw new ArgumentException("El nombre de usuario debe tener al menos 3 caracteres: solo letras, numeros, '_' o '.', sin espacios.");
 
         // Al modificar, contrasena en blanco significa "no cambiarla" (ver
         // Modificar) - solo es obligatoria cuando se esta creando el usuario.

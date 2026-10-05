@@ -57,21 +57,27 @@ public class PacienteService
 
     private void Validar(Paciente paciente, SGCContext contexto)
     {
-        if (string.IsNullOrWhiteSpace(paciente.Nombre))
-            throw new ArgumentException("El nombre es obligatorio.");
+        if (string.IsNullOrWhiteSpace(paciente.Nombre) || !paciente.Nombre.All(c => char.IsLetter(c) || c == ' '))
+            throw new ArgumentException("El nombre solo puede contener letras.");
 
-        if (string.IsNullOrWhiteSpace(paciente.Apellido))
-            throw new ArgumentException("El apellido es obligatorio.");
+        if (string.IsNullOrWhiteSpace(paciente.Apellido) || !paciente.Apellido.All(c => char.IsLetter(c) || c == ' '))
+            throw new ArgumentException("El apellido solo puede contener letras.");
 
         if (string.IsNullOrWhiteSpace(paciente.Dni) || !paciente.Dni.All(char.IsDigit) ||
             paciente.Dni.Length < 7 || paciente.Dni.Length > 8)
             throw new ArgumentException("El DNI debe tener entre 7 y 8 dígitos numéricos, sin puntos ni letras.");
 
+        // "0000000" pasa el chequeo de arriba (son 7 digitos numericos) pero
+        // no es un DNI real - ningun documento existe con todos ceros.
+        if (paciente.Dni.All(c => c == '0'))
+            throw new ArgumentException("El DNI ingresado no es válido.");
+
         if (string.IsNullOrWhiteSpace(paciente.Email) || !paciente.Email.Contains('@') || !paciente.Email.Contains('.'))
             throw new ArgumentException("Debe ingresar un email con formato válido (ej: nombre@dominio.com).");
 
-        if (string.IsNullOrWhiteSpace(paciente.Telefono))
-            throw new ArgumentException("El teléfono es obligatorio.");
+        if (string.IsNullOrWhiteSpace(paciente.Telefono) || !paciente.Telefono.All(char.IsDigit) ||
+            paciente.Telefono.Length < 6 || paciente.Telefono.Length > 15)
+            throw new ArgumentException("El teléfono debe tener entre 6 y 15 dígitos numéricos, sin espacios ni guiones.");
 
         if (paciente.FechaNacimiento == default)
             throw new ArgumentException("Debe ingresar la fecha de nacimiento.");

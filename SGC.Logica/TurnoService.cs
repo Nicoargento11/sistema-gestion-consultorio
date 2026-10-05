@@ -12,8 +12,8 @@ public class TurnoService
     {
         using var contexto = SGCContextFactory.Crear();
         IQueryable<Turno> query = contexto.Turnos
-            .Include(t => t.Paciente)
-            .Include(t => t.Medico)
+            .Include(t => t.Paciente).ThenInclude(p => p!.ObraSocial)
+            .Include(t => t.Medico).ThenInclude(m => m!.ObrasSocialesAceptadas)
             .Include(t => t.ActividadMedica);
 
         query = incluirCancelados ? query : query.Where(t => t.Activo);
@@ -34,8 +34,8 @@ public class TurnoService
     {
         using var contexto = SGCContextFactory.Crear();
         IQueryable<Turno> query = contexto.Turnos
-            .Include(t => t.Paciente)
-            .Include(t => t.Medico)
+            .Include(t => t.Paciente).ThenInclude(p => p!.ObraSocial)
+            .Include(t => t.Medico).ThenInclude(m => m!.ObrasSocialesAceptadas)
             .Include(t => t.ActividadMedica)
             .Where(t => t.MedicoId == medicoId);
 
@@ -51,8 +51,8 @@ public class TurnoService
     {
         using var contexto = SGCContextFactory.Crear();
         return contexto.Turnos
-            .Include(t => t.Paciente)
-            .Include(t => t.Medico)
+            .Include(t => t.Paciente).ThenInclude(p => p!.ObraSocial)
+            .Include(t => t.Medico).ThenInclude(m => m!.ObrasSocialesAceptadas)
             .Include(t => t.ActividadMedica)
             .FirstOrDefault(t => t.Id == id);
     }

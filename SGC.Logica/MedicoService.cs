@@ -9,18 +9,35 @@ public class MedicoService
     public List<Medico> ObtenerTodos()
     {
         using var contexto = SGCContextFactory.Crear();
-        return contexto.Medicos
+        var medicos = contexto.Medicos
             .Where(m => m.Activo)
             .Include(m => m.ObrasSocialesAceptadas)
             .ToList();
+
+        medicos.ForEach(SincronizarIds);
+        return medicos;
     }
 
     public Medico? ObtenerPorId(int id)
     {
         using var contexto = SGCContextFactory.Crear();
-        return contexto.Medicos
+        var medico = contexto.Medicos
             .Include(m => m.ObrasSocialesAceptadas)
             .FirstOrDefault(m => m.Id == id);
+
+        if (medico != null) SincronizarIds(medico);
+        return medico;
+    }
+
+    // ObrasSocialesAceptadasIds es [NotMapped] (pegamento con la UI, el
+    // CheckedListBox) - EF nunca lo llena solo al leer de la base, hay que
+    // sincronizarlo a mano desde la navegacion real (ObrasSocialesAceptadas)
+    // despues de cada consulta. Si no se hace esto, el checklist de
+    // FormMedicos siempre aparece vacio al editar un medico existente,
+    // aunque ya tenga obras sociales vinculadas en la base.
+    private static void SincronizarIds(Medico medico)
+    {
+        medico.ObrasSocialesAceptadasIds = medico.ObrasSocialesAceptadas.Select(o => o.Id).ToList();
     }
 
     public void Agregar(Medico medico)
@@ -74,21 +91,26 @@ public class MedicoService
 
     private void Validar(Medico medico, SGCContext contexto)
     {
-        if (string.IsNullOrWhiteSpace(medico.Nombre))
-            throw new ArgumentException("El nombre es obligatorio.");
+        if (string.IsNullOrWhiteSpace(medico.Nombre) || !medico.Nombre.All(c => char.IsLetter(c) || c == ' '))
+            throw new ArgumentException("El nombre solo puede contener letras.");
 
-        if (string.IsNullOrWhiteSpace(medico.Apellido))
-            throw new ArgumentException("El apellido es obligatorio.");
+        if (string.IsNullOrWhiteSpace(medico.Apellido) || !medico.Apellido.All(c => char.IsLetter(c) || c == ' '))
+            throw new ArgumentException("El apellido solo puede contener letras.");
 
         if (string.IsNullOrWhiteSpace(medico.Dni) || !medico.Dni.All(char.IsDigit) ||
             medico.Dni.Length < 7 || medico.Dni.Length > 8)
             throw new ArgumentException("El DNI debe tener entre 7 y 8 digitos numericos, sin puntos ni letras.");
 
+        // "0000000" pasa el chequeo de arriba (son 7 digitos numericos) pero
+        // no es un DNI real - ningun documento existe con todos ceros.
+        if (medico.Dni.All(c => c == '0'))
+            throw new ArgumentException("El DNI ingresado no es valido.");
+
         if (string.IsNullOrWhiteSpace(medico.Matricula))
             throw new ArgumentException("La matricula es obligatoria.");
 
-        if (string.IsNullOrWhiteSpace(medico.Especialidad))
-            throw new ArgumentException("La especialidad es obligatoria.");
+        if (string.IsNullOrWhiteSpace(medico.Especialidad) || !medico.Especialidad.All(c => char.IsLetter(c) || c == ' '))
+            throw new ArgumentException("La especialidad solo puede contener letras.");
 
         if (medico.PrecioConsultaParticular < 0)
             throw new ArgumentException("El precio de consulta particular no puede ser negativo.");

@@ -38,13 +38,23 @@ public partial class FormHistorialPaciente : Form
         var historial = _actividadService.ObtenerHistorialPorPaciente(_paciente.Id);
         DgvHistorial.DataSource = historial;
 
+        // Sin esto, WinForms selecciona sola la primera fila al asignar el
+        // DataSource y muestra el detalle de esa atencion sin que el
+        // usuario haya clickeado nada.
+        DgvHistorial.ClearSelection();
+        DgvHistorial.CurrentCell = null;
+
         if (historial.Count == 0)
         {
             lblDetalleTitulo.Text = "No se registraron atenciones previas para este paciente.";
-            TxtMotivo.Clear();
-            TxtDiagnostico.Clear();
-            TxtReceta.Clear();
         }
+        else
+        {
+            lblDetalleTitulo.Text = "Seleccione una atencion de la lista para ver el detalle.";
+        }
+        TxtMotivo.Clear();
+        TxtDiagnostico.Clear();
+        TxtReceta.Clear();
     }
 
     private void DgvHistorial_SelectionChanged(object? sender, EventArgs e)
