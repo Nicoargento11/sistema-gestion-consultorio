@@ -37,6 +37,18 @@ public class SGCContext : DbContext
             e.Property(m => m.PrecioConsultaParticular).HasColumnType("decimal(10,2)");
             e.ToTable(t => t.HasCheckConstraint("CK_Medico_Precio", "PrecioConsultaParticular >= 0"));
 
+            // Mismo criterio en los 3: el backend en C# valida con
+            // char.IsLetter (acentos y enie incluidos), que T-SQL LIKE no
+            // puede replicar exacto - la base actua como red de seguridad
+            // mas gruesa, rechazando el caso concreto que encontramos
+            // (numeros en nombre/apellido/especialidad), no como espejo 1 a 1.
+            e.ToTable(t => t.HasCheckConstraint("CK_Medico_Nombre", "Nombre NOT LIKE '%[0-9]%'"));
+            e.ToTable(t => t.HasCheckConstraint("CK_Medico_Apellido", "Apellido NOT LIKE '%[0-9]%'"));
+            e.ToTable(t => t.HasCheckConstraint("CK_Medico_Especialidad", "Especialidad NOT LIKE '%[0-9]%'"));
+
+            // "0000000" pasaba el chequeo de largo/digitos pero no es un DNI real.
+            e.ToTable(t => t.HasCheckConstraint("CK_Medico_Dni_NoCero", "Dni <> REPLICATE('0', LEN(Dni))"));
+
             // M:N real: EF genera y administra la tabla intermedia MedicoObraSocial.
             e.HasMany(m => m.ObrasSocialesAceptadas)
                 .WithMany()
@@ -68,6 +80,10 @@ public class SGCContext : DbContext
             e.HasOne(p => p.ObraSocial).WithMany().HasForeignKey(p => p.ObraSocialId).OnDelete(DeleteBehavior.Restrict);
 
             e.ToTable(t => t.HasCheckConstraint("CK_Paciente_FechaNacimiento", "FechaNacimiento <= CAST(GETDATE() AS DATE)"));
+            e.ToTable(t => t.HasCheckConstraint("CK_Paciente_Nombre", "Nombre NOT LIKE '%[0-9]%'"));
+            e.ToTable(t => t.HasCheckConstraint("CK_Paciente_Apellido", "Apellido NOT LIKE '%[0-9]%'"));
+            e.ToTable(t => t.HasCheckConstraint("CK_Paciente_Telefono", "Telefono NOT LIKE '%[^0-9]%' AND LEN(Telefono) BETWEEN 6 AND 15"));
+            e.ToTable(t => t.HasCheckConstraint("CK_Paciente_Dni_NoCero", "Dni <> REPLICATE('0', LEN(Dni))"));
         });
 
         modelBuilder.Entity<Usuario>(e =>
@@ -87,6 +103,8 @@ public class SGCContext : DbContext
                 .HasDatabaseName("UQ_Usuario_MedicoUnico");
 
             e.ToTable(t => t.HasCheckConstraint("CK_Usuario_RolMedico", "Rol <> 2 OR MedicoId IS NOT NULL"));
+            e.ToTable(t => t.HasCheckConstraint("CK_Usuario_NombreUsuario",
+                "LEN(NombreUsuario) >= 3 AND NombreUsuario NOT LIKE '%[^a-zA-Z0-9_.]%'"));
 
             // M:N real: EF genera y administra la tabla intermedia UsuarioMedico.
             e.HasMany(u => u.MedicosAsignados)
@@ -104,7 +122,7 @@ public class SGCContext : DbContext
         modelBuilder.Entity<ExcepcionAgenda>(e =>
         {
             e.HasOne(x => x.Medico).WithMany().HasForeignKey(x => x.MedicoId).OnDelete(DeleteBehavior.Restrict);
-            e.Property(x => x.Motivo).HasMaxLength(200);
+            e.Property(x => x.Motivo).IsRequired().HasMaxLength(200);
 
             // Tipo 0=DiaCompleto (sin horas) / 1=RangoHorario (con horas y HoraFin > HoraInicio).
             e.ToTable(t => t.HasCheckConstraint("CK_ExcepcionAgenda_Tipo",

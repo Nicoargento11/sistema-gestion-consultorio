@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SGC.Datos;
 
@@ -11,9 +12,11 @@ using SGC.Datos;
 namespace SGC.Datos.Migrations
 {
     [DbContext(typeof(SGCContext))]
-    partial class SGCContextModelSnapshot : ModelSnapshot
+    [Migration("20261005215209_RestriccionesFormato")]
+    partial class RestriccionesFormato
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
