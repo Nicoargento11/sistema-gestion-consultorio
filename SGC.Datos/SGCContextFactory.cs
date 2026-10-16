@@ -15,7 +15,7 @@ public static class SGCContextFactory
     // Cada desarrollador nuevo (Luciano, etc.) crea su propio
     // appsettings.Local.json con SU instancia - ver appsettings.example.json.
     private const string ConnectionStringPorDefecto =
-        @"Server=.\NICO_SERV1;Database=SGC;Trusted_Connection=True;TrustServerCertificate=True;";
+        @"Server=.;Database=SGC;Trusted_Connection=True;TrustServerCertificate=True;";
 
     public static SGCContext Crear()
     {
