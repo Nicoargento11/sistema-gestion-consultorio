@@ -11,6 +11,18 @@ public class NotificacionService
         return _avisos.ToList();
     }
 
+    // Avisos internos dirigidos a un profesional (los registrados con
+    // AvisarMedico). Los avisos a pacientes no se incluyen: llevan el email
+    // del paciente y no corresponden a la vista del medico.
+    public List<string> ObtenerAvisosDeMedico(Medico medico)
+    {
+        if (medico == null)
+            return new List<string>();
+
+        string marca = $"| Medico {medico.NombreCompleto} |";
+        return _avisos.Where(a => a.Contains(marca)).ToList();
+    }
+
     public string AvisarTurno(Paciente paciente, string tipoAviso, string detalle)
     {
         if (paciente == null)

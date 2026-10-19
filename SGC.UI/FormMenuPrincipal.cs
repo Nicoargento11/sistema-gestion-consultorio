@@ -7,6 +7,7 @@ public partial class FormMenuPrincipal : Form
     private readonly Usuario _usuarioActivo;
     private Form? formularioActivo = null;
     private Button? _botonActivo = null;
+    private readonly Button btnInicio = new();
 
     private readonly Color ColorSidebarNormal = Color.FromArgb(27, 42, 74);
     private readonly Color ColorSidebarActivo = Color.FromArgb(46, 134, 222);
@@ -18,6 +19,7 @@ public partial class FormMenuPrincipal : Form
 
         lblUsuarioActivo.Text = $"{_usuarioActivo.NombreUsuario}\n({_usuarioActivo.Rol})";
 
+        CrearBotonInicio();
         ConfigurarBotonesPorRol();
         AsignarEventosNavegacion();
 
@@ -62,26 +64,40 @@ public partial class FormMenuPrincipal : Form
 
         btnReportes.Click += (s, e) => { ResaltarBoton((Button)s!); AbrirFormularioHijo(new FormReportes(_usuarioActivo)); };
 
+        btnInicio.Click += (s, e) => { ResaltarBoton((Button)s!); AbrirFormularioHijo(new FormInicio(_usuarioActivo)); };
+
         btnCerrarSesion.Click += BtnCerrarSesion_Click;
     }
 
+    // Todos los roles arrancan en Inicio (resumen del dia); desde ahi se
+    // navega al resto de los modulos con el menu lateral.
     private void CargarPantallaInicialPorDefecto()
     {
-        switch (_usuarioActivo.Rol)
-        {
-            case RolUsuario.Medico:
-                ResaltarBoton(btnAgenda);
-                AbrirFormularioHijo(new FormAgendaMedico(_usuarioActivo, AbrirFormularioHijo));
-                break;
-            case RolUsuario.Recepcionista:
-                ResaltarBoton(btnTurnos);
-                AbrirFormularioHijo(new FormTurnos(_usuarioActivo));
-                break;
-            case RolUsuario.Administrador:
-                ResaltarBoton(btnMedicos);
-                AbrirFormularioHijo(new FormMedicos());
-                break;
-        }
+        ResaltarBoton(btnInicio);
+        AbrirFormularioHijo(new FormInicio(_usuarioActivo));
+    }
+
+    // El boton se crea aca (no en InitializeComponent) para que el
+    // disenador no lo borre; copia el estilo de los demas botones del menu
+    // y se ubica primero, debajo del nombre de usuario.
+    private void CrearBotonInicio()
+    {
+        btnInicio.Name = "btnInicio";
+        btnInicio.Text = "Inicio";
+        btnInicio.BackColor = ColorSidebarNormal;
+        btnInicio.FlatStyle = FlatStyle.Flat;
+        btnInicio.FlatAppearance.BorderSize = 0;
+        btnInicio.FlatAppearance.MouseOverBackColor = ColorSidebarActivo;
+        btnInicio.Font = new Font("Segoe UI", 10F);
+        btnInicio.ForeColor = Color.White;
+        btnInicio.Margin = new Padding(2);
+        btnInicio.Padding = new Padding(16, 0, 0, 0);
+        btnInicio.Size = new Size(176, 36);
+        btnInicio.TextAlign = ContentAlignment.MiddleLeft;
+        btnInicio.UseVisualStyleBackColor = false;
+
+        pnlSidebar.Controls.Add(btnInicio);
+        pnlSidebar.Controls.SetChildIndex(btnInicio, pnlSidebar.Controls.GetChildIndex(lblUsuarioActivo) + 1);
     }
 
     private void ResaltarBoton(Button boton)

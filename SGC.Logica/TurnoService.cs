@@ -59,6 +59,40 @@ public class TurnoService
             .FirstOrDefault(t => t.Id == id);
     }
 
+    // Regla de cobro (la usan FormConfirmarAsistencia y la grilla de FormTurnos):
+    // la obra social del paciente solo cuenta si ESTE medico la acepta
+    // (Medico.ObrasSocialesAceptadas); si no, el paciente paga particular.
+    // El turno debe venir con Paciente.ObraSocial y Medico.ObrasSocialesAceptadas
+    // cargados (ObtenerTodos/ObtenerPorId ya los incluyen).
+    public static bool MedicoAceptaObraSocialDelPaciente(Turno turno)
+    {
+        var obraSocial = turno.Paciente?.ObraSocial;
+        return obraSocial != null &&
+               (turno.Medico?.ObrasSocialesAceptadas.Any(o => o.Id == obraSocial.Id) ?? false);
+    }
+
+    public static decimal CalcularMontoParticular(Turno turno)
+    {
+        return turno.Medico?.PrecioConsultaParticular ?? 0;
+    }
+
+    // Precio particular menos el % de cobertura de la obra social del paciente.
+    public static decimal CalcularMontoConObraSocial(Turno turno)
+    {
+        decimal precioBase = CalcularMontoParticular(turno);
+        decimal cobertura = turno.Paciente?.ObraSocial?.PorcentajeCobertura ?? 0;
+        return Math.Max(precioBase - (precioBase * cobertura / 100m), 0);
+    }
+
+    // Monto estimado a cobrar: con obra social si el medico la acepta, o el
+    // precio particular en caso contrario.
+    public static decimal CalcularMontoEstimado(Turno turno)
+    {
+        return MedicoAceptaObraSocialDelPaciente(turno)
+            ? CalcularMontoConObraSocial(turno)
+            : CalcularMontoParticular(turno);
+    }
+
     public void AsignarTurno(Paciente paciente, Medico medico, DateOnly fecha, TimeOnly horaInicio, int duracionMinutos = 30)
     {
         if (duracionMinutos <= 0) duracionMinutos = 30;

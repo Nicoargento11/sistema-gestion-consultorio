@@ -14,6 +14,18 @@ public partial class FormTurnos : Form
     private readonly Usuario? _usuarioActivo;
     private int? _idTurnoSeleccionado = null;
 
+    private const string ColACobrar = "colACobrar";
+    private static readonly System.Globalization.CultureInfo CulturaAr = new("es-AR");
+
+    // Barra de contadores (se arma en ConfigurarBarraContadores, no en el disenador).
+    private readonly Dictionary<string, Label> _contadores = new();
+    private const string ContTotal = "Total";
+    private const string ContPendientes = "Pendientes";
+    private const string ContConfirmados = "Confirmados";
+    private const string ContAtendidos = "Atendidos";
+    private const string ContAusentes = "Ausentes";
+    private const string ContCancelados = "Cancelados";
+
     // Duraciones habituales para elegir en CboDuracion. Si un turno ya
     // guardado tiene una duracion distinta (por ejemplo, cargada por otra
     // pantalla), se agrega dinamicamente en DgvTurnos_SelectionChanged.
@@ -24,6 +36,7 @@ public partial class FormTurnos : Form
         _usuarioActivo = usuarioActivo;
         InitializeComponent();
         ConfigurarColumnas();
+        ConfigurarBarraContadores();
         CargarCombos();
 
         // Al entrar (por ejemplo la Recepcionista al iniciar sesion), la
@@ -33,6 +46,7 @@ public partial class FormTurnos : Form
         ChkFiltrarFecha.Checked = true;
 
         DgvTurnos.SelectionChanged += DgvTurnos_SelectionChanged;
+        DgvTurnos.CellFormatting += DgvTurnos_CellFormatting;
         BtnModificar.Click += BtnModificar_Click;
         BtnNuevoTurno.Click += (s, e) =>
         {
@@ -228,13 +242,22 @@ public partial class FormTurnos : Form
     {
         DgvTurnos.AutoGenerateColumns = false;
         DgvTurnos.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+        DgvTurnos.ColumnHeadersHeight = 44;
         DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colFecha", HeaderText = "Fecha", DataPropertyName = "Fecha", FillWeight = 90 });
-        DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colMedico", HeaderText = "Medico", DataPropertyName = "MedicoNombre", FillWeight = 190 });
+        DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colMedico", HeaderText = "Medico", DataPropertyName = "MedicoNombre", FillWeight = 170 });
         DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colPaciente", HeaderText = "Paciente", DataPropertyName = "PacienteNombre", FillWeight = 170 });
-        DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colHorario", HeaderText = "Horario", DataPropertyName = "HorarioRango", FillWeight = 130 });
+        DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colHorario", HeaderText = "Horario", DataPropertyName = "HorarioRango", FillWeight = 120 });
         DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colEstado", HeaderText = "Estado", DataPropertyName = "Estado", FillWeight = 100 });
         DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colMedioPago", HeaderText = "Medio de pago", DataPropertyName = "MedioPago", FillWeight = 130 });
         DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colMonto", HeaderText = "Monto", DataPropertyName = "Monto", FillWeight = 100 });
+
+        // Columna calculada (sin DataPropertyName): su valor se arma en
+        // DgvTurnos_CellFormatting con la regla de cobro de TurnoService.
+        DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = ColACobrar, HeaderText = "A cobrar (estimado)", FillWeight = 150 });
+
+        // Fila seleccionada: mismo azul que el resto de la app, texto blanco.
+        DgvTurnos.DefaultCellStyle.SelectionBackColor = Color.FromArgb(46, 134, 222);
+        DgvTurnos.DefaultCellStyle.SelectionForeColor = Color.White;
 
         DgvAgenda.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
         DgvAgenda.Columns.Add(new DataGridViewTextBoxColumn { Name = "colAgendaHorario", HeaderText = "Horario", FillWeight = 50 });
@@ -278,28 +301,134 @@ public partial class FormTurnos : Form
         if (ChkFiltrarPaciente.Checked && CboPaciente.SelectedItem != null)
             pacienteFiltro = ((Paciente)CboPaciente.SelectedItem).Id;
 
-        if (_usuarioActivo != null && _usuarioActivo.Rol == RolUsuario.Recepcionista)
+        bool esRecepcionista = _usuarioActivo != null && _usuarioActivo.Rol == RolUsuario.Recepcionista;
+        List<Turno> lista;
+        bool huboError = false;
+
+        try
         {
-            var medicosAsignadosIds = _usuarioActivo.MedicosAsignados.Select(m => m.Id).ToList();
-            var turnosFiltrados = _turnoService.ObtenerTodos(ChkMostrarCancelados.Checked, medicoFiltro, fechaFiltro)
-                .Where(t => medicosAsignadosIds.Contains(t.MedicoId))
-                .ToList();
-            DgvTurnos.SelectionChanged -= DgvTurnos_SelectionChanged;
-            DgvTurnos.DataSource = turnosFiltrados;
-            DgvTurnos.ClearSelection();
-            DgvTurnos.SelectionChanged += DgvTurnos_SelectionChanged;
-            return;
+            if (esRecepcionista)
+            {
+                var medicosAsignadosIds = _usuarioActivo!.MedicosAsignados.Select(m => m.Id).ToList();
+                lista = _turnoService.ObtenerTodos(ChkMostrarCancelados.Checked, medicoFiltro, fechaFiltro)
+                    .Where(t => medicosAsignadosIds.Contains(t.MedicoId))
+                    .ToList();
+            }
+            else
+            {
+                lista = _turnoService.ObtenerTodos(ChkMostrarCancelados.Checked, medicoFiltro, fechaFiltro, pacienteFiltro);
+            }
         }
+        catch (Exception ex)
+        {
+            huboError = true;
+            lista = new List<Turno>();
+            LblMensaje.ForeColor = Color.Red;
+            LblMensaje.Text = "No se pudieron cargar los turnos: " + ex.Message;
+        }
+
         DgvTurnos.SelectionChanged -= DgvTurnos_SelectionChanged;
-        var lista = _turnoService.ObtenerTodos(ChkMostrarCancelados.Checked, medicoFiltro, fechaFiltro, pacienteFiltro);
         DgvTurnos.DataSource = lista;
         DgvTurnos.ClearSelection();
         DgvTurnos.SelectionChanged += DgvTurnos_SelectionChanged;
 
-        if (lista.Count == 0 && (medicoFiltro != null || fechaFiltro != null || pacienteFiltro != null))
+        ActualizarContadores(lista);
+
+        if (!huboError && !esRecepcionista && lista.Count == 0 &&
+            (medicoFiltro != null || fechaFiltro != null || pacienteFiltro != null))
         {
             LblMensaje.ForeColor = Color.DarkOrange;
             LblMensaje.Text = "No existen resultados asociados a la busqueda realizada.";
+        }
+    }
+
+    // Arma la franja de contadores entre el formulario y la grilla. Se crea
+    // aca (y no en InitializeComponent) para que el disenador no la borre.
+    private void ConfigurarBarraContadores()
+    {
+        var barra = new FlowLayoutPanel
+        {
+            Name = "pnlContadores",
+            Dock = DockStyle.Top,
+            Height = 36,
+            BackColor = Color.FromArgb(245, 246, 250),
+            Padding = new Padding(14, 4, 0, 0),
+            WrapContents = false,
+            AutoScroll = false
+        };
+
+        AgregarContador(barra, ContTotal, Color.FromArgb(27, 42, 74), Color.White);
+        AgregarContador(barra, ContPendientes, PaletaEstados.Fondo(EstadoTurno.Pendiente), PaletaEstados.Acento(EstadoTurno.Pendiente));
+        AgregarContador(barra, ContConfirmados, PaletaEstados.Fondo(EstadoTurno.Confirmado), PaletaEstados.Acento(EstadoTurno.Confirmado));
+        AgregarContador(barra, ContAtendidos, PaletaEstados.Fondo(EstadoTurno.Asistio), Color.FromArgb(28, 120, 66));
+        AgregarContador(barra, ContAusentes, PaletaEstados.Fondo(EstadoTurno.Ausente), Color.FromArgb(180, 50, 38));
+        AgregarContador(barra, ContCancelados, PaletaEstados.Fondo(EstadoTurno.Cancelado), Color.FromArgb(90, 98, 112));
+
+        // Debajo del formulario y antes del panel de agenda/grilla en el
+        // orden de acople: queda a todo el ancho entre ambos.
+        Controls.Add(barra);
+        Controls.SetChildIndex(barra, Controls.GetChildIndex(pnlFormulario));
+        ActualizarContadores(new List<Turno>());
+    }
+
+    private void AgregarContador(FlowLayoutPanel barra, string clave, Color fondo, Color texto)
+    {
+        var etiqueta = new Label
+        {
+            AutoSize = true,
+            Font = new Font("Segoe UI", 9.5F, FontStyle.Bold),
+            BackColor = fondo,
+            ForeColor = texto,
+            Margin = new Padding(0, 0, 8, 0),
+            Padding = new Padding(10, 5, 10, 5),
+            Name = "lblContador" + clave
+        };
+        _contadores[clave] = etiqueta;
+        barra.Controls.Add(etiqueta);
+    }
+
+    // Cuenta sobre lo que muestra la grilla (con los filtros ya aplicados).
+    private void ActualizarContadores(List<Turno> turnos)
+    {
+        int Contar(EstadoTurno estado) => turnos.Count(t => t.Estado == estado);
+
+        _contadores[ContTotal].Text = $"Total: {turnos.Count}";
+        _contadores[ContPendientes].Text = $"Pendientes: {Contar(EstadoTurno.Pendiente)}";
+        _contadores[ContConfirmados].Text = $"Confirmados: {Contar(EstadoTurno.Confirmado)}";
+        _contadores[ContAtendidos].Text = $"Atendidos: {Contar(EstadoTurno.Asistio)}";
+        _contadores[ContAusentes].Text = $"Ausentes: {Contar(EstadoTurno.Ausente)}";
+        _contadores[ContCancelados].Text = $"Cancelados: {Contar(EstadoTurno.Cancelado)}";
+    }
+
+    // Color de fila por estado, texto de estado con acento y monto estimado.
+    private void DgvTurnos_CellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
+    {
+        if (e.RowIndex < 0 || e.RowIndex >= DgvTurnos.Rows.Count) return;
+        if (DgvTurnos.Rows[e.RowIndex].DataBoundItem is not Turno turno) return;
+
+        if (e.CellStyle == null) return;
+
+        e.CellStyle.BackColor = PaletaEstados.Fondo(turno.Estado);
+        e.CellStyle.ForeColor = turno.Estado == EstadoTurno.Cancelado
+            ? Color.FromArgb(110, 120, 135)
+            : Color.FromArgb(30, 35, 45);
+
+        string columna = DgvTurnos.Columns[e.ColumnIndex].Name;
+
+        if (columna == "colEstado")
+        {
+            e.Value = PaletaEstados.Texto(turno.Estado);
+            e.FormattingApplied = true;
+        }
+        else if (columna == ColACobrar)
+        {
+            // Solo tiene sentido estimar lo que todavia no se cobro: para un
+            // turno ya atendido manda el Monto real, y ausente/cancelado no cobra.
+            bool pendienteDeCobro = turno.Estado == EstadoTurno.Pendiente || turno.Estado == EstadoTurno.Confirmado;
+            e.Value = pendienteDeCobro
+                ? TurnoService.CalcularMontoEstimado(turno).ToString("C2", CulturaAr)
+                : "-";
+            e.FormattingApplied = true;
         }
     }
 

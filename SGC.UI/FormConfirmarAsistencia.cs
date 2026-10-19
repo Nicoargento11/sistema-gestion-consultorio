@@ -1,4 +1,5 @@
 using SGC.Entidades;
+using SGC.Logica;
 
 namespace SGC.UI;
 
@@ -27,12 +28,9 @@ public partial class FormConfirmarAsistencia : Form
         // ESTE medico puntual la acepta (Medico.ObrasSocialesAceptadas) - si
         // el paciente tiene una obra social que el medico no cubre, paga
         // particular como cualquier otro paciente sin obra social.
-        var obraSocial = turno.Paciente?.ObraSocial;
-        bool medicoAceptaObraSocial = obraSocial != null &&
-            (turno.Medico?.ObrasSocialesAceptadas.Any(o => o.Id == obraSocial.Id) ?? false);
-
-        if (medicoAceptaObraSocial)
-            CboMedioPago.Items.Add(obraSocial!.Nombre);
+        // La regla vive en TurnoService (la comparte la grilla de FormTurnos).
+        if (TurnoService.MedicoAceptaObraSocialDelPaciente(turno))
+            CboMedioPago.Items.Add(turno.Paciente!.ObraSocial!.Nombre);
 
         RbAsistio.CheckedChanged += RadioButtons_CheckedChanged;
         RbAusente.CheckedChanged += RadioButtons_CheckedChanged;
@@ -54,17 +52,13 @@ public partial class FormConfirmarAsistencia : Form
         // sigue quedando editable por si hace falta un ajuste puntual.
         if (CboMedioPago.SelectedItem == null) return;
 
-        decimal precioBase = _turno.Medico?.PrecioConsultaParticular ?? 0;
-
         if (CboMedioPago.SelectedItem.ToString() == OpcionParticular)
         {
-            NudMonto.Value = Math.Min(precioBase, NudMonto.Maximum);
+            NudMonto.Value = Math.Min(TurnoService.CalcularMontoParticular(_turno), NudMonto.Maximum);
             return;
         }
 
-        decimal cobertura = _turno.Paciente?.ObraSocial?.PorcentajeCobertura ?? 0;
-        decimal montoConCobertura = precioBase - (precioBase * cobertura / 100m);
-        NudMonto.Value = Math.Min(Math.Max(montoConCobertura, 0), NudMonto.Maximum);
+        NudMonto.Value = Math.Min(TurnoService.CalcularMontoConObraSocial(_turno), NudMonto.Maximum);
     }
 
     private void BtnConfirmar_Click(object? sender, EventArgs e)
