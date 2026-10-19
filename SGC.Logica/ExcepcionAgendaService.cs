@@ -12,6 +12,54 @@ public class ExcepcionAgendaService
         return contexto.ExcepcionesAgenda.Where(e => e.Activo).Include(e => e.Medico).ToList();
     }
 
+    // Listado para la grilla: cada excepcion con su estado respecto de hoy y
+    // la cantidad de turnos activos (no cancelados) que todavia se
+    // superponen con ella. Los turnos de todas las excepciones se traen con
+    // UNA sola consulta (medicos y rango de fechas involucrados) y se cuentan
+    // en memoria, en vez de una consulta por fila.
+    public List<ExcepcionFila> ObtenerListado(DateOnly? hoy = null)
+    {
+        var dia = hoy ?? DateOnly.FromDateTime(DateTime.Today);
+
+        using var contexto = SGCContextFactory.Crear();
+        var excepciones = contexto.ExcepcionesAgenda
+            .AsNoTracking()
+            .Where(e => e.Activo)
+            .Include(e => e.Medico)
+            .ToList();
+
+        if (excepciones.Count == 0) return new List<ExcepcionFila>();
+
+        var medicoIds = excepciones.Select(e => e.MedicoId).Distinct().ToList();
+        var desde = excepciones.Min(e => e.Fecha);
+        var hasta = excepciones.Max(e => e.Fecha);
+
+        var turnos = contexto.Turnos
+            .AsNoTracking()
+            .Where(t => t.Activo && t.Estado != EstadoTurno.Cancelado
+                        && medicoIds.Contains(t.MedicoId) && t.Fecha >= desde && t.Fecha <= hasta)
+            .Select(t => new { t.MedicoId, t.Fecha, t.HoraInicio, t.DuracionMinutos })
+            .ToList()
+            .ToLookup(t => (t.MedicoId, t.Fecha));
+
+        return excepciones
+            .Select(e => new ExcepcionFila
+            {
+                Excepcion = e,
+                Estado = ExcepcionFila.CalcularEstado(e.Fecha, dia),
+                TurnosAfectados = turnos[(e.MedicoId, e.Fecha)].Count(t =>
+                    e.Tipo == TipoExcepcionAgenda.DiaCompleto
+                    || (e.HoraInicio != null && e.HoraFin != null
+                        && t.HoraInicio < e.HoraFin && e.HoraInicio < t.HoraInicio.AddMinutes(t.DuracionMinutos)))
+            })
+            // Vigentes y proximas primero (la mas cercana arriba), luego las pasadas (la mas reciente arriba).
+            .OrderBy(f => f.Estado == EstadoExcepcion.Pasada ? 1 : 0)
+            .ThenBy(f => f.Estado == EstadoExcepcion.Pasada ? 0 : f.Fecha.DayNumber)
+            .ThenByDescending(f => f.Estado == EstadoExcepcion.Pasada ? f.Fecha.DayNumber : 0)
+            .ThenBy(f => f.Id)
+            .ToList();
+    }
+
     public List<ExcepcionAgenda> ObtenerPorMedico(int medicoId)
     {
         using var contexto = SGCContextFactory.Crear();

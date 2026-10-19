@@ -15,6 +15,29 @@ public class AgendaMedicoService
             .ToList();
     }
 
+    // Vista semanal: una fila por medico activo (tenga o no horarios) con sus
+    // franjas activas y las horas semanales. Dos consultas en total.
+    public List<AgendaSemanalFila> ObtenerResumenSemanal()
+    {
+        using var contexto = SGCContextFactory.Crear();
+
+        var medicos = contexto.Medicos
+            .AsNoTracking()
+            .Where(m => m.Activo)
+            .OrderBy(m => m.Apellido).ThenBy(m => m.Nombre)
+            .ToList();
+
+        var franjas = contexto.AgendasMedico
+            .AsNoTracking()
+            .Where(a => a.Activo)
+            .ToList()
+            .ToLookup(a => a.MedicoId);
+
+        return medicos
+            .Select(m => new AgendaSemanalFila { Medico = m, Franjas = franjas[m.Id].ToList() })
+            .ToList();
+    }
+
     public List<AgendaMedico> ObtenerPorMedico(int medicoId)
     {
         using var contexto = SGCContextFactory.Crear();

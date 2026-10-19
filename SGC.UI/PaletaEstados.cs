@@ -1,4 +1,5 @@
 using SGC.Entidades;
+using SGC.Logica;
 
 namespace SGC.UI;
 
@@ -28,6 +29,23 @@ public static class PaletaEstados
         EstadoTurno.Ausente => Color.FromArgb(231, 76, 60),
         EstadoTurno.Cancelado => Color.FromArgb(110, 120, 135),
         _ => Color.FromArgb(27, 42, 74)
+    };
+
+    // Excepciones de agenda: se reutilizan los tonos de la paleta de turnos
+    // (vigente = ambar como Pendiente, proxima = azul como Confirmado,
+    // pasada = gris como Cancelado) para que se lean igual en toda la app.
+    public static Color Fondo(EstadoExcepcion estado) => estado switch
+    {
+        EstadoExcepcion.Vigente => Fondo(EstadoTurno.Pendiente),
+        EstadoExcepcion.Proxima => Fondo(EstadoTurno.Confirmado),
+        _ => Fondo(EstadoTurno.Cancelado)
+    };
+
+    public static Color Acento(EstadoExcepcion estado) => estado switch
+    {
+        EstadoExcepcion.Vigente => Acento(EstadoTurno.Pendiente),
+        EstadoExcepcion.Proxima => Acento(EstadoTurno.Confirmado),
+        _ => Acento(EstadoTurno.Cancelado)
     };
 
     public static string Texto(EstadoTurno estado) => estado switch

@@ -463,7 +463,7 @@ public partial class FormAgendaMedico : Form
         }
         else
         {
-            var formHistorial = new FormHistorialPaciente(_turnoSeleccionado.Paciente);
+            var formHistorial = new FormHistorialPaciente(_turnoSeleccionado.Paciente, _usuarioActivo);
             formHistorial.ShowDialog();
         }
     }
