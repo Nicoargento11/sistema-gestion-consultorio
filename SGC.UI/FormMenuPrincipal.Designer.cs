@@ -37,6 +37,7 @@ partial class FormMenuPrincipal
     private Button btnAgenda;
     private Button btnActividad;
     private Button btnHistorial;
+    private Button btnReportes;
     private Button btnCerrarSesion;
 
 
@@ -56,7 +57,7 @@ partial class FormMenuPrincipal
         btnExcepcionesAgenda = new Button();
         btnTurnos = new Button();
         btnHistorial = new Button();
-        btnHorarios = new Button();
+        btnReportes = new Button();
         btnCerrarSesion = new Button();
         pnlContenido = new Panel();
         pnlSidebar.SuspendLayout();
@@ -77,6 +78,7 @@ partial class FormMenuPrincipal
         pnlSidebar.Controls.Add(btnExcepcionesAgenda);
         pnlSidebar.Controls.Add(btnTurnos);
         pnlSidebar.Controls.Add(btnHistorial);
+        pnlSidebar.Controls.Add(btnReportes);
         pnlSidebar.Controls.Add(btnCerrarSesion);
         pnlSidebar.Dock = DockStyle.Left;
         pnlSidebar.FlowDirection = FlowDirection.TopDown;
@@ -291,6 +293,24 @@ partial class FormMenuPrincipal
         btnHistorial.Text = "Consultar historial";
         btnHistorial.TextAlign = ContentAlignment.MiddleLeft;
         btnHistorial.UseVisualStyleBackColor = false;
+        // 
+        // btnReportes
+        // 
+        btnReportes.BackColor = Color.FromArgb(27, 42, 74);
+        btnReportes.FlatAppearance.BorderSize = 0;
+        btnReportes.FlatAppearance.MouseOverBackColor = Color.FromArgb(46, 134, 222);
+        btnReportes.FlatStyle = FlatStyle.Flat;
+        btnReportes.Font = new Font("Segoe UI", 10F);
+        btnReportes.ForeColor = Color.White;
+        btnReportes.Location = new Point(2, 306);
+        btnReportes.Margin = new Padding(2);
+        btnReportes.Name = "btnReportes";
+        btnReportes.Padding = new Padding(16, 0, 0, 0);
+        btnReportes.Size = new Size(176, 36);
+        btnReportes.TabIndex = 12;
+        btnReportes.Text = "Reportes";
+        btnReportes.TextAlign = ContentAlignment.MiddleLeft;
+        btnReportes.UseVisualStyleBackColor = false;
         // 
         // btnCerrarSesion
         // 
