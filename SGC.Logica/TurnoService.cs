@@ -33,18 +33,20 @@ public class TurnoService
     public List<Turno> ObtenerPorMedicoYFecha(int medicoId, DateOnly? fecha = null, bool incluirCancelados = false)
     {
         using var contexto = SGCContextFactory.Crear();
-        IQueryable<Turno> query = contexto.Turnos
+
+        var pMedicoId = new Microsoft.Data.SqlClient.SqlParameter("@MedicoId", medicoId);
+        var pFecha = new Microsoft.Data.SqlClient.SqlParameter("@Fecha", (object?)fecha?.ToString("yyyy-MM-dd") ?? DBNull.Value);
+        var pIncluirCancelados = new Microsoft.Data.SqlClient.SqlParameter("@IncluirCancelados", incluirCancelados ? 1 : 0);
+
+        return contexto.Turnos
+            .FromSqlRaw("EXEC sp_ObtenerTurnosPorMedicoYFecha @MedicoId, @Fecha, @IncluirCancelados",
+                        pMedicoId, pFecha, pIncluirCancelados)
             .Include(t => t.Paciente).ThenInclude(p => p!.ObraSocial)
             .Include(t => t.Medico).ThenInclude(m => m!.ObrasSocialesAceptadas)
             .Include(t => t.ActividadMedica)
-            .Where(t => t.MedicoId == medicoId);
-
-        query = incluirCancelados ? query : query.Where(t => t.Activo);
-
-        if (fecha.HasValue)
-            query = query.Where(t => t.Fecha == fecha.Value);
-
-        return query.OrderBy(t => t.Fecha).ThenBy(t => t.HoraInicio).ToList();
+            .OrderBy(t => t.Fecha)
+            .ThenBy(t => t.HoraInicio)
+            .ToList();
     }
 
     public Turno? ObtenerPorId(int id)
