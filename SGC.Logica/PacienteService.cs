@@ -15,6 +15,71 @@ public class PacienteService
             .ToList();
     }
 
+    // Listado para la grilla de Pacientes con ultima visita, proximo turno y
+    // ausencias. Son 3 consultas en total (pacientes, agregados por paciente y
+    // turnos futuros), nunca una por fila.
+    // medicosVisibles limita SOLO el "proximo turno" a esos medicos (para una
+    // recepcionista: los que tiene asignados; lista vacia = ninguno). null
+    // significa sin restriccion (administrador).
+    public List<PacienteFila> ObtenerListado(IReadOnlyCollection<int>? medicosVisibles = null)
+    {
+        using var contexto = SGCContextFactory.Crear();
+
+        var pacientes = contexto.Pacientes
+            .Where(p => p.Activo)
+            .Include(p => p.ObraSocial)
+            .ToList();
+
+        // Ultima visita y ausencias: agrupado en SQL, una fila por paciente.
+        var agregados = contexto.Turnos
+            .Where(t => t.Activo && (t.Estado == EstadoTurno.Asistio || t.Estado == EstadoTurno.Ausente))
+            .GroupBy(t => t.PacienteId)
+            .Select(g => new
+            {
+                PacienteId = g.Key,
+                UltimaVisita = g.Max(t => t.Estado == EstadoTurno.Asistio ? (DateOnly?)t.Fecha : null),
+                Ausencias = g.Count(t => t.Estado == EstadoTurno.Ausente)
+            })
+            .ToDictionary(a => a.PacienteId);
+
+        // Proximo turno: se traen solo columnas livianas de los turnos futuros
+        // y se queda con el primero de cada paciente. Un consultorio tiene
+        // pocos turnos futuros abiertos, asi que es mas simple que una
+        // subconsulta correlacionada y sigue siendo una unica consulta.
+        var hoy = DateOnly.FromDateTime(DateTime.Today);
+        var ahora = TimeOnly.FromDateTime(DateTime.Now);
+        var proximos = new Dictionary<int, string>();
+        if (medicosVisibles == null || medicosVisibles.Count > 0)
+        {
+            var futuros = contexto.Turnos
+                .Where(t => t.Activo
+                            && (t.Estado == EstadoTurno.Pendiente || t.Estado == EstadoTurno.Confirmado)
+                            && (t.Fecha > hoy || (t.Fecha == hoy && t.HoraInicio >= ahora))
+                            && (medicosVisibles == null || medicosVisibles.Contains(t.MedicoId)))
+                .OrderBy(t => t.Fecha).ThenBy(t => t.HoraInicio)
+                .Select(t => new { t.PacienteId, t.Fecha, t.HoraInicio, MedicoApellido = t.Medico!.Apellido, MedicoNombre = t.Medico!.Nombre })
+                .ToList();
+
+            foreach (var f in futuros)
+            {
+                if (!proximos.ContainsKey(f.PacienteId))
+                    proximos[f.PacienteId] = $"{f.Fecha:dd/MM/yyyy} {f.HoraInicio:HH:mm} - {f.MedicoApellido}, {f.MedicoNombre}";
+            }
+        }
+
+        return pacientes.Select(p =>
+        {
+            agregados.TryGetValue(p.Id, out var agg);
+            return new PacienteFila
+            {
+                Paciente = p,
+                UltimaVisita = agg?.UltimaVisita,
+                Ausencias = agg?.Ausencias ?? 0,
+                ProximoTurno = proximos.TryGetValue(p.Id, out var texto) ? texto : "-"
+            };
+        }).ToList();
+    }
+
     public void Agregar(Paciente paciente)
     {
         using var contexto = SGCContextFactory.Crear();

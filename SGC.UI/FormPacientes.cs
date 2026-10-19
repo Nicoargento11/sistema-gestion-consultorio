@@ -6,10 +6,15 @@ public partial class FormPacientes : Form
 {
     private readonly PacienteService _service = new();
     private readonly ObraSocialService _obraSocialService = new();
+    private readonly Usuario? _usuarioActivo;
     private int? _idSeleccionado = null;
-    public FormPacientes()
+
+    // usuarioActivo define que medicos puede ver una recepcionista en la
+    // columna "Proximo turno"; null = sin restriccion.
+    public FormPacientes(Usuario? usuarioActivo = null)
     {
         InitializeComponent();
+        _usuarioActivo = usuarioActivo;
         ConfigurarColumnas();
         CargarCombos();
         CargarGrilla();
@@ -23,6 +28,24 @@ public partial class FormPacientes : Form
         TxtApellido.KeyPress += FiltrosTexto.SoloLetras;
         TxtDni.KeyPress += FiltrosTexto.SoloNumeros;
         TxtTelefono.KeyPress += FiltrosTexto.SoloNumeros;
+
+        DgvPacientes.CellFormatting += DgvPacientes_CellFormatting;
+    }
+
+    // Que medicos puede ver el usuario en "Proximo turno": una recepcionista
+    // solo los que tiene asignados (sin asignaciones = ninguno), un medico
+    // solo el propio; administrador (o sin usuario) todos (null).
+    private IReadOnlyCollection<int>? MedicosVisibles()
+    {
+        if (_usuarioActivo == null)
+            return null;
+
+        return _usuarioActivo.Rol switch
+        {
+            RolUsuario.Recepcionista => _usuarioActivo.MedicosAsignados.Select(m => m.Id).ToList(),
+            RolUsuario.Medico => _usuarioActivo.MedicoId is int id ? new List<int> { id } : new List<int>(),
+            _ => null
+        };
     }
 
     private void CargarCombos()
@@ -47,14 +70,29 @@ public partial class FormPacientes : Form
         // ahora se embebe en pnlContenido y ya no tiene un ancho de ventana fijo.
         DgvPacientes.AutoGenerateColumns = false;
         DgvPacientes.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-        DgvPacientes.Columns.Add(new DataGridViewTextBoxColumn { Name = "colId", HeaderText = "Id", DataPropertyName = "Id", FillWeight = 40 });
-        DgvPacientes.Columns.Add(new DataGridViewTextBoxColumn { Name = "colNombre", HeaderText = "Nombre", DataPropertyName = "Nombre", FillWeight = 130 });
-        DgvPacientes.Columns.Add(new DataGridViewTextBoxColumn { Name = "colApellido", HeaderText = "Apellido", DataPropertyName = "Apellido", FillWeight = 130 });
-        DgvPacientes.Columns.Add(new DataGridViewTextBoxColumn { Name = "colFechaNacimiento", HeaderText = "Fecha Nacimiento", DataPropertyName = "FechaNacimiento", FillWeight = 110 });
-        DgvPacientes.Columns.Add(new DataGridViewTextBoxColumn { Name = "colDni", HeaderText = "DNI", DataPropertyName = "Dni", FillWeight = 100 });
-        DgvPacientes.Columns.Add(new DataGridViewTextBoxColumn { Name = "colEmail", HeaderText = "Email", DataPropertyName = "Email", FillWeight = 170 });
-        DgvPacientes.Columns.Add(new DataGridViewTextBoxColumn { Name = "colTelefono", HeaderText = "Telefono", DataPropertyName = "Telefono", FillWeight = 110 });
-        DgvPacientes.Columns.Add(new DataGridViewTextBoxColumn { Name = "colObraSocial", HeaderText = "Obra Social", DataPropertyName = "ObraSocialNombre", FillWeight = 130 });
+        // Los encabezados largos ("Fecha Nacimiento", "Ultima visita") se parten en dos lineas sin cortarse.
+        DgvPacientes.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+        DgvPacientes.Columns.Add(new DataGridViewTextBoxColumn { Name = "colId", HeaderText = "Id", DataPropertyName = "Id", FillWeight = 28 });
+        DgvPacientes.Columns.Add(new DataGridViewTextBoxColumn { Name = "colNombre", HeaderText = "Nombre", DataPropertyName = "Nombre", FillWeight = 85 });
+        DgvPacientes.Columns.Add(new DataGridViewTextBoxColumn { Name = "colApellido", HeaderText = "Apellido", DataPropertyName = "Apellido", FillWeight = 85 });
+        DgvPacientes.Columns.Add(new DataGridViewTextBoxColumn { Name = "colFechaNacimiento", HeaderText = "Fecha Nacimiento", DataPropertyName = "FechaNacimiento", FillWeight = 90 });
+        DgvPacientes.Columns.Add(new DataGridViewTextBoxColumn { Name = "colDni", HeaderText = "DNI", DataPropertyName = "Dni", FillWeight = 75 });
+        DgvPacientes.Columns.Add(new DataGridViewTextBoxColumn { Name = "colEmail", HeaderText = "Email", DataPropertyName = "Email", FillWeight = 115 });
+        DgvPacientes.Columns.Add(new DataGridViewTextBoxColumn { Name = "colTelefono", HeaderText = "Teléfono", DataPropertyName = "Telefono", FillWeight = 90 });
+        DgvPacientes.Columns.Add(new DataGridViewTextBoxColumn { Name = "colObraSocial", HeaderText = "Obra Social", DataPropertyName = "ObraSocialNombre", FillWeight = 100 });
+
+        // Columnas calculadas (edad, ultima visita, proximo turno, ausencias).
+        // "-" cuando no hay dato. Con tantas columnas se fija un minimo para
+        // que no queden ilegibles: si no entran, aparece la barra horizontal.
+        var estiloCentrado = new DataGridViewCellStyle { Alignment = DataGridViewContentAlignment.MiddleCenter, NullValue = "-" };
+        var estiloFecha = new DataGridViewCellStyle { Alignment = DataGridViewContentAlignment.MiddleCenter, NullValue = "-", Format = "dd/MM/yyyy" };
+        DgvPacientes.Columns.Add(new DataGridViewTextBoxColumn { Name = "colEdad", HeaderText = "Edad", DataPropertyName = "Edad", FillWeight = 42, DefaultCellStyle = estiloCentrado });
+        DgvPacientes.Columns.Add(new DataGridViewTextBoxColumn { Name = "colUltimaVisita", HeaderText = "Última visita", DataPropertyName = "UltimaVisita", FillWeight = 90, DefaultCellStyle = estiloFecha });
+        DgvPacientes.Columns.Add(new DataGridViewTextBoxColumn { Name = "colProximoTurno", HeaderText = "Próximo turno", DataPropertyName = "ProximoTurno", FillWeight = 200 });
+        DgvPacientes.Columns.Add(new DataGridViewTextBoxColumn { Name = "colAusencias", HeaderText = "Ausencias", DataPropertyName = "Ausencias", FillWeight = 75, DefaultCellStyle = estiloCentrado });
+
+        foreach (DataGridViewColumn columna in DgvPacientes.Columns)
+            columna.MinimumWidth = columna.Name == "colId" ? 30 : 55;
     }
 
     private void FormPacientes_Load(object sender, EventArgs e)
@@ -64,12 +102,46 @@ public partial class FormPacientes : Form
 
     private void CargarGrilla()
     {
-        DgvPacientes.DataSource = _service.ObtenerTodos();
+        // Se desengancha SelectionChanged mientras se reasigna el DataSource
+        // para que no corra con filas a medio cargar.
+        DgvPacientes.SelectionChanged -= DgvPacientes_SelectionChanged;
+        try
+        {
+            DgvPacientes.DataSource = _service.ObtenerListado(MedicosVisibles());
+        }
+        catch (Exception ex)
+        {
+            DgvPacientes.DataSource = new List<PacienteFila>();
+            LblMensaje.ForeColor = Color.Red;
+            LblMensaje.Text = "No se pudo cargar el listado de pacientes: " + ex.Message;
+        }
+        finally
+        {
+            // Sin esto, WinForms selecciona sola la primera fila al asignar el
+            // DataSource y precarga el formulario con ese registro.
+            DgvPacientes.ClearSelection();
+            DgvPacientes.CurrentCell = null;
+            DgvPacientes.SelectionChanged += DgvPacientes_SelectionChanged;
+        }
+    }
 
-        // Sin esto, WinForms selecciona sola la primera fila al asignar el
-        // DataSource y precarga el formulario con ese registro.
-        DgvPacientes.ClearSelection();
-        DgvPacientes.CurrentCell = null;
+    private void DgvPacientes_CellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
+    {
+        if (e.RowIndex < 0 || DgvPacientes.Rows[e.RowIndex].DataBoundItem is not PacienteFila fila)
+            return;
+
+        string columna = DgvPacientes.Columns[e.ColumnIndex].Name;
+        if (columna == "colAusencias" && fila.Ausencias > 0)
+        {
+            // Resalta a quienes faltaron a algun turno.
+            e.CellStyle!.ForeColor = PaletaEstados.Acento(EstadoTurno.Ausente);
+            e.CellStyle.Font = new Font(DgvPacientes.Font, FontStyle.Bold);
+        }
+        else if (columna == "colProximoTurno")
+        {
+            // El texto puede quedar cortado; el tooltip muestra el completo.
+            DgvPacientes.Rows[e.RowIndex].Cells[e.ColumnIndex].ToolTipText = fila.ProximoTurno;
+        }
     }
 
     private void BtnNuevo_Click(object sender, EventArgs e)
@@ -139,7 +211,7 @@ public partial class FormPacientes : Form
             return;
         }
 
-        var pacienteSeleccionado = (Paciente)DgvPacientes.CurrentRow.DataBoundItem;
+        var pacienteSeleccionado = ((PacienteFila)DgvPacientes.CurrentRow.DataBoundItem).Paciente;
 
         var respuesta = MessageBox.Show(
             $"Esta seguro que desea eliminar a {pacienteSeleccionado.Nombre} {pacienteSeleccionado.Apellido}?",
@@ -172,11 +244,11 @@ public partial class FormPacientes : Form
         }
     }
 
-    private void DgvPacientes_SelectionChanged(object sender, EventArgs e)
+    private void DgvPacientes_SelectionChanged(object? sender, EventArgs e)
     {
         if (DgvPacientes.CurrentRow == null) return;
 
-        var paciente = (Paciente)DgvPacientes.CurrentRow.DataBoundItem;
+        var paciente = ((PacienteFila)DgvPacientes.CurrentRow.DataBoundItem).Paciente;
 
         _idSeleccionado = paciente.Id;
         TxtNombre.Text = paciente.Nombre;
