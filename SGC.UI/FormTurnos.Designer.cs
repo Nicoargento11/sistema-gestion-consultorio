@@ -15,430 +15,767 @@ partial class FormTurnos
 
     private void InitializeComponent()
     {
-        pnlFormulario = new Panel();
-        lblDuracion = new Label();
-        CboDuracion = new ComboBox();
-        ChkFiltrarFecha = new CheckBox();
-        ChkFiltrarPaciente = new CheckBox();
-        ChkTodosMedicos = new CheckBox();
-        BtnNuevoTurno = new Button();
-        BtnModificar = new Button();
-        ChkMostrarCancelados = new CheckBox();
+        pnlDerecho = new Panel();
+        pnlIzquierdo = new Panel();
+        pnlEstado = new Panel();
         LblMensaje = new Label();
+        pnlMarcoNuevo = new Panel();
+        pnlNuevoTurno = new Panel();
+        tlpNuevoTurno = new TableLayoutPanel();
+        lblTituloNuevo = new Label();
+        LblModo = new Label();
+        lblMedico = new Label();
+        CboMedico = new ComboBox();
+        lblFecha = new Label();
+        DtpFecha = new DateTimePicker();
+        lblHorarios = new Label();
+        tlpHorarios = new TableLayoutPanel();
+        LblAviso = new Label();
+        FlpHorarios = new FlowLayoutPanel();
+        FlpLeyenda = new FlowLayoutPanel();
+        tlpPacienteDuracion = new TableLayoutPanel();
+        lblPaciente = new Label();
+        lblDuracion = new Label();
+        CboPaciente = new ComboBox();
+        CboDuracion = new ComboBox();
+        tlpBotonesNuevo = new TableLayoutPanel();
+        BtnAsignar = new Button();
+        BtnLimpiar = new Button();
+        tlpDerecho = new TableLayoutPanel();
+        pnlMarcoToolbar = new Panel();
+        pnlToolbar = new Panel();
+        tlpToolbar = new TableLayoutPanel();
+        LblVista = new Label();
+        flpFiltros = new FlowLayoutPanel();
+        flpPaciente = new FlowLayoutPanel();
+        ChkTodosMedicos = new CheckBox();
+        ChkFiltrarFecha = new CheckBox();
+        ChkMostrarCancelados = new CheckBox();
+        lblFiltroPaciente = new Label();
+        CboFiltroPaciente = new ComboBox();
+        FlpContadores = new FlowLayoutPanel();
+        pnlMarcoGrilla = new Panel();
+        DgvTurnos = new DataGridView();
+        pnlMarcoAcciones = new Panel();
+        pnlAcciones = new Panel();
+        tlpAcciones = new TableLayoutPanel();
+        LblSeleccion = new Label();
+        flpBotonesAccion = new FlowLayoutPanel();
+        BtnModificar = new Button();
         BtnCancelar = new Button();
         BtnConfirmarAsistencia = new Button();
-        BtnAsignar = new Button();
-        CboHorario = new ComboBox();
-        lblHorario = new Label();
-        DtpFecha = new DateTimePicker();
-        lblFecha = new Label();
-        CboMedico = new ComboBox();
-        lblMedico = new Label();
-        CboPaciente = new ComboBox();
-        lblPaciente = new Label();
-        DgvTurnos = new DataGridView();
-        pnlAgenda = new Panel();
-        DgvAgenda = new DataGridView();
-        lblAgendaTitulo = new Label();
-        lblAgendaHint = new Label();
-        pnlFormulario.SuspendLayout();
+        LblAyudaAcciones = new Label();
+        pnlDerecho.SuspendLayout();
+        pnlIzquierdo.SuspendLayout();
+        pnlEstado.SuspendLayout();
+        pnlMarcoNuevo.SuspendLayout();
+        pnlNuevoTurno.SuspendLayout();
+        tlpNuevoTurno.SuspendLayout();
+        tlpHorarios.SuspendLayout();
+        FlpHorarios.SuspendLayout();
+        FlpLeyenda.SuspendLayout();
+        tlpPacienteDuracion.SuspendLayout();
+        tlpBotonesNuevo.SuspendLayout();
+        tlpDerecho.SuspendLayout();
+        pnlMarcoToolbar.SuspendLayout();
+        pnlToolbar.SuspendLayout();
+        tlpToolbar.SuspendLayout();
+        flpFiltros.SuspendLayout();
+        flpPaciente.SuspendLayout();
+        FlpContadores.SuspendLayout();
+        pnlMarcoGrilla.SuspendLayout();
+        pnlMarcoAcciones.SuspendLayout();
+        pnlAcciones.SuspendLayout();
+        tlpAcciones.SuspendLayout();
+        flpBotonesAccion.SuspendLayout();
         ((System.ComponentModel.ISupportInitialize)DgvTurnos).BeginInit();
-        pnlAgenda.SuspendLayout();
-        ((System.ComponentModel.ISupportInitialize)DgvAgenda).BeginInit();
         SuspendLayout();
         // 
-        // pnlFormulario
+        // pnlDerecho
         // 
-        pnlFormulario.BackColor = Color.FromArgb(245, 246, 250);
-        pnlFormulario.Controls.Add(lblDuracion);
-        pnlFormulario.Controls.Add(CboDuracion);
-        pnlFormulario.Controls.Add(ChkFiltrarFecha);
-        pnlFormulario.Controls.Add(ChkFiltrarPaciente);
-        pnlFormulario.Controls.Add(ChkTodosMedicos);
-        pnlFormulario.Controls.Add(BtnNuevoTurno);
-        pnlFormulario.Controls.Add(BtnModificar);
-        pnlFormulario.Controls.Add(ChkMostrarCancelados);
-        pnlFormulario.Controls.Add(LblMensaje);
-        pnlFormulario.Controls.Add(BtnCancelar);
-        pnlFormulario.Controls.Add(BtnConfirmarAsistencia);
-        pnlFormulario.Controls.Add(BtnAsignar);
-        pnlFormulario.Controls.Add(CboHorario);
-        pnlFormulario.Controls.Add(lblHorario);
-        pnlFormulario.Controls.Add(DtpFecha);
-        pnlFormulario.Controls.Add(lblFecha);
-        pnlFormulario.Controls.Add(CboMedico);
-        pnlFormulario.Controls.Add(lblMedico);
-        pnlFormulario.Controls.Add(CboPaciente);
-        pnlFormulario.Controls.Add(lblPaciente);
-        pnlFormulario.Dock = DockStyle.Top;
-        pnlFormulario.Location = new Point(0, 0);
-        pnlFormulario.Margin = new Padding(1, 2, 1, 2);
-        pnlFormulario.Name = "pnlFormulario";
-        pnlFormulario.Size = new Size(910, 114);
-        pnlFormulario.TabIndex = 1;
+        pnlDerecho.Controls.Add(tlpDerecho);
+        pnlDerecho.Dock = DockStyle.Fill;
+        pnlDerecho.Padding = new Padding(0);
+        pnlDerecho.TabIndex = 1;
+        pnlDerecho.Name = "pnlDerecho";
+        // 
+        // pnlIzquierdo
+        // 
+        pnlIzquierdo.Controls.Add(pnlMarcoNuevo);
+        pnlIzquierdo.Dock = DockStyle.Left;
+        pnlIzquierdo.Padding = new Padding(0, 0, 12, 0);
+        pnlIzquierdo.Size = new Size(312, 0);
+        pnlIzquierdo.TabIndex = 0;
+        pnlIzquierdo.Name = "pnlIzquierdo";
+        // 
+        // pnlEstado
+        // 
+        pnlEstado.Controls.Add(LblMensaje);
+        pnlEstado.Dock = DockStyle.Bottom;
+        pnlEstado.Padding = new Padding(2, 8, 2, 0);
+        pnlEstado.Size = new Size(0, 36);
+        pnlEstado.TabIndex = 2;
+        pnlEstado.Name = "pnlEstado";
+        // 
+        // LblMensaje
+        // 
+        LblMensaje.Dock = DockStyle.Fill;
+        LblMensaje.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+        LblMensaje.TabIndex = 0;
+        LblMensaje.Name = "LblMensaje";
+        // 
+        // pnlMarcoNuevo
+        // 
+        pnlMarcoNuevo.Controls.Add(pnlNuevoTurno);
+        pnlMarcoNuevo.BackColor = Color.FromArgb(214, 220, 230);
+        pnlMarcoNuevo.Dock = DockStyle.Fill;
+        pnlMarcoNuevo.Padding = new Padding(1);
+        pnlMarcoNuevo.TabIndex = 0;
+        pnlMarcoNuevo.Name = "pnlMarcoNuevo";
+        // 
+        // pnlNuevoTurno
+        // 
+        pnlNuevoTurno.Controls.Add(tlpNuevoTurno);
+        pnlNuevoTurno.AutoScroll = true;
+        pnlNuevoTurno.BackColor = Color.White;
+        pnlNuevoTurno.Dock = DockStyle.Fill;
+        pnlNuevoTurno.Padding = new Padding(16, 14, 16, 14);
+        pnlNuevoTurno.TabIndex = 0;
+        pnlNuevoTurno.Name = "pnlNuevoTurno";
+        // 
+        // tlpNuevoTurno
+        // 
+        tlpNuevoTurno.Controls.Add(lblTituloNuevo, 0, 0);
+        tlpNuevoTurno.Controls.Add(LblModo, 0, 1);
+        tlpNuevoTurno.Controls.Add(lblMedico, 0, 2);
+        tlpNuevoTurno.Controls.Add(CboMedico, 0, 3);
+        tlpNuevoTurno.Controls.Add(lblFecha, 0, 4);
+        tlpNuevoTurno.Controls.Add(DtpFecha, 0, 5);
+        tlpNuevoTurno.Controls.Add(lblHorarios, 0, 6);
+        tlpNuevoTurno.Controls.Add(tlpHorarios, 0, 7);
+        tlpNuevoTurno.Controls.Add(FlpLeyenda, 0, 8);
+        tlpNuevoTurno.Controls.Add(tlpPacienteDuracion, 0, 9);
+        tlpNuevoTurno.Controls.Add(tlpBotonesNuevo, 0, 10);
+        tlpNuevoTurno.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+        tlpNuevoTurno.RowCount = 11;
+        tlpNuevoTurno.RowStyles.Add(new RowStyle());
+        tlpNuevoTurno.RowStyles.Add(new RowStyle());
+        tlpNuevoTurno.RowStyles.Add(new RowStyle());
+        tlpNuevoTurno.RowStyles.Add(new RowStyle());
+        tlpNuevoTurno.RowStyles.Add(new RowStyle());
+        tlpNuevoTurno.RowStyles.Add(new RowStyle());
+        tlpNuevoTurno.RowStyles.Add(new RowStyle());
+        tlpNuevoTurno.RowStyles.Add(new RowStyle(SizeType.Absolute, 120F));
+        tlpNuevoTurno.RowStyles.Add(new RowStyle());
+        tlpNuevoTurno.RowStyles.Add(new RowStyle());
+        tlpNuevoTurno.RowStyles.Add(new RowStyle());
+        tlpNuevoTurno.AutoSize = true;
+        tlpNuevoTurno.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+        tlpNuevoTurno.ColumnCount = 1;
+        tlpNuevoTurno.Dock = DockStyle.Top;
+        tlpNuevoTurno.TabIndex = 0;
+        tlpNuevoTurno.Name = "tlpNuevoTurno";
+        // 
+        // lblTituloNuevo
+        // 
+        lblTituloNuevo.AutoSize = true;
+        lblTituloNuevo.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
+        lblTituloNuevo.ForeColor = Color.FromArgb(27, 42, 74);
+        lblTituloNuevo.Margin = new Padding(0, 0, 0, 4);
+        lblTituloNuevo.Text = "NUEVO TURNO";
+        lblTituloNuevo.TabIndex = 0;
+        lblTituloNuevo.Name = "lblTituloNuevo";
+        // 
+        // LblModo
+        // 
+        LblModo.AutoSize = true;
+        LblModo.Font = new Font("Segoe UI", 9F);
+        LblModo.ForeColor = Color.FromArgb(176, 96, 0);
+        LblModo.Margin = new Padding(0, 0, 0, 4);
+        LblModo.TabIndex = 1;
+        LblModo.Visible = false;
+        LblModo.Name = "LblModo";
+        // 
+        // lblMedico
+        // 
+        lblMedico.AutoSize = true;
+        lblMedico.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+        lblMedico.ForeColor = Color.FromArgb(27, 42, 74);
+        lblMedico.Margin = new Padding(0, 10, 0, 3);
+        lblMedico.Text = "1. Médico";
+        lblMedico.TabIndex = 2;
+        lblMedico.Name = "lblMedico";
+        // 
+        // CboMedico
+        // 
+        CboMedico.Dock = DockStyle.Fill;
+        CboMedico.DropDownStyle = ComboBoxStyle.DropDownList;
+        CboMedico.Font = new Font("Segoe UI", 10F);
+        CboMedico.FormattingEnabled = true;
+        CboMedico.Margin = new Padding(0, 0, 0, 4);
+        CboMedico.TabIndex = 3;
+        CboMedico.Name = "CboMedico";
+        // 
+        // lblFecha
+        // 
+        lblFecha.AutoSize = true;
+        lblFecha.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+        lblFecha.ForeColor = Color.FromArgb(27, 42, 74);
+        lblFecha.Margin = new Padding(0, 10, 0, 3);
+        lblFecha.Text = "2. Fecha";
+        lblFecha.TabIndex = 4;
+        lblFecha.Name = "lblFecha";
+        // 
+        // DtpFecha
+        // 
+        DtpFecha.Dock = DockStyle.Fill;
+        DtpFecha.Font = new Font("Segoe UI", 10F);
+        DtpFecha.Format = DateTimePickerFormat.Short;
+        DtpFecha.Margin = new Padding(0, 0, 0, 4);
+        DtpFecha.TabIndex = 5;
+        DtpFecha.Name = "DtpFecha";
+        // 
+        // lblHorarios
+        // 
+        lblHorarios.AutoSize = true;
+        lblHorarios.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+        lblHorarios.ForeColor = Color.FromArgb(27, 42, 74);
+        lblHorarios.Margin = new Padding(0, 10, 0, 3);
+        lblHorarios.Text = "3. Horarios libres";
+        lblHorarios.TabIndex = 6;
+        lblHorarios.Name = "lblHorarios";
+        // 
+        // tlpHorarios
+        // 
+        tlpHorarios.Controls.Add(LblAviso, 0, 0);
+        tlpHorarios.Controls.Add(FlpHorarios, 0, 1);
+        tlpHorarios.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+        tlpHorarios.RowCount = 2;
+        tlpHorarios.RowStyles.Add(new RowStyle());
+        tlpHorarios.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+        tlpHorarios.ColumnCount = 1;
+        tlpHorarios.Dock = DockStyle.Fill;
+        tlpHorarios.Margin = new Padding(0, 0, 0, 4);
+        tlpHorarios.TabIndex = 7;
+        tlpHorarios.Name = "tlpHorarios";
+        // 
+        // LblAviso
+        // 
+        LblAviso.AutoSize = true;
+        LblAviso.Font = new Font("Segoe UI", 9F);
+        LblAviso.ForeColor = Color.FromArgb(176, 96, 0);
+        LblAviso.Margin = new Padding(0, 0, 0, 4);
+        LblAviso.TabIndex = 0;
+        LblAviso.Visible = false;
+        LblAviso.Name = "LblAviso";
+        // 
+        // FlpHorarios
+        // 
+        FlpHorarios.AutoScroll = true;
+        FlpHorarios.Dock = DockStyle.Fill;
+        FlpHorarios.Margin = new Padding(0);
+        FlpHorarios.TabIndex = 1;
+        FlpHorarios.Name = "FlpHorarios";
+        // 
+        // FlpLeyenda
+        // 
+        FlpLeyenda.Size = new Size(0, 30);
+        FlpLeyenda.Dock = DockStyle.Fill;
+        FlpLeyenda.Margin = new Padding(0, 2, 0, 2);
+        FlpLeyenda.TabIndex = 8;
+        FlpLeyenda.Name = "FlpLeyenda";
+        // 
+        // tlpPacienteDuracion
+        // 
+        tlpPacienteDuracion.Controls.Add(lblPaciente, 0, 0);
+        tlpPacienteDuracion.Controls.Add(lblDuracion, 1, 0);
+        tlpPacienteDuracion.Controls.Add(CboPaciente, 0, 1);
+        tlpPacienteDuracion.Controls.Add(CboDuracion, 1, 1);
+        tlpPacienteDuracion.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+        tlpPacienteDuracion.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 112F));
+        tlpPacienteDuracion.RowCount = 2;
+        tlpPacienteDuracion.RowStyles.Add(new RowStyle());
+        tlpPacienteDuracion.RowStyles.Add(new RowStyle());
+        tlpPacienteDuracion.AutoSize = true;
+        tlpPacienteDuracion.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+        tlpPacienteDuracion.ColumnCount = 2;
+        tlpPacienteDuracion.Dock = DockStyle.Fill;
+        tlpPacienteDuracion.Margin = new Padding(0, 0, 0, 12);
+        tlpPacienteDuracion.TabIndex = 9;
+        tlpPacienteDuracion.Name = "tlpPacienteDuracion";
+        // 
+        // lblPaciente
+        // 
+        lblPaciente.AutoSize = true;
+        lblPaciente.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+        lblPaciente.ForeColor = Color.FromArgb(27, 42, 74);
+        lblPaciente.Margin = new Padding(0, 10, 0, 3);
+        lblPaciente.Text = "4. Paciente";
+        lblPaciente.TabIndex = 0;
+        lblPaciente.Name = "lblPaciente";
         // 
         // lblDuracion
         // 
         lblDuracion.AutoSize = true;
-        lblDuracion.Font = new Font("Segoe UI", 9F);
-        lblDuracion.Location = new Point(286, 54);
-        lblDuracion.Margin = new Padding(1, 0, 1, 0);
+        lblDuracion.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+        lblDuracion.ForeColor = Color.FromArgb(27, 42, 74);
+        lblDuracion.Margin = new Padding(0, 10, 0, 3);
+        lblDuracion.Text = "Duración (min)";
+        lblDuracion.TabIndex = 1;
         lblDuracion.Name = "lblDuracion";
-        lblDuracion.Size = new Size(87, 15);
-        lblDuracion.TabIndex = 13;
-        lblDuracion.Text = "Duracion (min)";
+        // 
+        // CboPaciente
+        // 
+        CboPaciente.Dock = DockStyle.Fill;
+        CboPaciente.DropDownStyle = ComboBoxStyle.DropDownList;
+        CboPaciente.Font = new Font("Segoe UI", 10F);
+        CboPaciente.FormattingEnabled = true;
+        CboPaciente.Margin = new Padding(0, 0, 8, 4);
+        CboPaciente.TabIndex = 2;
+        CboPaciente.Name = "CboPaciente";
         // 
         // CboDuracion
         // 
+        CboDuracion.Dock = DockStyle.Fill;
         CboDuracion.DropDownStyle = ComboBoxStyle.DropDownList;
         CboDuracion.Font = new Font("Segoe UI", 10F);
-        CboDuracion.Location = new Point(286, 68);
-        CboDuracion.Margin = new Padding(1, 2, 1, 2);
+        CboDuracion.FormattingEnabled = true;
+        CboDuracion.Margin = new Padding(0, 0, 0, 4);
+        CboDuracion.TabIndex = 3;
         CboDuracion.Name = "CboDuracion";
-        CboDuracion.Size = new Size(80, 25);
-        CboDuracion.TabIndex = 14;
         // 
-        // ChkFiltrarFecha
+        // tlpBotonesNuevo
         // 
-        ChkFiltrarFecha.AutoSize = true;
-        ChkFiltrarFecha.Font = new Font("Segoe UI", 9F);
-        ChkFiltrarFecha.Location = new Point(154, 93);
-        ChkFiltrarFecha.Margin = new Padding(1, 2, 1, 2);
-        ChkFiltrarFecha.Name = "ChkFiltrarFecha";
-        ChkFiltrarFecha.Size = new Size(109, 19);
-        ChkFiltrarFecha.TabIndex = 10;
-        ChkFiltrarFecha.Text = "Filtrar por fecha";
-        ChkFiltrarFecha.UseVisualStyleBackColor = true;
+        tlpBotonesNuevo.Controls.Add(BtnAsignar, 0, 0);
+        tlpBotonesNuevo.Controls.Add(BtnLimpiar, 1, 0);
+        tlpBotonesNuevo.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 62F));
+        tlpBotonesNuevo.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 38F));
+        tlpBotonesNuevo.RowCount = 1;
+        tlpBotonesNuevo.RowStyles.Add(new RowStyle());
+        tlpBotonesNuevo.AutoSize = true;
+        tlpBotonesNuevo.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+        tlpBotonesNuevo.ColumnCount = 2;
+        tlpBotonesNuevo.Dock = DockStyle.Fill;
+        tlpBotonesNuevo.Margin = new Padding(0);
+        tlpBotonesNuevo.TabIndex = 10;
+        tlpBotonesNuevo.Name = "tlpBotonesNuevo";
         // 
-        // ChkFiltrarPaciente
+        // BtnAsignar
         // 
-        ChkFiltrarPaciente.AutoSize = true;
-        ChkFiltrarPaciente.Font = new Font("Segoe UI", 9F);
-        ChkFiltrarPaciente.Location = new Point(321, 124);
-        ChkFiltrarPaciente.Margin = new Padding(1, 2, 1, 2);
-        ChkFiltrarPaciente.Name = "ChkFiltrarPaciente";
-        ChkFiltrarPaciente.Size = new Size(125, 19);
-        ChkFiltrarPaciente.TabIndex = 12;
-        ChkFiltrarPaciente.Text = "Filtrar por paciente";
-        ChkFiltrarPaciente.UseVisualStyleBackColor = true;
+        BtnAsignar.Dock = DockStyle.Fill;
+        BtnAsignar.BackColor = Color.FromArgb(46, 134, 222);
+        BtnAsignar.FlatAppearance.BorderSize = 0;
+        BtnAsignar.FlatStyle = FlatStyle.Flat;
+        BtnAsignar.Font = new Font("Segoe UI", 10.5F, FontStyle.Bold);
+        BtnAsignar.ForeColor = Color.White;
+        BtnAsignar.Margin = new Padding(0, 0, 8, 0);
+        BtnAsignar.Size = new Size(0, 40);
+        BtnAsignar.Text = "Asignar turno";
+        BtnAsignar.UseVisualStyleBackColor = false;
+        BtnAsignar.TabIndex = 0;
+        BtnAsignar.Name = "BtnAsignar";
+        // 
+        // BtnLimpiar
+        // 
+        BtnLimpiar.Dock = DockStyle.Fill;
+        BtnLimpiar.BackColor = Color.White;
+        BtnLimpiar.FlatAppearance.BorderColor = Color.FromArgb(214, 220, 230);
+        BtnLimpiar.FlatAppearance.BorderSize = 1;
+        BtnLimpiar.FlatStyle = FlatStyle.Flat;
+        BtnLimpiar.Font = new Font("Segoe UI", 9.5F);
+        BtnLimpiar.ForeColor = Color.FromArgb(27, 42, 74);
+        BtnLimpiar.Margin = new Padding(0);
+        BtnLimpiar.Size = new Size(0, 40);
+        BtnLimpiar.Text = "Limpiar";
+        BtnLimpiar.UseVisualStyleBackColor = false;
+        BtnLimpiar.TabIndex = 1;
+        BtnLimpiar.Name = "BtnLimpiar";
+        // 
+        // tlpDerecho
+        // 
+        tlpDerecho.Controls.Add(pnlMarcoToolbar, 0, 0);
+        tlpDerecho.Controls.Add(FlpContadores, 0, 1);
+        tlpDerecho.Controls.Add(pnlMarcoGrilla, 0, 2);
+        tlpDerecho.Controls.Add(pnlMarcoAcciones, 0, 3);
+        tlpDerecho.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+        tlpDerecho.RowCount = 4;
+        tlpDerecho.RowStyles.Add(new RowStyle());
+        tlpDerecho.RowStyles.Add(new RowStyle());
+        tlpDerecho.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+        tlpDerecho.RowStyles.Add(new RowStyle());
+        tlpDerecho.ColumnCount = 1;
+        tlpDerecho.Dock = DockStyle.Fill;
+        tlpDerecho.TabIndex = 0;
+        tlpDerecho.Name = "tlpDerecho";
+        // 
+        // pnlMarcoToolbar
+        // 
+        pnlMarcoToolbar.Controls.Add(pnlToolbar);
+        pnlMarcoToolbar.AutoSize = true;
+        pnlMarcoToolbar.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+        pnlMarcoToolbar.BackColor = Color.FromArgb(214, 220, 230);
+        pnlMarcoToolbar.Dock = DockStyle.Fill;
+        pnlMarcoToolbar.Margin = new Padding(0, 0, 0, 8);
+        pnlMarcoToolbar.Padding = new Padding(1);
+        pnlMarcoToolbar.TabIndex = 0;
+        pnlMarcoToolbar.Name = "pnlMarcoToolbar";
+        // 
+        // pnlToolbar
+        // 
+        pnlToolbar.Controls.Add(tlpToolbar);
+        pnlToolbar.AutoSize = true;
+        pnlToolbar.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+        pnlToolbar.BackColor = Color.White;
+        pnlToolbar.Dock = DockStyle.Fill;
+        pnlToolbar.Padding = new Padding(14, 8, 14, 6);
+        pnlToolbar.TabIndex = 0;
+        pnlToolbar.Name = "pnlToolbar";
+        // 
+        // tlpToolbar
+        // 
+        tlpToolbar.Controls.Add(LblVista, 0, 0);
+        tlpToolbar.Controls.Add(flpFiltros, 0, 1);
+        tlpToolbar.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+        tlpToolbar.RowCount = 2;
+        tlpToolbar.RowStyles.Add(new RowStyle());
+        tlpToolbar.RowStyles.Add(new RowStyle());
+        tlpToolbar.AutoSize = true;
+        tlpToolbar.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+        tlpToolbar.ColumnCount = 1;
+        tlpToolbar.Dock = DockStyle.Fill;
+        tlpToolbar.TabIndex = 0;
+        tlpToolbar.Name = "tlpToolbar";
+        // 
+        // LblVista
+        // 
+        LblVista.AutoSize = true;
+        LblVista.Font = new Font("Segoe UI", 9F);
+        LblVista.ForeColor = Color.FromArgb(110, 120, 135);
+        LblVista.Margin = new Padding(0, 0, 0, 4);
+        LblVista.TabIndex = 0;
+        LblVista.Name = "LblVista";
+        // 
+        // flpFiltros
+        // 
+        flpFiltros.Controls.Add(ChkTodosMedicos);
+        flpFiltros.Controls.Add(ChkFiltrarFecha);
+        flpFiltros.Controls.Add(ChkMostrarCancelados);
+        flpFiltros.Controls.Add(flpPaciente);
+        flpFiltros.Size = new Size(0, 30);
+        flpFiltros.Dock = DockStyle.Fill;
+        flpFiltros.Margin = new Padding(0);
+        flpFiltros.TabIndex = 2;
+        flpFiltros.Name = "flpFiltros";
+        // 
+        // flpPaciente
+        // 
+        flpPaciente.Controls.Add(lblFiltroPaciente);
+        flpPaciente.Controls.Add(CboFiltroPaciente);
+        flpPaciente.AutoSize = true;
+        flpPaciente.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+        flpPaciente.Margin = new Padding(0);
+        flpPaciente.TabIndex = 3;
+        flpPaciente.WrapContents = false;
+        flpPaciente.Name = "flpPaciente";
         // 
         // ChkTodosMedicos
         // 
         ChkTodosMedicos.AutoSize = true;
-        ChkTodosMedicos.Font = new Font("Segoe UI", 9F);
-        ChkTodosMedicos.Location = new Point(427, 24);
-        ChkTodosMedicos.Margin = new Padding(1, 2, 1, 2);
-        ChkTodosMedicos.Name = "ChkTodosMedicos";
-        ChkTodosMedicos.Size = new Size(141, 19);
-        ChkTodosMedicos.TabIndex = 9;
-        ChkTodosMedicos.Text = "Ver todos los medicos";
+        ChkTodosMedicos.Font = new Font("Segoe UI", 9.5F);
+        ChkTodosMedicos.Margin = new Padding(0, 4, 18, 4);
+        ChkTodosMedicos.TabIndex = 0;
+        ChkTodosMedicos.Text = "Ver todos los médicos";
         ChkTodosMedicos.UseVisualStyleBackColor = true;
+        ChkTodosMedicos.Name = "ChkTodosMedicos";
         // 
-        // BtnNuevoTurno
+        // ChkFiltrarFecha
         // 
-        BtnNuevoTurno.BackColor = Color.FromArgb(46, 134, 222);
-        BtnNuevoTurno.FlatAppearance.BorderSize = 0;
-        BtnNuevoTurno.FlatStyle = FlatStyle.Flat;
-        BtnNuevoTurno.Font = new Font("Segoe UI", 9.5F);
-        BtnNuevoTurno.ForeColor = Color.White;
-        BtnNuevoTurno.Location = new Point(372, 68);
-        BtnNuevoTurno.Margin = new Padding(1, 2, 1, 2);
-        BtnNuevoTurno.Name = "BtnNuevoTurno";
-        BtnNuevoTurno.Size = new Size(91, 20);
-        BtnNuevoTurno.TabIndex = 20;
-        BtnNuevoTurno.Text = "Limpiar";
-        BtnNuevoTurno.UseVisualStyleBackColor = false;
+        ChkFiltrarFecha.AutoSize = true;
+        ChkFiltrarFecha.Font = new Font("Segoe UI", 9.5F);
+        ChkFiltrarFecha.Margin = new Padding(0, 4, 18, 4);
+        ChkFiltrarFecha.TabIndex = 1;
+        ChkFiltrarFecha.Text = "Filtrar por fecha";
+        ChkFiltrarFecha.UseVisualStyleBackColor = true;
+        ChkFiltrarFecha.Name = "ChkFiltrarFecha";
+        // 
+        // ChkMostrarCancelados
+        // 
+        ChkMostrarCancelados.AutoSize = true;
+        ChkMostrarCancelados.Font = new Font("Segoe UI", 9.5F);
+        ChkMostrarCancelados.Margin = new Padding(0, 4, 18, 4);
+        ChkMostrarCancelados.TabIndex = 2;
+        ChkMostrarCancelados.Text = "Mostrar cancelados";
+        ChkMostrarCancelados.UseVisualStyleBackColor = true;
+        ChkMostrarCancelados.Name = "ChkMostrarCancelados";
+        // 
+        // lblFiltroPaciente
+        // 
+        lblFiltroPaciente.AutoSize = true;
+        lblFiltroPaciente.Font = new Font("Segoe UI", 9.5F);
+        lblFiltroPaciente.Margin = new Padding(0, 7, 6, 0);
+        lblFiltroPaciente.TabIndex = 0;
+        lblFiltroPaciente.Text = "Paciente:";
+        lblFiltroPaciente.Name = "lblFiltroPaciente";
+        // 
+        // CboFiltroPaciente
+        // 
+        CboFiltroPaciente.DropDownStyle = ComboBoxStyle.DropDownList;
+        CboFiltroPaciente.Font = new Font("Segoe UI", 9.5F);
+        CboFiltroPaciente.FormattingEnabled = true;
+        CboFiltroPaciente.Margin = new Padding(0, 3, 0, 3);
+        CboFiltroPaciente.Size = new Size(200, 25);
+        CboFiltroPaciente.TabIndex = 1;
+        CboFiltroPaciente.Name = "CboFiltroPaciente";
+        // 
+        // FlpContadores
+        // 
+        FlpContadores.Size = new Size(0, 30);
+        FlpContadores.Dock = DockStyle.Fill;
+        FlpContadores.Margin = new Padding(0, 0, 0, 4);
+        FlpContadores.TabIndex = 1;
+        FlpContadores.Name = "FlpContadores";
+        // 
+        // pnlMarcoGrilla
+        // 
+        pnlMarcoGrilla.Controls.Add(DgvTurnos);
+        pnlMarcoGrilla.BackColor = Color.FromArgb(214, 220, 230);
+        pnlMarcoGrilla.Dock = DockStyle.Fill;
+        pnlMarcoGrilla.Margin = new Padding(0, 0, 0, 8);
+        pnlMarcoGrilla.Padding = new Padding(1);
+        pnlMarcoGrilla.TabIndex = 2;
+        pnlMarcoGrilla.Name = "pnlMarcoGrilla";
+        // 
+        // DgvTurnos
+        // 
+        DgvTurnos.AllowUserToAddRows = false;
+        DgvTurnos.AllowUserToDeleteRows = false;
+        DgvTurnos.AllowUserToResizeRows = false;
+        DgvTurnos.BackgroundColor = Color.White;
+        DgvTurnos.BorderStyle = BorderStyle.None;
+        DgvTurnos.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
+        DgvTurnos.ColumnHeadersHeight = 40;
+        DgvTurnos.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
+        DgvTurnos.Dock = DockStyle.Fill;
+        DgvTurnos.Font = new Font("Segoe UI", 9F);
+        DgvTurnos.MultiSelect = false;
+        DgvTurnos.ReadOnly = true;
+        DgvTurnos.RowHeadersVisible = false;
+        DgvTurnos.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+        DgvTurnos.TabIndex = 0;
+        DgvTurnos.Name = "DgvTurnos";
+        // 
+        // pnlMarcoAcciones
+        // 
+        pnlMarcoAcciones.Controls.Add(pnlAcciones);
+        pnlMarcoAcciones.AutoSize = true;
+        pnlMarcoAcciones.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+        pnlMarcoAcciones.BackColor = Color.FromArgb(214, 220, 230);
+        pnlMarcoAcciones.Dock = DockStyle.Fill;
+        pnlMarcoAcciones.Margin = new Padding(0);
+        pnlMarcoAcciones.Padding = new Padding(1);
+        pnlMarcoAcciones.TabIndex = 3;
+        pnlMarcoAcciones.Name = "pnlMarcoAcciones";
+        // 
+        // pnlAcciones
+        // 
+        pnlAcciones.Controls.Add(tlpAcciones);
+        pnlAcciones.AutoSize = true;
+        pnlAcciones.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+        pnlAcciones.BackColor = Color.White;
+        pnlAcciones.Dock = DockStyle.Fill;
+        pnlAcciones.Padding = new Padding(14, 8, 14, 8);
+        pnlAcciones.TabIndex = 0;
+        pnlAcciones.Name = "pnlAcciones";
+        // 
+        // tlpAcciones
+        // 
+        tlpAcciones.Controls.Add(LblSeleccion, 0, 0);
+        tlpAcciones.Controls.Add(flpBotonesAccion, 0, 1);
+        tlpAcciones.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+        tlpAcciones.RowCount = 2;
+        tlpAcciones.RowStyles.Add(new RowStyle());
+        tlpAcciones.RowStyles.Add(new RowStyle());
+        tlpAcciones.AutoSize = true;
+        tlpAcciones.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+        tlpAcciones.ColumnCount = 1;
+        tlpAcciones.Dock = DockStyle.Fill;
+        tlpAcciones.TabIndex = 0;
+        tlpAcciones.Name = "tlpAcciones";
+        // 
+        // LblSeleccion
+        // 
+        LblSeleccion.AutoSize = true;
+        LblSeleccion.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+        LblSeleccion.ForeColor = Color.FromArgb(27, 42, 74);
+        LblSeleccion.Margin = new Padding(0, 0, 0, 6);
+        LblSeleccion.TabIndex = 0;
+        LblSeleccion.Text = "Turno seleccionado: ninguno";
+        LblSeleccion.Name = "LblSeleccion";
+        // 
+        // flpBotonesAccion
+        // 
+        flpBotonesAccion.Controls.Add(BtnModificar);
+        flpBotonesAccion.Controls.Add(BtnCancelar);
+        flpBotonesAccion.Controls.Add(BtnConfirmarAsistencia);
+        flpBotonesAccion.Controls.Add(LblAyudaAcciones);
+        flpBotonesAccion.Size = new Size(0, 30);
+        flpBotonesAccion.Dock = DockStyle.Fill;
+        flpBotonesAccion.Margin = new Padding(0);
+        flpBotonesAccion.TabIndex = 1;
+        flpBotonesAccion.Name = "flpBotonesAccion";
         // 
         // BtnModificar
         // 
         BtnModificar.BackColor = Color.FromArgb(230, 145, 45);
         BtnModificar.FlatAppearance.BorderSize = 0;
         BtnModificar.FlatStyle = FlatStyle.Flat;
-        BtnModificar.Font = new Font("Segoe UI", 9.5F);
+        BtnModificar.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
         BtnModificar.ForeColor = Color.White;
-        BtnModificar.Location = new Point(601, 68);
-        BtnModificar.Margin = new Padding(1, 2, 1, 2);
-        BtnModificar.Name = "BtnModificar";
-        BtnModificar.Size = new Size(91, 20);
-        BtnModificar.TabIndex = 22;
+        BtnModificar.Margin = new Padding(0, 0, 8, 0);
+        BtnModificar.Size = new Size(116, 32);
         BtnModificar.Text = "Modificar";
         BtnModificar.UseVisualStyleBackColor = false;
-        // 
-        // ChkMostrarCancelados
-        // 
-        ChkMostrarCancelados.AutoSize = true;
-        ChkMostrarCancelados.Font = new Font("Segoe UI", 9F);
-        ChkMostrarCancelados.Location = new Point(14, 93);
-        ChkMostrarCancelados.Margin = new Padding(1, 2, 1, 2);
-        ChkMostrarCancelados.Name = "ChkMostrarCancelados";
-        ChkMostrarCancelados.Size = new Size(129, 19);
-        ChkMostrarCancelados.TabIndex = 6;
-        ChkMostrarCancelados.Text = "Mostrar cancelados";
-        ChkMostrarCancelados.UseVisualStyleBackColor = true;
-        // 
-        // LblMensaje
-        // 
-        LblMensaje.AutoSize = true;
-        LblMensaje.Font = new Font("Segoe UI", 9F);
-        LblMensaje.Location = new Point(372, 93);
-        LblMensaje.Margin = new Padding(1, 0, 1, 0);
-        LblMensaje.MaximumSize = new Size(350, 0);
-        LblMensaje.Name = "LblMensaje";
-        LblMensaje.Size = new Size(0, 15);
-        LblMensaje.TabIndex = 0;
+        BtnModificar.TabIndex = 0;
+        BtnModificar.Name = "BtnModificar";
         // 
         // BtnCancelar
         // 
         BtnCancelar.BackColor = Color.FromArgb(231, 76, 60);
         BtnCancelar.FlatAppearance.BorderSize = 0;
         BtnCancelar.FlatStyle = FlatStyle.Flat;
-        BtnCancelar.Font = new Font("Segoe UI", 9.5F);
+        BtnCancelar.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
         BtnCancelar.ForeColor = Color.White;
-        BtnCancelar.Location = new Point(699, 68);
-        BtnCancelar.Margin = new Padding(1, 2, 1, 2);
-        BtnCancelar.Name = "BtnCancelar";
-        BtnCancelar.Size = new Size(132, 20);
-        BtnCancelar.TabIndex = 23;
+        BtnCancelar.Margin = new Padding(0, 0, 8, 0);
+        BtnCancelar.Size = new Size(136, 32);
         BtnCancelar.Text = "Cancelar turno";
         BtnCancelar.UseVisualStyleBackColor = false;
-        BtnCancelar.Click += BtnCancelar_Click;
+        BtnCancelar.TabIndex = 1;
+        BtnCancelar.Name = "BtnCancelar";
         // 
         // BtnConfirmarAsistencia
         // 
         BtnConfirmarAsistencia.BackColor = Color.FromArgb(39, 174, 96);
         BtnConfirmarAsistencia.FlatAppearance.BorderSize = 0;
         BtnConfirmarAsistencia.FlatStyle = FlatStyle.Flat;
-        BtnConfirmarAsistencia.Font = new Font("Segoe UI", 9.5F);
+        BtnConfirmarAsistencia.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
         BtnConfirmarAsistencia.ForeColor = Color.White;
-        BtnConfirmarAsistencia.Location = new Point(836, 68);
-        BtnConfirmarAsistencia.Margin = new Padding(1, 2, 1, 2);
-        BtnConfirmarAsistencia.Name = "BtnConfirmarAsistencia";
-        BtnConfirmarAsistencia.Size = new Size(158, 20);
-        BtnConfirmarAsistencia.TabIndex = 24;
+        BtnConfirmarAsistencia.Margin = new Padding(0, 0, 14, 0);
+        BtnConfirmarAsistencia.Size = new Size(176, 32);
         BtnConfirmarAsistencia.Text = "Confirmar asistencia";
         BtnConfirmarAsistencia.UseVisualStyleBackColor = false;
-        BtnConfirmarAsistencia.Click += BtnConfirmarAsistencia_Click;
+        BtnConfirmarAsistencia.TabIndex = 2;
+        BtnConfirmarAsistencia.Name = "BtnConfirmarAsistencia";
         // 
-        // BtnAsignar
+        // LblAyudaAcciones
         // 
-        BtnAsignar.BackColor = Color.FromArgb(39, 174, 96);
-        BtnAsignar.FlatAppearance.BorderSize = 0;
-        BtnAsignar.FlatStyle = FlatStyle.Flat;
-        BtnAsignar.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
-        BtnAsignar.ForeColor = Color.White;
-        BtnAsignar.Location = new Point(470, 68);
-        BtnAsignar.Margin = new Padding(1, 2, 1, 2);
-        BtnAsignar.Name = "BtnAsignar";
-        BtnAsignar.Size = new Size(122, 20);
-        BtnAsignar.TabIndex = 21;
-        BtnAsignar.Text = "Asignar turno";
-        BtnAsignar.UseVisualStyleBackColor = false;
-        BtnAsignar.Click += BtnAsignar_Click;
-        // 
-        // CboHorario
-        // 
-        CboHorario.DropDownStyle = ComboBoxStyle.DropDownList;
-        CboHorario.Font = new Font("Segoe UI", 10F);
-        CboHorario.Location = new Point(154, 68);
-        CboHorario.Margin = new Padding(1, 2, 1, 2);
-        CboHorario.Name = "CboHorario";
-        CboHorario.Size = new Size(127, 25);
-        CboHorario.TabIndex = 3;
-        // 
-        // lblHorario
-        // 
-        lblHorario.AutoSize = true;
-        lblHorario.Font = new Font("Segoe UI", 9F);
-        lblHorario.Location = new Point(154, 54);
-        lblHorario.Margin = new Padding(1, 0, 1, 0);
-        lblHorario.Name = "lblHorario";
-        lblHorario.Size = new Size(47, 15);
-        lblHorario.TabIndex = 6;
-        lblHorario.Text = "Horario";
-        // 
-        // DtpFecha
-        // 
-        DtpFecha.Font = new Font("Segoe UI", 10F);
-        DtpFecha.Format = DateTimePickerFormat.Short;
-        DtpFecha.Location = new Point(14, 68);
-        DtpFecha.Margin = new Padding(1, 2, 1, 2);
-        DtpFecha.Name = "DtpFecha";
-        DtpFecha.Size = new Size(127, 25);
-        DtpFecha.TabIndex = 2;
-        // 
-        // lblFecha
-        // 
-        lblFecha.AutoSize = true;
-        lblFecha.Font = new Font("Segoe UI", 9F);
-        lblFecha.Location = new Point(14, 54);
-        lblFecha.Margin = new Padding(1, 0, 1, 0);
-        lblFecha.Name = "lblFecha";
-        lblFecha.Size = new Size(38, 15);
-        lblFecha.TabIndex = 7;
-        lblFecha.Text = "Fecha";
-        // 
-        // CboMedico
-        // 
-        CboMedico.DropDownStyle = ComboBoxStyle.DropDownList;
-        CboMedico.Font = new Font("Segoe UI", 10F);
-        CboMedico.Location = new Point(210, 23);
-        CboMedico.Margin = new Padding(1, 2, 1, 2);
-        CboMedico.Name = "CboMedico";
-        CboMedico.Size = new Size(211, 25);
-        CboMedico.TabIndex = 1;
-        // 
-        // lblMedico
-        // 
-        lblMedico.AutoSize = true;
-        lblMedico.Font = new Font("Segoe UI", 9F);
-        lblMedico.Location = new Point(210, 9);
-        lblMedico.Margin = new Padding(1, 0, 1, 0);
-        lblMedico.Name = "lblMedico";
-        lblMedico.Size = new Size(47, 15);
-        lblMedico.TabIndex = 8;
-        lblMedico.Text = "Medico";
-        // 
-        // CboPaciente
-        // 
-        CboPaciente.DropDownStyle = ComboBoxStyle.DropDownList;
-        CboPaciente.Font = new Font("Segoe UI", 10F);
-        CboPaciente.Location = new Point(14, 23);
-        CboPaciente.Margin = new Padding(1, 2, 1, 2);
-        CboPaciente.Name = "CboPaciente";
-        CboPaciente.Size = new Size(183, 25);
-        CboPaciente.TabIndex = 0;
-        // 
-        // lblPaciente
-        // 
-        lblPaciente.AutoSize = true;
-        lblPaciente.Font = new Font("Segoe UI", 9F);
-        lblPaciente.Location = new Point(14, 9);
-        lblPaciente.Margin = new Padding(1, 0, 1, 0);
-        lblPaciente.Name = "lblPaciente";
-        lblPaciente.Size = new Size(52, 15);
-        lblPaciente.TabIndex = 9;
-        lblPaciente.Text = "Paciente";
-        // 
-        // DgvTurnos
-        // 
-        DgvTurnos.AllowUserToAddRows = false;
-        DgvTurnos.BackgroundColor = Color.White;
-        DgvTurnos.ColumnHeadersHeight = 34;
-        DgvTurnos.Dock = DockStyle.Fill;
-        DgvTurnos.Font = new Font("Segoe UI", 9.5F);
-        DgvTurnos.Location = new Point(0, 114);
-        DgvTurnos.Margin = new Padding(1, 2, 1, 2);
-        DgvTurnos.MultiSelect = false;
-        DgvTurnos.Name = "DgvTurnos";
-        DgvTurnos.ReadOnly = true;
-        DgvTurnos.RowHeadersWidth = 62;
-        DgvTurnos.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-        DgvTurnos.Size = new Size(700, 276);
-        DgvTurnos.TabIndex = 0;
-        // 
-        // pnlAgenda
-        // 
-        pnlAgenda.BackColor = Color.FromArgb(245, 246, 250);
-        pnlAgenda.Controls.Add(DgvAgenda);
-        pnlAgenda.Controls.Add(lblAgendaTitulo);
-        pnlAgenda.Controls.Add(lblAgendaHint);
-        pnlAgenda.Dock = DockStyle.Right;
-        pnlAgenda.Location = new Point(700, 114);
-        pnlAgenda.Margin = new Padding(1, 2, 1, 2);
-        pnlAgenda.Name = "pnlAgenda";
-        pnlAgenda.Padding = new Padding(7, 6, 7, 6);
-        pnlAgenda.Size = new Size(210, 276);
-        pnlAgenda.TabIndex = 2;
-        // 
-        // DgvAgenda
-        // 
-        DgvAgenda.AllowUserToAddRows = false;
-        DgvAgenda.BackgroundColor = Color.White;
-        DgvAgenda.ColumnHeadersHeight = 34;
-        DgvAgenda.Dock = DockStyle.Fill;
-        DgvAgenda.Font = new Font("Segoe UI", 9.5F);
-        DgvAgenda.Location = new Point(7, 48);
-        DgvAgenda.Margin = new Padding(1, 2, 1, 2);
-        DgvAgenda.Name = "DgvAgenda";
-        DgvAgenda.ReadOnly = true;
-        DgvAgenda.RowHeadersWidth = 20;
-        DgvAgenda.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-        DgvAgenda.Size = new Size(196, 222);
-        DgvAgenda.TabIndex = 1;
-        // 
-        // lblAgendaTitulo
-        // 
-        lblAgendaTitulo.AutoSize = true;
-        lblAgendaTitulo.Dock = DockStyle.Top;
-        lblAgendaTitulo.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
-        lblAgendaTitulo.ForeColor = Color.FromArgb(27, 42, 74);
-        lblAgendaTitulo.Location = new Point(7, 24);
-        lblAgendaTitulo.Margin = new Padding(1, 0, 1, 0);
-        lblAgendaTitulo.Name = "lblAgendaTitulo";
-        lblAgendaTitulo.Padding = new Padding(0, 0, 0, 5);
-        lblAgendaTitulo.Size = new Size(106, 24);
-        lblAgendaTitulo.TabIndex = 0;
-        lblAgendaTitulo.Text = "Disponibilidad";
-        // 
-        // lblAgendaHint
-        // 
-        lblAgendaHint.AutoSize = true;
-        lblAgendaHint.Dock = DockStyle.Top;
-        lblAgendaHint.Font = new Font("Segoe UI", 8F, FontStyle.Italic);
-        lblAgendaHint.ForeColor = Color.FromArgb(110, 120, 135);
-        lblAgendaHint.Location = new Point(7, 6);
-        lblAgendaHint.Margin = new Padding(1, 0, 1, 0);
-        lblAgendaHint.Name = "lblAgendaHint";
-        lblAgendaHint.Padding = new Padding(0, 0, 0, 5);
-        lblAgendaHint.Size = new Size(181, 18);
-        lblAgendaHint.TabIndex = 2;
-        lblAgendaHint.Text = "Clic en un horario para seleccionarlo";
+        LblAyudaAcciones.AutoSize = true;
+        LblAyudaAcciones.Font = new Font("Segoe UI", 9F, FontStyle.Italic);
+        LblAyudaAcciones.ForeColor = Color.FromArgb(110, 120, 135);
+        LblAyudaAcciones.Margin = new Padding(0, 7, 0, 0);
+        LblAyudaAcciones.TabIndex = 3;
+        LblAyudaAcciones.Visible = false;
+        LblAyudaAcciones.Name = "LblAyudaAcciones";
         // 
         // FormTurnos
         // 
-        AutoScaleDimensions = new SizeF(7F, 15F);
+        AutoScaleDimensions = new SizeF(8F, 20F);
         AutoScaleMode = AutoScaleMode.Font;
-        ClientSize = new Size(910, 390);
-        Controls.Add(DgvTurnos);
-        Controls.Add(pnlAgenda);
-        Controls.Add(pnlFormulario);
-        Margin = new Padding(1, 2, 1, 2);
+        BackColor = Color.FromArgb(245, 246, 250);
+        ClientSize = new Size(1130, 650);
+        Controls.Add(pnlDerecho);
+        Controls.Add(pnlIzquierdo);
+        Controls.Add(pnlEstado);
         Name = "FormTurnos";
+        Padding = new Padding(16, 14, 16, 12);
         StartPosition = FormStartPosition.CenterScreen;
-        Text = "d";
-        pnlFormulario.ResumeLayout(false);
-        pnlFormulario.PerformLayout();
+        Text = "Turnos";
+        flpBotonesAccion.ResumeLayout(false);
+        tlpAcciones.ResumeLayout(false);
+        tlpAcciones.PerformLayout();
+        pnlAcciones.ResumeLayout(false);
+        pnlAcciones.PerformLayout();
+        pnlMarcoAcciones.ResumeLayout(false);
+        pnlMarcoAcciones.PerformLayout();
+        pnlMarcoGrilla.ResumeLayout(false);
+        FlpContadores.ResumeLayout(false);
+        flpPaciente.ResumeLayout(false);
+        flpPaciente.PerformLayout();
+        flpFiltros.ResumeLayout(false);
+        tlpToolbar.ResumeLayout(false);
+        tlpToolbar.PerformLayout();
+        pnlToolbar.ResumeLayout(false);
+        pnlToolbar.PerformLayout();
+        pnlMarcoToolbar.ResumeLayout(false);
+        pnlMarcoToolbar.PerformLayout();
+        tlpDerecho.ResumeLayout(false);
+        tlpDerecho.PerformLayout();
+        tlpBotonesNuevo.ResumeLayout(false);
+        tlpBotonesNuevo.PerformLayout();
+        tlpPacienteDuracion.ResumeLayout(false);
+        tlpPacienteDuracion.PerformLayout();
+        FlpLeyenda.ResumeLayout(false);
+        FlpHorarios.ResumeLayout(false);
+        tlpHorarios.ResumeLayout(false);
+        tlpHorarios.PerformLayout();
+        tlpNuevoTurno.ResumeLayout(false);
+        tlpNuevoTurno.PerformLayout();
+        pnlNuevoTurno.ResumeLayout(false);
+        pnlMarcoNuevo.ResumeLayout(false);
+        pnlEstado.ResumeLayout(false);
+        pnlIzquierdo.ResumeLayout(false);
+        pnlDerecho.ResumeLayout(false);
         ((System.ComponentModel.ISupportInitialize)DgvTurnos).EndInit();
-        pnlAgenda.ResumeLayout(false);
-        pnlAgenda.PerformLayout();
-        ((System.ComponentModel.ISupportInitialize)DgvAgenda).EndInit();
         ResumeLayout(false);
     }
 
-    private Panel pnlFormulario;
-    private Panel pnlAgenda;
-    private Label lblAgendaTitulo;
-    private Label lblAgendaHint;
-    private DataGridView DgvAgenda;
-    private Button BtnNuevoTurno;
-    private CheckBox ChkTodosMedicos;
-    private CheckBox ChkFiltrarFecha;
-    private CheckBox ChkFiltrarPaciente;
-    private Button BtnModificar;
-    private CheckBox ChkMostrarCancelados;
-    private Label lblPaciente;
-    private ComboBox CboPaciente;
+    private Panel pnlDerecho;
+    private Panel pnlIzquierdo;
+    private Panel pnlEstado;
+    private Label LblMensaje;
+    private Panel pnlMarcoNuevo;
+    private Panel pnlNuevoTurno;
+    private TableLayoutPanel tlpNuevoTurno;
+    private Label lblTituloNuevo;
+    private Label LblModo;
     private Label lblMedico;
     private ComboBox CboMedico;
     private Label lblFecha;
     private DateTimePicker DtpFecha;
-    private Label lblHorario;
-    private ComboBox CboHorario;
+    private Label lblHorarios;
+    private TableLayoutPanel tlpHorarios;
+    private Label LblAviso;
+    private FlowLayoutPanel FlpHorarios;
+    private FlowLayoutPanel FlpLeyenda;
+    private TableLayoutPanel tlpPacienteDuracion;
+    private Label lblPaciente;
+    private Label lblDuracion;
+    private ComboBox CboPaciente;
+    private ComboBox CboDuracion;
+    private TableLayoutPanel tlpBotonesNuevo;
     private Button BtnAsignar;
+    private Button BtnLimpiar;
+    private TableLayoutPanel tlpDerecho;
+    private Panel pnlMarcoToolbar;
+    private Panel pnlToolbar;
+    private TableLayoutPanel tlpToolbar;
+    private Label LblVista;
+    private FlowLayoutPanel flpFiltros;
+    private FlowLayoutPanel flpPaciente;
+    private CheckBox ChkTodosMedicos;
+    private CheckBox ChkFiltrarFecha;
+    private CheckBox ChkMostrarCancelados;
+    private Label lblFiltroPaciente;
+    private ComboBox CboFiltroPaciente;
+    private FlowLayoutPanel FlpContadores;
+    private Panel pnlMarcoGrilla;
+    private DataGridView DgvTurnos;
+    private Panel pnlMarcoAcciones;
+    private Panel pnlAcciones;
+    private TableLayoutPanel tlpAcciones;
+    private Label LblSeleccion;
+    private FlowLayoutPanel flpBotonesAccion;
+    private Button BtnModificar;
     private Button BtnCancelar;
     private Button BtnConfirmarAsistencia;
-    private Label LblMensaje;
-    private DataGridView DgvTurnos;
-    private Label lblDuracion;
-    private ComboBox CboDuracion;
+    private Label LblAyudaAcciones;
 }

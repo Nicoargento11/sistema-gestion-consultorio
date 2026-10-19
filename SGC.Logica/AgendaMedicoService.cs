@@ -61,6 +61,33 @@ public class AgendaMedicoService
             .ToList();
     }
 
+    // Agenda del medico para una fecha concreta: sus bloques de ese dia de la
+    // semana, los dias en que atiende y las ausencias (ExcepcionAgenda) de esa
+    // fecha. Solo lectura; no modifica las reglas de AsignarTurno/MedicoAtiende.
+    public DisponibilidadDia ObtenerDisponibilidad(int medicoId, DateOnly fecha)
+    {
+        using var contexto = SGCContextFactory.Crear();
+
+        var franjas = contexto.AgendasMedico
+            .AsNoTracking()
+            .Where(a => a.Activo && a.MedicoId == medicoId)
+            .ToList();
+
+        var ausencias = contexto.ExcepcionesAgenda
+            .AsNoTracking()
+            .Where(e => e.Activo && e.MedicoId == medicoId && e.Fecha == fecha)
+            .ToList();
+
+        return new DisponibilidadDia
+        {
+            Fecha = fecha,
+            Bloques = franjas.Where(a => a.DiaSemana == fecha.DayOfWeek).OrderBy(a => a.HoraInicio).ToList(),
+            Ausencias = ausencias,
+            DiasQueAtiende = franjas.Select(a => a.DiaSemana).Distinct()
+                .OrderBy(d => ((int)d + 6) % 7).ToList()
+        };
+    }
+
     public bool MedicoAtiende(int medicoId, DayOfWeek dia, TimeOnly horaInicioTurno, int duracionMinutos)
     {
         if (duracionMinutos <= 0) duracionMinutos = 30;

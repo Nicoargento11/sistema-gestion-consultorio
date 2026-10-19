@@ -203,6 +203,11 @@ public partial class FormAgendaMedico : Form
         BtnFiltroCancelados.FlatAppearance.BorderSize = _filtroActual == FiltroTurno.Cancelados ? 3 : 1;
     }
 
+    // Pendiente de atencion = turno Pendiente o Confirmado que todavia no se atendio.
+    // Asistio / Ausente (ya resueltos en recepcion) y Cancelado no cuentan.
+    private static bool EsPendienteDeAtencion(TurnoAgendaItem t)
+        => (t.Estado == EstadoTurno.Pendiente || t.Estado == EstadoTurno.Confirmado) && !t.Atendido;
+
     private static string Plural(int cantidad, string singular, string plural)
         => $"{cantidad} {(cantidad == 1 ? singular : plural)}";
 
@@ -230,7 +235,7 @@ public partial class FormAgendaMedico : Form
         int total = todosDelDia.Count;
         int cancelados = todosDelDia.Count(t => t.Estado == EstadoTurno.Cancelado);
         int atendidos = todosDelDia.Count(t => t.Atendido);
-        int pendientes = todosDelDia.Count(t => t.Estado != EstadoTurno.Cancelado && !t.Atendido);
+        int pendientes = todosDelDia.Count(EsPendienteDeAtencion);
 
         BtnFiltroTotal.Text = $"TOTAL TURNOS ({total})";
         BtnFiltroPendientes.Text = $"PENDIENTES ({pendientes})";
@@ -246,7 +251,7 @@ public partial class FormAgendaMedico : Form
         switch (_filtroActual)
         {
             case FiltroTurno.Pendientes:
-                filtrados = todosDelDia.Where(t => t.Estado != EstadoTurno.Cancelado && !t.Atendido);
+                filtrados = todosDelDia.Where(EsPendienteDeAtencion);
                 lblGrillaTitulo.Text = $"Turnos pendientes de atención ({pendientes})";
                 break;
             case FiltroTurno.Atendidos:

@@ -3,6 +3,13 @@ using SGC.Logica;
 
 namespace SGC.UI;
 
+// Pantalla de Turnos (Recepcionista). Izquierda: tarjeta "Nuevo turno" con el
+// flujo medico -> fecha -> horarios libres (botones) -> paciente/duracion.
+// Derecha: filtros, contadores por estado, grilla de turnos y acciones sobre el
+// turno seleccionado. La estructura estatica vive en el Designer; todo lo que
+// depende de datos o de pixeles (columnas, botones de horario, leyenda,
+// contadores) se arma aca, en Load, para que el disenador de Visual Studio no
+// lo borre y para medir con la escala de pantalla ya aplicada.
 public partial class FormTurnos : Form
 {
     private readonly PacienteService _pacienteService = new();
@@ -12,10 +19,38 @@ public partial class FormTurnos : Form
     private readonly TurnoService _turnoService = new();
     private readonly NotificacionService _notificacionService = new();
     private readonly Usuario? _usuarioActivo;
+
+    // Turno de la grilla cargado en la tarjeta de la izquierda (modo reprogramar).
     private int? _idTurnoSeleccionado = null;
+
+    // Horario (boton) elegido para Asignar / Modificar.
+    private Horario? _horarioElegido = null;
+
+    // true mientras se cargan o sincronizan controles por codigo: los eventos
+    // de combos/fecha/filtros se ignoran para no recargar a mitad de camino.
+    private bool _cargando = true;
+
+    private ToolTip _tip = null!;
+    private Label _lblLeyendaDuracion = null!;
 
     private const string ColACobrar = "colACobrar";
     private static readonly System.Globalization.CultureInfo CulturaAr = new("es-AR");
+
+    // Colores: misma paleta que el resto de la app (FormInicio / FormMedicos).
+    private static readonly Color ColorTexto = Color.FromArgb(27, 42, 74);
+    private static readonly Color ColorSecundario = Color.FromArgb(110, 120, 135);
+    private static readonly Color ColorAzul = Color.FromArgb(46, 134, 222);
+    private static readonly Color ColorBorde = Color.FromArgb(214, 220, 230);
+    private static readonly Color ColorOk = Color.FromArgb(28, 120, 66);
+    private static readonly Color ColorError = Color.FromArgb(192, 57, 43);
+    private static readonly Color ColorAdvertencia = Color.FromArgb(176, 96, 0);
+    private static readonly Color ChipLibreBorde = Color.FromArgb(39, 174, 96);
+    private static readonly Color ChipLibreHover = Color.FromArgb(232, 246, 238);
+    private static readonly Color ChipOcupadoFondo = Color.FromArgb(236, 238, 242);
+    private static readonly Color ChipOcupadoBorde = Color.FromArgb(214, 218, 226);
+    private static readonly Color ChipOcupadoTexto = Color.FromArgb(130, 138, 150);
+    private static readonly Font FuenteChip = new("Segoe UI", 9.5F);
+    private static readonly Font FuenteChica = new("Segoe UI", 8.5F);
 
     // Barra de contadores (se arma en ConfigurarBarraContadores, no en el disenador).
     private readonly Dictionary<string, Label> _contadores = new();
@@ -28,256 +63,805 @@ public partial class FormTurnos : Form
 
     // Duraciones habituales para elegir en CboDuracion. Si un turno ya
     // guardado tiene una duracion distinta (por ejemplo, cargada por otra
-    // pantalla), se agrega dinamicamente en DgvTurnos_SelectionChanged.
+    // pantalla), se agrega dinamicamente al seleccionarlo en la grilla.
     private readonly List<int> _duracionesDisponibles = new() { 15, 20, 30, 45, 60, 90 };
+
+    // Item del filtro "Paciente" de la barra derecha (Id 0 = todos).
+    private sealed record ItemPaciente(int Id, string Nombre);
+
+    private enum EstadoChip { Libre, Ocupado }
+
+    private bool EsRecepcionista => _usuarioActivo != null && _usuarioActivo.Rol == RolUsuario.Recepcionista;
+
+    private Turno? TurnoSeleccionado =>
+        DgvTurnos.SelectedRows.Count > 0 ? DgvTurnos.SelectedRows[0].DataBoundItem as Turno : null;
 
     public FormTurnos(Usuario? usuarioActivo = null)
     {
         _usuarioActivo = usuarioActivo;
         InitializeComponent();
-        ConfigurarColumnas();
-        ConfigurarBarraContadores();
-        CargarCombos();
 
-        // Al entrar (por ejemplo la Recepcionista al iniciar sesion), la
-        // grilla arranca mostrando los turnos de HOY, no el historial
-        // completo - el filtro de fecha ya viene activado.
-        DtpFecha.Value = DateTime.Today;
-        ChkFiltrarFecha.Checked = true;
+        components ??= new System.ComponentModel.Container();
+        _tip = new ToolTip(components);
 
         DgvTurnos.SelectionChanged += DgvTurnos_SelectionChanged;
         DgvTurnos.CellFormatting += DgvTurnos_CellFormatting;
+        BtnAsignar.Click += BtnAsignar_Click;
+        BtnLimpiar.Click += BtnLimpiar_Click;
         BtnModificar.Click += BtnModificar_Click;
-        BtnNuevoTurno.Click += (s, e) =>
+        BtnCancelar.Click += BtnCancelar_Click;
+        BtnConfirmarAsistencia.Click += BtnConfirmarAsistencia_Click;
+
+        ChkMostrarCancelados.CheckedChanged += (s, e) => { if (!_cargando) CargarGrilla(); };
+        ChkTodosMedicos.CheckedChanged += (s, e) => { if (!_cargando) CargarGrilla(); };
+        ChkFiltrarFecha.CheckedChanged += (s, e) => { if (!_cargando) CargarGrilla(); };
+        CboFiltroPaciente.SelectedIndexChanged += (s, e) => { if (!_cargando) CargarGrilla(); };
+
+        CboMedico.SelectedIndexChanged += CboMedico_SelectedIndexChanged;
+        CboDuracion.SelectedIndexChanged += (s, e) =>
+        {
+            if (_cargando) return;
+            LimpiarMensaje();
+            ActualizarHorarios();
+        };
+        DtpFecha.ValueChanged += DtpFecha_ValueChanged;
+
+        // Los textos con ancho limitado se recalculan cuando cambia el ancho.
+        pnlNuevoTurno.SizeChanged += (s, e) => AcotarEtiquetas();
+        tlpHorarios.SizeChanged += (s, e) => AcotarEtiquetas();
+        tlpToolbar.SizeChanged += (s, e) => AcotarEtiquetas();
+        tlpAcciones.SizeChanged += (s, e) => AcotarEtiquetas();
+        foreach (var flujo in new[] { flpFiltros, FlpContadores, flpBotonesAccion, FlpLeyenda })
+            flujo.SizeChanged += (s, e) => AjustarFlujos();
+        pnlEstado.SizeChanged += (s, e) => AjustarMensaje();
+
+        Load += FormTurnos_Load;
+    }
+
+    // ------------------------------------------------------------- arranque
+
+    private void FormTurnos_Load(object? sender, EventArgs e)
+    {
+        _cargando = true;
+        try
+        {
+            ConfigurarColumnas();
+            ConfigurarBarraContadores();
+            ConfigurarLeyenda();
+            ConfigurarEstiloBotones();
+            ConfigurarAyudas();
+            CargarCombos();
+
+            // Al entrar (por ejemplo la Recepcionista al iniciar sesion), la
+            // grilla arranca mostrando los turnos de HOY, no el historial
+            // completo - el filtro de fecha ya viene activado.
+            DtpFecha.Value = DateTime.Today;
+            ChkFiltrarFecha.Checked = true;
+            pnlEstado.Visible = false;
+        }
+        finally
+        {
+            _cargando = false;
+        }
+
+        CargarGrilla();
+        ActualizarHorarios();
+        ActualizarModo();
+        ActualizarAcciones();
+        AcotarEtiquetas();
+    }
+
+    // Los paneles de flujo que parten sus controles en varias filas (filtros,
+    // contadores, botones, leyenda) no usan AutoSize: dentro de contenedores
+    // AutoSize anidados se calcula su alto con un ancho equivocado. En su lugar
+    // el alto se fija aca con el ancho real, cada vez que cambia el ancho o el contenido.
+    private void AjustarFlujos()
+    {
+        foreach (var flujo in new[] { flpFiltros, FlpContadores, flpBotonesAccion, FlpLeyenda })
+        {
+            if (flujo.Width <= 0) continue;
+            int alto = flujo.GetPreferredSize(new Size(flujo.Width, 0)).Height;
+            if (flujo.Height != alto) flujo.Height = alto;
+        }
+    }
+
+    private void ConfigurarAyudas()
+    {
+        _tip.SetToolTip(ChkTodosMedicos, EsRecepcionista
+            ? "Marcado: la tabla muestra los turnos de todos sus médicos asignados.\nSin marcar: solo los del médico elegido en «Nuevo turno»."
+            : "Marcado: la tabla muestra los turnos de todos los médicos.\nSin marcar: solo los del médico elegido en «Nuevo turno».");
+        _tip.SetToolTip(ChkFiltrarFecha, "Marcado: la tabla muestra solo los turnos de la fecha elegida en «Nuevo turno».\nSin marcar: muestra todas las fechas.");
+        _tip.SetToolTip(ChkMostrarCancelados, "Incluye en la tabla los turnos cancelados.");
+        _tip.SetToolTip(CboFiltroPaciente, "Filtra la tabla por paciente (no afecta al formulario «Nuevo turno»).");
+    }
+
+    // ------------------------------------------------------- medico / fecha
+
+    private void CboMedico_SelectedIndexChanged(object? sender, EventArgs e)
+    {
+        if (_cargando) return;
+        LimpiarMensaje();
+        ActualizarHorarios();
+        if (_idTurnoSeleccionado == null && !ChkTodosMedicos.Checked) CargarGrilla();
+    }
+
+    private void DtpFecha_ValueChanged(object? sender, EventArgs e)
+    {
+        if (_cargando) return;
+        LimpiarMensaje();
+        ActualizarHorarios();
+        if (_idTurnoSeleccionado == null && ChkFiltrarFecha.Checked) CargarGrilla();
+    }
+
+    // ------------------------------------------------- horarios (botones)
+
+    // Arma un boton por cada horario del medico y la fecha elegidos. Los
+    // horarios salen de los bloques de AgendaMedico del dia de la semana,
+    // cortados en turnos de la duracion elegida (HorarioService). Un horario
+    // esta ocupado si se superpone con otro turno activo del medico (se ignora
+    // el turno que se esta reprogramando) o con una ausencia cargada. Recalcula
+    // tambien el aviso con el motivo real cada vez que cambia algo.
+    private void ActualizarHorarios(TimeOnly? preseleccion = null)
+    {
+        var previa = preseleccion ?? _horarioElegido?.HoraInicio;
+        _horarioElegido = null;
+
+        FlpHorarios.SuspendLayout();
+        foreach (Control c in FlpHorarios.Controls.Cast<Control>().ToList())
+        {
+            FlpHorarios.Controls.Remove(c);
+            c.Dispose();
+        }
+
+        string? aviso;
+        Color colorAviso = ColorAdvertencia;
+
+        if (CboMedico.SelectedItem is not Medico medico)
+        {
+            aviso = "No hay un médico seleccionado.";
+        }
+        else if (CboDuracion.SelectedItem is not int duracion)
+        {
+            aviso = "Seleccione la duración del turno.";
+        }
+        else
+        {
+            _lblLeyendaDuracion.Text = $"· turnos de {duracion} min";
+            try
+            {
+                aviso = CrearHorarios(medico, DateOnly.FromDateTime(DtpFecha.Value), duracion, previa);
+            }
+            catch (Exception ex)
+            {
+                aviso = "No se pudo consultar la agenda del médico: " + ex.Message;
+                colorAviso = ColorError;
+            }
+        }
+
+        FlpHorarios.ResumeLayout(true);
+        LblAviso.ForeColor = colorAviso;
+        LblAviso.Text = aviso ?? "";
+        LblAviso.Visible = !string.IsNullOrEmpty(aviso);
+
+        PintarHorarios();
+        ActualizarHorarioElegido();
+        AcotarEtiquetas();
+    }
+
+    // Crea los botones y devuelve el aviso a mostrar (null si no hace falta).
+    private string? CrearHorarios(Medico medico, DateOnly fecha, int duracion, TimeOnly? previa)
+    {
+        var disponibilidad = _agendaMedicoService.ObtenerDisponibilidad(medico.Id, fecha);
+
+        // Motivo real: ausencia de todo el dia, dia sin agenda o sin agenda cargada.
+        string? motivo = disponibilidad.MotivoSinAtencion(medico.NombreCompleto);
+        if (motivo != null) return motivo;
+
+        var slots = new List<Horario>();
+        foreach (var bloque in disponibilidad.Bloques)
+            slots.AddRange(_horarioService.GenerarSlotsEnRango(bloque.HoraInicio, bloque.HoraFin, duracion, duracion));
+        slots = slots.OrderBy(h => h.HoraInicio).ToList();
+
+        var avisos = new List<string>();
+        bool fechaPasada = fecha < DateOnly.FromDateTime(DateTime.Today);
+        if (fechaPasada) avisos.Add("La fecha elegida ya pasó: no se pueden asignar turnos.");
+
+        if (slots.Count == 0)
+        {
+            avisos.Add($"La agenda de ese día no tiene lugar para turnos de {duracion} min.");
+            return string.Join(" ", avisos);
+        }
+
+        int idPropio = _idTurnoSeleccionado ?? 0;
+        var turnos = _turnoService.ObtenerPorMedicoYFecha(medico.Id, fecha, false)
+            .Where(t => t.Id != idPropio)
+            .ToList();
+
+        int libres = 0;
+        foreach (var slot in slots)
+        {
+            bool ocupado = fechaPasada
+                || turnos.Any(t => t.HoraInicio < slot.HoraFin && t.HoraFin > slot.HoraInicio)
+                || disponibilidad.HayAusenciaEn(slot.HoraInicio, slot.HoraFin);
+
+            var chip = CrearChip(slot, ocupado ? EstadoChip.Ocupado : EstadoChip.Libre);
+            FlpHorarios.Controls.Add(chip);
+
+            if (!ocupado)
+            {
+                libres++;
+                if (previa == slot.HoraInicio) _horarioElegido = slot;
+            }
+        }
+
+        if (libres == 0 && !fechaPasada) avisos.Add("No quedan horarios libres ese día.");
+
+        string? parciales = disponibilidad.DescripcionAusenciasParciales();
+        if (parciales != null) avisos.Add(parciales);
+
+        return avisos.Count == 0 ? null : string.Join(" ", avisos);
+    }
+
+    private Button CrearChip(Horario slot, EstadoChip estado)
+    {
+        var chip = new Button
+        {
+            Text = slot.HoraInicio.ToString("HH:mm"),
+            Tag = slot,
+            FlatStyle = FlatStyle.Flat,
+            Font = FuenteChip,
+            UseVisualStyleBackColor = false,
+            Margin = new Padding(0, 0, EscalaDpi.Px(this, 5), EscalaDpi.Px(this, 5)),
+            Enabled = estado == EstadoChip.Libre,
+            TabStop = estado == EstadoChip.Libre
+        };
+        chip.FlatAppearance.BorderSize = 1;
+
+        // Ancho segun el texto medido (la fuente escala con el DPI) mas holgura.
+        int ancho = TextRenderer.MeasureText(chip.Text, chip.Font).Width + EscalaDpi.Px(this, 8);
+        chip.Size = new Size(Math.Max(ancho, EscalaDpi.Px(this, 58)), EscalaDpi.Px(this, 30));
+
+        if (estado == EstadoChip.Libre)
+        {
+            _tip.SetToolTip(chip, slot.Rango);
+            chip.Click += Chip_Click;
+        }
+        return chip;
+    }
+
+    private void Chip_Click(object? sender, EventArgs e)
+    {
+        if (sender is not Button { Tag: Horario horario }) return;
+        _horarioElegido = horario;
+        PintarHorarios();
+        ActualizarHorarioElegido();
+    }
+
+    // Libre = blanco con borde verde; ocupado = gris deshabilitado; elegido = azul solido.
+    private void PintarHorarios()
+    {
+        foreach (var chip in FlpHorarios.Controls.OfType<Button>())
+        {
+            var horario = chip.Tag as Horario;
+            if (!chip.Enabled)
+            {
+                chip.BackColor = ChipOcupadoFondo;
+                chip.ForeColor = ChipOcupadoTexto;
+                chip.FlatAppearance.BorderColor = ChipOcupadoBorde;
+                chip.FlatAppearance.MouseOverBackColor = ChipOcupadoFondo;
+                chip.FlatAppearance.MouseDownBackColor = ChipOcupadoFondo;
+            }
+            else if (_horarioElegido != null && horario != null && horario.HoraInicio == _horarioElegido.HoraInicio)
+            {
+                chip.BackColor = ColorAzul;
+                chip.ForeColor = Color.White;
+                chip.FlatAppearance.BorderColor = ColorAzul;
+                chip.FlatAppearance.MouseOverBackColor = ColorAzul;
+                chip.FlatAppearance.MouseDownBackColor = ColorAzul;
+            }
+            else
+            {
+                chip.BackColor = Color.White;
+                chip.ForeColor = ColorOk;
+                chip.FlatAppearance.BorderColor = ChipLibreBorde;
+                chip.FlatAppearance.MouseOverBackColor = ChipLibreHover;
+                chip.FlatAppearance.MouseDownBackColor = ChipLibreHover;
+            }
+        }
+    }
+
+    private void ActualizarHorarioElegido()
+    {
+        lblHorarios.Text = _horarioElegido == null
+            ? "3. Horarios libres"
+            : $"3. Horarios libres · {_horarioElegido.Rango}";
+    }
+
+    private void ConfigurarLeyenda()
+    {
+        FlpLeyenda.Controls.Add(CrearItemLeyenda("Libre", Color.White, ChipLibreBorde));
+        FlpLeyenda.Controls.Add(CrearItemLeyenda("Ocupado", ChipOcupadoFondo, ChipOcupadoBorde));
+        FlpLeyenda.Controls.Add(CrearItemLeyenda("Elegido", ColorAzul, ColorAzul));
+
+        _lblLeyendaDuracion = new Label
+        {
+            AutoSize = true,
+            Font = FuenteChica,
+            ForeColor = ColorSecundario,
+            Margin = new Padding(0)
+        };
+        FlpLeyenda.Controls.Add(_lblLeyendaDuracion);
+    }
+
+    private Control CrearItemLeyenda(string texto, Color relleno, Color borde)
+    {
+        var item = new FlowLayoutPanel
+        {
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            WrapContents = false,
+            Margin = new Padding(0, 0, EscalaDpi.Px(this, 12), 0)
+        };
+
+        int lado = EscalaDpi.Px(this, 12);
+        var muestra = new Panel
+        {
+            Size = new Size(lado, lado),
+            BackColor = borde,
+            Padding = new Padding(1),
+            Margin = new Padding(0, EscalaDpi.Px(this, 3), EscalaDpi.Px(this, 5), 0)
+        };
+        muestra.Controls.Add(new Panel { Dock = DockStyle.Fill, BackColor = relleno });
+
+        var etiqueta = new Label
+        {
+            AutoSize = true,
+            Font = FuenteChica,
+            ForeColor = ColorSecundario,
+            Margin = new Padding(0),
+            Text = texto
+        };
+
+        item.Controls.Add(muestra);
+        item.Controls.Add(etiqueta);
+        return item;
+    }
+
+    // ------------------------------------------------ seleccion en la grilla
+
+    private void DgvTurnos_SelectionChanged(object? sender, EventArgs e)
+    {
+        if (_cargando) return;
+
+        var turno = TurnoSeleccionado;
+        if (turno == null)
+        {
+            if (_idTurnoSeleccionado != null)
+            {
+                SalirDeEdicion(false);
+                ActualizarHorarios();
+            }
+            ActualizarAcciones();
+            return;
+        }
+
+        _cargando = true;
+        try
+        {
+            _idTurnoSeleccionado = turno.Id;
+            CboPaciente.SelectedValue = turno.PacienteId;
+            CboMedico.SelectedValue = turno.MedicoId;
+            DtpFecha.Value = turno.Fecha.ToDateTime(TimeOnly.MinValue);
+
+            // Si el turno tiene una duracion que no esta en la lista habitual
+            // (por ejemplo, cargada antes de que existiera este combo), la
+            // sumamos para poder mostrarla seleccionada.
+            if (!_duracionesDisponibles.Contains(turno.DuracionMinutos))
+            {
+                _duracionesDisponibles.Add(turno.DuracionMinutos);
+                _duracionesDisponibles.Sort();
+                CboDuracion.DataSource = null;
+                CboDuracion.DataSource = _duracionesDisponibles;
+            }
+            CboDuracion.SelectedItem = turno.DuracionMinutos;
+        }
+        finally
+        {
+            _cargando = false;
+        }
+
+        // Paciente y medico de un turno ya asignado no se cambian aca (RF#05
+        // solo permite modificar fecha/horario): se bloquean mientras hay fila elegida.
+        LimpiarMensaje();
+        ActualizarModo();
+        ActualizarHorarios(turno.HoraInicio);
+        ActualizarAcciones();
+    }
+
+    // Vuelve al modo "Nuevo turno": deselecciona la fila y desbloquea la tarjeta.
+    private void SalirDeEdicion(bool limpiarPaciente)
+    {
+        bool anterior = _cargando;
+        _cargando = true;
+        try
         {
             DgvTurnos.SelectionChanged -= DgvTurnos_SelectionChanged;
             DgvTurnos.ClearSelection();
             DgvTurnos.SelectionChanged += DgvTurnos_SelectionChanged;
-            LimpiarSeleccion();
-        };
-        ChkMostrarCancelados.CheckedChanged += (s, e) => CargarGrilla();
-        ChkTodosMedicos.CheckedChanged += (s, e) => CargarGrilla();
-        ChkFiltrarFecha.CheckedChanged += (s, e) => CargarGrilla();
-        ChkFiltrarPaciente.CheckedChanged += (s, e) => CargarGrilla();
-        CboPaciente.SelectedIndexChanged += (s, e) =>
-        {
-            if (ChkFiltrarPaciente.Checked) CargarGrilla();
-        };
-        CboMedico.SelectedIndexChanged += (s, e) => { ActualizarAgenda(); CargarGrilla(); };
-        CboDuracion.SelectedIndexChanged += (s, e) => ActualizarAgenda();
-        DtpFecha.ValueChanged += (s, e) => { ActualizarAgenda(); CargarGrilla(); };
-        DgvAgenda.CellClick += DgvAgenda_CellClick;
-        DgvAgenda.CellDoubleClick += DgvAgenda_CellDoubleClick;
 
-        CargarGrilla();
-        ActualizarAgenda();
+            _idTurnoSeleccionado = null;
+            if (limpiarPaciente) CboPaciente.SelectedIndex = -1;
+        }
+        finally
+        {
+            _cargando = anterior;
+        }
+
+        ActualizarModo();
+        ActualizarAcciones();
     }
 
-    private void DgvAgenda_CellClick(object? sender, DataGridViewCellEventArgs e)
+    // Titulo y bloqueos de la tarjeta segun si hay un turno cargado para reprogramar.
+    private void ActualizarModo()
     {
-        if (e.RowIndex < 0) return;
+        bool editando = _idTurnoSeleccionado != null;
+        var turno = TurnoSeleccionado;
 
-        var horario = (Horario)DgvAgenda.Rows[e.RowIndex].Tag!;
-        CboHorario.SelectedValue = horario.Id;
+        lblTituloNuevo.Text = editando ? "REPROGRAMAR TURNO" : "NUEVO TURNO";
+        CboPaciente.Enabled = !editando;
+        CboMedico.Enabled = !editando;
+        BtnAsignar.Enabled = !editando;
+
+        LblModo.Visible = editando;
+        LblModo.Text = editando
+            ? $"Turno de {turno?.PacienteNombre}: elija otra fecha u horario y pulse «Modificar»."
+            : "";
+        AcotarEtiquetas();
     }
 
-    private void DgvAgenda_CellDoubleClick(object? sender, DataGridViewCellEventArgs e)
+    // ------------------------------------------------------ acciones del turno
+
+    // Habilita los botones segun el turno seleccionado y las reglas de TurnoService.
+    private void ActualizarAcciones()
     {
-        if (e.RowIndex < 0) return;
+        var turno = TurnoSeleccionado;
 
-        var horario = (Horario)DgvAgenda.Rows[e.RowIndex].Tag!;
-
-        if (CboMedico.SelectedItem != null &&
-            _turnoService.HorarioOcupado(
-                ((Medico)CboMedico.SelectedItem).Id,
-                DateOnly.FromDateTime(DtpFecha.Value),
-                horario.HoraInicio,
-                (int)(horario.HoraFin - horario.HoraInicio).TotalMinutes))
+        if (turno == null)
         {
-            LblMensaje.ForeColor = Color.Red;
-            LblMensaje.Text = "Ese horario ya esta ocupado.";
+            LblSeleccion.Text = "Turno seleccionado: ninguno";
+            BtnModificar.Enabled = false;
+            BtnCancelar.Enabled = false;
+            BtnConfirmarAsistencia.Enabled = false;
+            MostrarAyudaAcciones("Elija una fila de la tabla.");
             return;
         }
 
-        CboHorario.SelectedValue = horario.Id;
-        BtnAsignar_Click(this, e);
+        LblSeleccion.Text = $"Turno seleccionado: {turno.PacienteNombre} · {turno.Fecha:dd/MM/yyyy} {turno.HoraInicio:HH:mm} · {PaletaEstados.Texto(turno.Estado)}";
+
+        bool cancelado = turno.Estado == EstadoTurno.Cancelado;
+        BtnModificar.Enabled = !cancelado;
+        BtnCancelar.Enabled = !cancelado;
+
+        bool llegoLaFecha = turno.Fecha <= DateOnly.FromDateTime(DateTime.Today);
+        bool puedeConfirmar = turno.Estado == EstadoTurno.Confirmado && llegoLaFecha;
+        BtnConfirmarAsistencia.Enabled = puedeConfirmar;
+
+        string ayuda = "";
+        if (!puedeConfirmar)
+        {
+            ayuda = turno.Estado switch
+            {
+                EstadoTurno.Cancelado => "Este turno está cancelado.",
+                EstadoTurno.Asistio or EstadoTurno.Ausente => "La asistencia ya fue registrada.",
+                EstadoTurno.Pendiente => "Solo se confirma asistencia de turnos Confirmados.",
+                _ => "Se confirma a partir de la fecha del turno."
+            };
+        }
+        MostrarAyudaAcciones(ayuda);
     }
 
-    // Arma la lista de horarios realmente disponibles para el medico y la
-    // fecha elegidos: toma el/los bloque(s) de AgendaMedico configurados
-    // por el Administrador para ese dia de la semana, y dentro de cada
-    // bloque genera slots consecutivos del largo indicado en CboDuracion.
-    // Si el medico no tiene ningun bloque cargado para ese dia, la lista
-    // queda vacia (no atiende ese dia).
-    private void ActualizarAgenda()
+    private void MostrarAyudaAcciones(string texto)
     {
-        DgvAgenda.Rows.Clear();
-        CboHorario.DataSource = null;
+        LblAyudaAcciones.Text = texto;
+        LblAyudaAcciones.Visible = !string.IsNullOrEmpty(texto);
+        AcotarEtiquetas();
+    }
 
-        if (CboMedico.SelectedItem == null || CboDuracion.SelectedItem == null) return;
+    private void BtnLimpiar_Click(object? sender, EventArgs e)
+    {
+        SalirDeEdicion(true);
+        _horarioElegido = null;
+        LimpiarMensaje();
+        ActualizarHorarios();
+    }
 
-        var medico = (Medico)CboMedico.SelectedItem;
+    private void BtnAsignar_Click(object? sender, EventArgs e)
+    {
+        var faltantes = new List<string>();
+        if (CboPaciente.SelectedItem is not Paciente) faltantes.Add("paciente");
+        if (CboMedico.SelectedItem is not Medico) faltantes.Add("médico");
+        if (CboDuracion.SelectedItem is not int) faltantes.Add("duración");
+        if (_horarioElegido == null) faltantes.Add("horario");
+
+        if (faltantes.Count > 0)
+        {
+            MostrarMensaje("Debe seleccionar " + string.Join(", ", faltantes) + ".", ColorError);
+            return;
+        }
+
+        var paciente = (Paciente)CboPaciente.SelectedItem!;
+        var medico = (Medico)CboMedico.SelectedItem!;
+        var horario = _horarioElegido!;
         var fecha = DateOnly.FromDateTime(DtpFecha.Value);
-        int duracion = (int)CboDuracion.SelectedItem;
+        int duracion = (int)CboDuracion.SelectedItem!;
 
-        var bloquesDelDia = _agendaMedicoService.ObtenerPorMedicoYDia(medico.Id, fecha.DayOfWeek);
-
-        var horariosDisponibles = new List<Horario>();
-        foreach (var bloque in bloquesDelDia)
-            horariosDisponibles.AddRange(_horarioService.GenerarSlotsEnRango(bloque.HoraInicio, bloque.HoraFin, duracion, duracion));
-
-        horariosDisponibles = horariosDisponibles.OrderBy(h => h.HoraInicio).ToList();
-
-        foreach (var horario in horariosDisponibles)
+        try
         {
-            bool ocupado = _turnoService.HorarioOcupado(medico.Id, fecha, horario.HoraInicio, duracion);
-            int fila = DgvAgenda.Rows.Add(horario.Rango, ocupado ? "Ocupado" : "Disponible");
-
-            DgvAgenda.Rows[fila].Tag = horario;
-            DgvAgenda.Rows[fila].DefaultCellStyle.BackColor = ocupado
-                ? Color.FromArgb(250, 220, 220)
-                : Color.FromArgb(220, 245, 225);
+            _turnoService.AsignarTurno(paciente, medico, fecha, horario.HoraInicio, duracion);
+        }
+        catch (Exception ex)
+        {
+            // El horario pudo ocuparse desde otra pantalla: se refrescan los botones.
+            MostrarMensaje(ex.Message, ColorError);
+            ActualizarHorarios();
+            return;
         }
 
-        CboHorario.DataSource = horariosDisponibles;
-        CboHorario.DisplayMember = "Rango";
-        CboHorario.ValueMember = "Id";
+        SalirDeEdicion(true);
+        _horarioElegido = null;
+        CargarGrilla();
+        ActualizarHorarios();
 
-        if (bloquesDelDia.Count == 0)
+        string aviso;
+        try
         {
-            LblMensaje.ForeColor = Color.DarkOrange;
-            LblMensaje.Text = $"{medico.NombreCompleto} no atiende los {AgendaMedico.NombreDia(fecha.DayOfWeek)}.";
+            aviso = _notificacionService.AvisarTurno(
+                paciente, "Confirmacion", $"{fecha:dd/MM/yyyy} {horario.Rango} con {medico.NombreCompleto}");
         }
-    }
-
-    private void DgvTurnos_SelectionChanged(object? sender, EventArgs e)
-    {
-        if (DgvTurnos.CurrentRow == null) return;
-
-        var turno = (Turno)DgvTurnos.CurrentRow.DataBoundItem;
-
-        _idTurnoSeleccionado = turno.Id;
-        CboPaciente.SelectedValue = turno.PacienteId;
-        CboMedico.SelectedValue = turno.MedicoId;
-        DtpFecha.Value = turno.Fecha.ToDateTime(TimeOnly.MinValue);
-
-        // Si el turno tiene una duracion que no esta en la lista habitual
-        // (por ejemplo, cargada antes de que existiera este combo), la
-        // sumamos para poder mostrarla seleccionada.
-        if (!_duracionesDisponibles.Contains(turno.DuracionMinutos))
+        catch (Exception ex)
         {
-            _duracionesDisponibles.Add(turno.DuracionMinutos);
-            _duracionesDisponibles.Sort();
-            CboDuracion.DataSource = null;
-            CboDuracion.DataSource = _duracionesDisponibles;
+            aviso = "No se pudo avisar al paciente: " + ex.Message;
         }
-        CboDuracion.SelectedItem = turno.DuracionMinutos;
-
-        // ActualizarAgenda() ya se disparo con la duracion correcta (evento
-        // de CboDuracion), asi que CboHorario ya tiene los slots armados.
-        // Buscamos el que coincide con la hora de inicio del turno.
-        var horarioActual = (CboHorario.DataSource as List<Horario>)?
-            .FirstOrDefault(h => h.HoraInicio == turno.HoraInicio);
-
-        if (horarioActual != null)
-            CboHorario.SelectedValue = horarioActual.Id;
-        else
-            CboHorario.SelectedIndex = -1;
-
-        // Paciente y medico de un turno ya asignado no se cambian aca (RF#05
-        // solo permite modificar fecha/horario). Se deshabilitan para que
-        // quede claro que no son editables mientras hay una fila seleccionada.
-        CboPaciente.Enabled = false;
-        CboMedico.Enabled = false;
-    }
-
-    private void LimpiarSeleccion()
-    {
-        _idTurnoSeleccionado = null;
-        CboPaciente.Enabled = true;
-        CboMedico.Enabled = true;
+        MostrarMensaje("Turno agendado. " + aviso, ColorOk);
     }
 
     private void BtnModificar_Click(object? sender, EventArgs e)
     {
-        if (_idTurnoSeleccionado == null)
+        var seleccionado = TurnoSeleccionado;
+        if (seleccionado == null || _idTurnoSeleccionado == null)
         {
-            LblMensaje.ForeColor = Color.Red;
-            LblMensaje.Text = "Seleccione un turno de la lista para modificar.";
+            MostrarMensaje("Seleccione un turno de la lista para modificar.", ColorError);
             return;
         }
 
-        if (CboHorario.SelectedItem == null || CboDuracion.SelectedItem == null)
+        if (_horarioElegido == null || CboDuracion.SelectedItem is not int duracion)
         {
-            LblMensaje.ForeColor = Color.Red;
-            LblMensaje.Text = "Seleccione un horario y una duracion.";
+            MostrarMensaje("Seleccione un horario libre y una duración para reprogramar el turno.", ColorError);
             return;
         }
+
+        var horario = _horarioElegido;
+        var fecha = DateOnly.FromDateTime(DtpFecha.Value);
+        int idTurno = _idTurnoSeleccionado.Value;
 
         try
         {
-            var horario = (Horario)CboHorario.SelectedItem;
-            var fecha = DateOnly.FromDateTime(DtpFecha.Value);
-            int duracion = (int)CboDuracion.SelectedItem;
-
-            _turnoService.ModificarTurno(_idTurnoSeleccionado.Value, fecha, horario.HoraInicio, duracion);
-            var turno = _turnoService.ObtenerPorId(_idTurnoSeleccionado.Value);
-
-            CargarGrilla();
-            LimpiarSeleccion();
-            ActualizarAgenda();
-            LblMensaje.ForeColor = Color.Green;
-            LblMensaje.Text = "Turno modificado. " + (turno?.Paciente != null
-                ? _notificacionService.AvisarTurno(turno.Paciente, "Reprogramacion", $"{fecha:dd/MM/yyyy} {horario.Rango}")
-                : "");
+            _turnoService.ModificarTurno(idTurno, fecha, horario.HoraInicio, duracion);
         }
         catch (Exception ex)
         {
-            LblMensaje.ForeColor = Color.Red;
-            LblMensaje.Text = ex.Message;
+            MostrarMensaje(ex.Message, ColorError);
+            ActualizarHorarios();
+            return;
         }
+
+        string aviso = "";
+        try
+        {
+            var turno = _turnoService.ObtenerPorId(idTurno);
+            if (turno?.Paciente != null)
+                aviso = _notificacionService.AvisarTurno(turno.Paciente, "Reprogramacion", $"{fecha:dd/MM/yyyy} {horario.Rango}");
+        }
+        catch (Exception ex)
+        {
+            aviso = "No se pudo avisar al paciente: " + ex.Message;
+        }
+
+        SalirDeEdicion(true);
+        _horarioElegido = null;
+        CargarGrilla();
+        ActualizarHorarios();
+        MostrarMensaje("Turno modificado. " + aviso, ColorOk);
     }
+
+    private void BtnCancelar_Click(object? sender, EventArgs e)
+    {
+        var turnoSeleccionado = TurnoSeleccionado;
+        if (turnoSeleccionado == null)
+        {
+            MostrarMensaje("Seleccione un turno de la lista primero.", ColorError);
+            return;
+        }
+
+        var respuesta = MessageBox.Show(
+            $"¿Está seguro que desea cancelar el turno de {turnoSeleccionado.PacienteNombre} del {turnoSeleccionado.Fecha:dd/MM/yyyy}?",
+            "Confirmar cancelación", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+
+        if (respuesta != DialogResult.Yes)
+            return;
+
+        try
+        {
+            _turnoService.CancelarTurno(turnoSeleccionado.Id);
+        }
+        catch (Exception ex)
+        {
+            MostrarMensaje(ex.Message, ColorError);
+            return;
+        }
+
+        string aviso = "";
+        try
+        {
+            if (turnoSeleccionado.Paciente != null)
+                aviso = _notificacionService.AvisarTurno(turnoSeleccionado.Paciente, "Cancelacion", $"{turnoSeleccionado.Fecha:dd/MM/yyyy} {turnoSeleccionado.HorarioRango}");
+        }
+        catch (Exception ex)
+        {
+            aviso = "No se pudo avisar al paciente: " + ex.Message;
+        }
+
+        SalirDeEdicion(true);
+        _horarioElegido = null;
+        CargarGrilla();
+        ActualizarHorarios();
+        MostrarMensaje("Turno cancelado. " + aviso, ColorOk);
+    }
+
+    private void BtnConfirmarAsistencia_Click(object? sender, EventArgs e)
+    {
+        var turno = TurnoSeleccionado;
+        if (turno == null)
+        {
+            MostrarMensaje("Seleccione un turno de la lista primero.", ColorError);
+            return;
+        }
+
+        using (var dialogo = new FormConfirmarAsistencia(turno))
+        {
+            if (dialogo.ShowDialog() != DialogResult.OK)
+                return;
+
+            try
+            {
+                _turnoService.ConfirmarAsistencia(turno.Id, dialogo.Asistio, dialogo.MedioPagoSeleccionado, dialogo.MontoSeleccionado);
+            }
+            catch (Exception ex)
+            {
+                MostrarMensaje(ex.Message, ColorError);
+                return;
+            }
+        }
+
+        SalirDeEdicion(true);
+        _horarioElegido = null;
+        CargarGrilla();
+        ActualizarHorarios();
+        MostrarMensaje("Asistencia confirmada.", ColorOk);
+    }
+
+    // ----------------------------------------------------------- grilla y datos
 
     private void ConfigurarColumnas()
     {
         DgvTurnos.AutoGenerateColumns = false;
         DgvTurnos.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-        DgvTurnos.ColumnHeadersHeight = 44;
-        DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colFecha", HeaderText = "Fecha", DataPropertyName = "Fecha", FillWeight = 90 });
-        DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colMedico", HeaderText = "Medico", DataPropertyName = "MedicoNombre", FillWeight = 170 });
-        DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colPaciente", HeaderText = "Paciente", DataPropertyName = "PacienteNombre", FillWeight = 170 });
-        DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colHorario", HeaderText = "Horario", DataPropertyName = "HorarioRango", FillWeight = 120 });
-        DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colEstado", HeaderText = "Estado", DataPropertyName = "Estado", FillWeight = 100 });
-        DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colMedioPago", HeaderText = "Medio de pago", DataPropertyName = "MedioPago", FillWeight = 130 });
-        DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colMonto", HeaderText = "Monto", DataPropertyName = "Monto", FillWeight = 100 });
+        DgvTurnos.ColumnHeadersHeight = EscalaDpi.Px(this, 46);
+        DgvTurnos.RowTemplate.Height = EscalaDpi.Px(this, 28);
+
+        // Encabezado claro, acorde al resto de la app.
+        DgvTurnos.EnableHeadersVisualStyles = false;
+        DgvTurnos.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(245, 246, 250);
+        DgvTurnos.ColumnHeadersDefaultCellStyle.ForeColor = ColorTexto;
+        DgvTurnos.ColumnHeadersDefaultCellStyle.SelectionBackColor = Color.FromArgb(245, 246, 250);
+        DgvTurnos.ColumnHeadersDefaultCellStyle.SelectionForeColor = ColorTexto;
+        DgvTurnos.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+        DgvTurnos.ColumnHeadersDefaultCellStyle.WrapMode = DataGridViewTriState.True;
+        DgvTurnos.ColumnHeadersDefaultCellStyle.Padding = new Padding(EscalaDpi.Px(this, 4), 0, 0, 0);
+        DgvTurnos.GridColor = Color.FromArgb(228, 232, 240);
+
+        // MinimumWidth hace que, en una ventana angosta, la tabla scrollee
+        // horizontalmente dentro de si misma en vez de apretar las columnas.
+        // Las columnas de contenido corto (fecha, horario, estado, importes)
+        // nunca bajan del ancho de su texto; medico, paciente y medio de pago
+        // se reparten el resto y se recortan si falta lugar.
+        AgregarColumna("colFecha", "Fecha", "Fecha", 80, MinimoPara("00/00/0000"), "dd/MM/yyyy");
+        AgregarColumna("colMedico", "Médico", "MedicoNombre", 130, EscalaDpi.Px(this, 56));
+        AgregarColumna("colPaciente", "Paciente", "PacienteNombre", 150, EscalaDpi.Px(this, 60));
+        AgregarColumna("colHorario", "Horario", "HorarioRango", 100, MinimoPara("00:00 - 00:00"));
+        AgregarColumna("colEstado", "Estado", "Estado", 85, MinimoPara("Confirmado"));
+        AgregarColumna("colMedioPago", "Medio de pago", "MedioPago", 100, EscalaDpi.Px(this, 56));
+        var monto = AgregarColumna("colMonto", "Monto", "Monto", 85, MinimoPara("$ 00.000,00"), "C2");
+        monto.DefaultCellStyle.FormatProvider = CulturaAr;
+        monto.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
 
         // Columna calculada (sin DataPropertyName): su valor se arma en
         // DgvTurnos_CellFormatting con la regla de cobro de TurnoService.
-        DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = ColACobrar, HeaderText = "A cobrar (estimado)", FillWeight = 150 });
+        var acobrar = AgregarColumna(ColACobrar, "A cobrar (estimado)", null, 110, MinimoPara("$ 00.000,00"));
+        acobrar.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
 
         // Fila seleccionada: mismo azul que el resto de la app, texto blanco.
-        DgvTurnos.DefaultCellStyle.SelectionBackColor = Color.FromArgb(46, 134, 222);
+        DgvTurnos.DefaultCellStyle.SelectionBackColor = ColorAzul;
         DgvTurnos.DefaultCellStyle.SelectionForeColor = Color.White;
+    }
 
-        DgvAgenda.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-        DgvAgenda.Columns.Add(new DataGridViewTextBoxColumn { Name = "colAgendaHorario", HeaderText = "Horario", FillWeight = 50 });
-        DgvAgenda.Columns.Add(new DataGridViewTextBoxColumn { Name = "colAgendaEstado", HeaderText = "Estado", FillWeight = 50 });
+    // Ancho en pixeles reales del texto de muestra con la fuente de la grilla, mas holgura.
+    private int MinimoPara(string muestra) =>
+        TextRenderer.MeasureText(muestra, DgvTurnos.Font).Width + EscalaDpi.Px(this, 6);
+
+    // El encabezado puede partirse en varias lineas, pero no una palabra: el
+    // minimo de la columna alcanza para la palabra mas larga del titulo.
+    private int MinimoEncabezado(string titulo)
+    {
+        var fuente = DgvTurnos.ColumnHeadersDefaultCellStyle.Font ?? DgvTurnos.Font;
+        int palabra = titulo.Split(' ').Max(w => TextRenderer.MeasureText(w, fuente).Width);
+        return palabra + EscalaDpi.Px(this, 14);
+    }
+
+    private DataGridViewTextBoxColumn AgregarColumna(string nombre, string titulo, string? propiedad, float peso, int anchoMinimo, string? formato = null)
+    {
+        var columna = new DataGridViewTextBoxColumn
+        {
+            Name = nombre,
+            HeaderText = titulo,
+            FillWeight = peso,
+            MinimumWidth = Math.Max(anchoMinimo, MinimoEncabezado(titulo)),
+            SortMode = DataGridViewColumnSortMode.NotSortable
+        };
+        if (propiedad != null) columna.DataPropertyName = propiedad;
+        if (formato != null) columna.DefaultCellStyle.Format = formato;
+        columna.DefaultCellStyle.NullValue = "-";
+        DgvTurnos.Columns.Add(columna);
+        return columna;
     }
 
     private void CargarCombos()
     {
-        CboPaciente.DataSource = _pacienteService.ObtenerTodos();
+        var pacientes = new List<Paciente>();
+        try
+        {
+            pacientes = _pacienteService.ObtenerTodos();
+        }
+        catch (Exception ex)
+        {
+            MostrarMensaje("No se pudieron cargar los pacientes: " + ex.Message, ColorError);
+        }
+
+        CboPaciente.DataSource = pacientes;
         CboPaciente.DisplayMember = "NombreCompleto";
         CboPaciente.ValueMember = "Id";
+        // Sin paciente elegido por defecto: evita asignar al primero por descuido.
+        CboPaciente.SelectedIndex = -1;
+
+        var itemsFiltro = new List<ItemPaciente> { new(0, "Todos los pacientes") };
+        itemsFiltro.AddRange(pacientes.Select(p => new ItemPaciente(p.Id, p.NombreCompleto)));
+        CboFiltroPaciente.DataSource = itemsFiltro;
+        CboFiltroPaciente.DisplayMember = nameof(ItemPaciente.Nombre);
+        CboFiltroPaciente.ValueMember = nameof(ItemPaciente.Id);
+        CboFiltroPaciente.SelectedIndex = 0;
 
         // Una recepcionista solo ve los medicos que tiene asignados.
-        if (_usuarioActivo != null && _usuarioActivo.Rol == RolUsuario.Recepcionista)
+        try
         {
-            CboMedico.DataSource = _usuarioActivo.MedicosAsignados;
+            if (EsRecepcionista)
+                CboMedico.DataSource = (_usuarioActivo!.MedicosAsignados ?? new List<Medico>()).ToList();
+            else
+                CboMedico.DataSource = _medicoService.ObtenerTodos();
         }
-        else
+        catch (Exception ex)
         {
-            CboMedico.DataSource = _medicoService.ObtenerTodos();
+            CboMedico.DataSource = new List<Medico>();
+            MostrarMensaje("No se pudieron cargar los médicos: " + ex.Message, ColorError);
         }
 
         CboMedico.DisplayMember = "NombreCompleto";
@@ -290,101 +874,137 @@ public partial class FormTurnos : Form
     private void CargarGrilla()
     {
         int? medicoFiltro = null;
-        if (!ChkTodosMedicos.Checked && CboMedico.SelectedItem != null)
-            medicoFiltro = ((Medico)CboMedico.SelectedItem).Id;
+        if (!ChkTodosMedicos.Checked && CboMedico.SelectedItem is Medico medicoElegido)
+            medicoFiltro = medicoElegido.Id;
 
         DateOnly? fechaFiltro = ChkFiltrarFecha.Checked
             ? DateOnly.FromDateTime(DtpFecha.Value)
             : null;
 
+        // El filtro por paciente es el de la barra derecha (independiente del
+        // paciente del formulario "Nuevo turno").
         int? pacienteFiltro = null;
-        if (ChkFiltrarPaciente.Checked && CboPaciente.SelectedItem != null)
-            pacienteFiltro = ((Paciente)CboPaciente.SelectedItem).Id;
+        string textoPaciente = "todos los pacientes";
+        if (CboFiltroPaciente.SelectedItem is ItemPaciente { Id: > 0 } itemPaciente)
+        {
+            pacienteFiltro = itemPaciente.Id;
+            textoPaciente = itemPaciente.Nombre;
+        }
 
-        bool esRecepcionista = _usuarioActivo != null && _usuarioActivo.Rol == RolUsuario.Recepcionista;
+        int? idPrevio = _idTurnoSeleccionado;
         List<Turno> lista;
-        bool huboError = false;
+        string? errorCarga = null;
 
         try
         {
-            if (esRecepcionista)
+            lista = _turnoService.ObtenerTodos(ChkMostrarCancelados.Checked, medicoFiltro, fechaFiltro, pacienteFiltro);
+
+            if (EsRecepcionista)
             {
-                var medicosAsignadosIds = _usuarioActivo!.MedicosAsignados.Select(m => m.Id).ToList();
-                lista = _turnoService.ObtenerTodos(ChkMostrarCancelados.Checked, medicoFiltro, fechaFiltro)
-                    .Where(t => medicosAsignadosIds.Contains(t.MedicoId))
-                    .ToList();
-            }
-            else
-            {
-                lista = _turnoService.ObtenerTodos(ChkMostrarCancelados.Checked, medicoFiltro, fechaFiltro, pacienteFiltro);
+                var medicosAsignadosIds = (_usuarioActivo!.MedicosAsignados ?? new List<Medico>()).Select(m => m.Id).ToList();
+                lista = lista.Where(t => medicosAsignadosIds.Contains(t.MedicoId)).ToList();
             }
         }
         catch (Exception ex)
         {
-            huboError = true;
+            errorCarga = "No se pudieron cargar los turnos: " + ex.Message;
             lista = new List<Turno>();
-            LblMensaje.ForeColor = Color.Red;
-            LblMensaje.Text = "No se pudieron cargar los turnos: " + ex.Message;
         }
 
-        DgvTurnos.SelectionChanged -= DgvTurnos_SelectionChanged;
-        DgvTurnos.DataSource = lista;
-        DgvTurnos.ClearSelection();
-        DgvTurnos.SelectionChanged += DgvTurnos_SelectionChanged;
+        bool anterior = _cargando;
+        _cargando = true;
+        bool reseleccionado = false;
+        try
+        {
+            DgvTurnos.SelectionChanged -= DgvTurnos_SelectionChanged;
+            DgvTurnos.DataSource = lista;
+
+            // Medico y fecha solo son columna cuando el filtro no los fija (si no,
+            // serian iguales en todas las filas y ya figuran en el resumen de arriba).
+            DgvTurnos.Columns["colMedico"]!.Visible = ChkTodosMedicos.Checked;
+            DgvTurnos.Columns["colFecha"]!.Visible = !ChkFiltrarFecha.Checked;
+            DgvTurnos.ClearSelection();
+
+            // Si se estaba reprogramando un turno y sigue en la lista, queda elegido.
+            if (idPrevio != null)
+            {
+                foreach (DataGridViewRow fila in DgvTurnos.Rows)
+                {
+                    if (fila.DataBoundItem is Turno t && t.Id == idPrevio)
+                    {
+                        fila.Selected = true;
+                        DgvTurnos.CurrentCell = fila.Cells.Cast<DataGridViewCell>().First(c => c.Visible);
+                        reseleccionado = true;
+                        break;
+                    }
+                }
+            }
+            DgvTurnos.SelectionChanged += DgvTurnos_SelectionChanged;
+        }
+        finally
+        {
+            _cargando = anterior;
+        }
 
         ActualizarContadores(lista);
 
-        if (!huboError && !esRecepcionista && lista.Count == 0 &&
-            (medicoFiltro != null || fechaFiltro != null || pacienteFiltro != null))
+        // Resumen de lo que muestra la tabla ahora (los filtros aplicados).
+        if (errorCarga != null)
         {
-            LblMensaje.ForeColor = Color.DarkOrange;
-            LblMensaje.Text = "No existen resultados asociados a la busqueda realizada.";
+            LblVista.ForeColor = ColorError;
+            LblVista.Text = errorCarga;
+        }
+        else
+        {
+            string textoMedico = medicoFiltro != null
+                ? ((Medico)CboMedico.SelectedItem!).NombreCompleto
+                : (EsRecepcionista ? "todos sus médicos" : "todos los médicos");
+            string textoFecha = fechaFiltro != null ? fechaFiltro.Value.ToString("dd/MM/yyyy") : "todas las fechas";
+            string cancelados = ChkMostrarCancelados.Checked ? " · incluye cancelados" : "";
+            LblVista.ForeColor = ColorSecundario;
+            LblVista.Text = $"Mostrando: {textoMedico} · {textoFecha} · {textoPaciente}{cancelados}";
+        }
+        AcotarEtiquetas();
+
+        if (idPrevio != null && !reseleccionado)
+        {
+            SalirDeEdicion(false);
+            ActualizarHorarios();
+        }
+        else
+        {
+            ActualizarModo();
+            ActualizarAcciones();
         }
     }
 
-    // Arma la franja de contadores entre el formulario y la grilla. Se crea
-    // aca (y no en InitializeComponent) para que el disenador no la borre.
+    // Arma la franja de contadores. Se crea aca (y no en InitializeComponent)
+    // para que el disenador no la borre.
     private void ConfigurarBarraContadores()
     {
-        var barra = new FlowLayoutPanel
-        {
-            Name = "pnlContadores",
-            Dock = DockStyle.Top,
-            Height = 36,
-            BackColor = Color.FromArgb(245, 246, 250),
-            Padding = new Padding(14, 4, 0, 0),
-            WrapContents = false,
-            AutoScroll = false
-        };
-
-        AgregarContador(barra, ContTotal, Color.FromArgb(27, 42, 74), Color.White);
-        AgregarContador(barra, ContPendientes, PaletaEstados.Fondo(EstadoTurno.Pendiente), PaletaEstados.Acento(EstadoTurno.Pendiente));
-        AgregarContador(barra, ContConfirmados, PaletaEstados.Fondo(EstadoTurno.Confirmado), PaletaEstados.Acento(EstadoTurno.Confirmado));
-        AgregarContador(barra, ContAtendidos, PaletaEstados.Fondo(EstadoTurno.Asistio), Color.FromArgb(28, 120, 66));
-        AgregarContador(barra, ContAusentes, PaletaEstados.Fondo(EstadoTurno.Ausente), Color.FromArgb(180, 50, 38));
-        AgregarContador(barra, ContCancelados, PaletaEstados.Fondo(EstadoTurno.Cancelado), Color.FromArgb(90, 98, 112));
-
-        // Debajo del formulario y antes del panel de agenda/grilla en el
-        // orden de acople: queda a todo el ancho entre ambos.
-        Controls.Add(barra);
-        Controls.SetChildIndex(barra, Controls.GetChildIndex(pnlFormulario));
+        AgregarContador(ContTotal, Color.FromArgb(27, 42, 74), Color.White);
+        AgregarContador(ContPendientes, PaletaEstados.Fondo(EstadoTurno.Pendiente), PaletaEstados.Acento(EstadoTurno.Pendiente));
+        AgregarContador(ContConfirmados, PaletaEstados.Fondo(EstadoTurno.Confirmado), PaletaEstados.Acento(EstadoTurno.Confirmado));
+        AgregarContador(ContAtendidos, PaletaEstados.Fondo(EstadoTurno.Asistio), Color.FromArgb(28, 120, 66));
+        AgregarContador(ContAusentes, PaletaEstados.Fondo(EstadoTurno.Ausente), Color.FromArgb(180, 50, 38));
+        AgregarContador(ContCancelados, PaletaEstados.Fondo(EstadoTurno.Cancelado), Color.FromArgb(90, 98, 112));
         ActualizarContadores(new List<Turno>());
     }
 
-    private void AgregarContador(FlowLayoutPanel barra, string clave, Color fondo, Color texto)
+    private void AgregarContador(string clave, Color fondo, Color texto)
     {
         var etiqueta = new Label
         {
             AutoSize = true,
-            Font = new Font("Segoe UI", 9.5F, FontStyle.Bold),
+            Font = new Font("Segoe UI", 9F, FontStyle.Bold),
             BackColor = fondo,
             ForeColor = texto,
-            Margin = new Padding(0, 0, 8, 0),
-            Padding = new Padding(10, 5, 10, 5),
+            Margin = new Padding(0, 0, EscalaDpi.Px(this, 6), EscalaDpi.Px(this, 4)),
+            Padding = new Padding(EscalaDpi.Px(this, 8), EscalaDpi.Px(this, 4), EscalaDpi.Px(this, 8), EscalaDpi.Px(this, 4)),
             Name = "lblContador" + clave
         };
         _contadores[clave] = etiqueta;
-        barra.Controls.Add(etiqueta);
+        FlpContadores.Controls.Add(etiqueta);
     }
 
     // Cuenta sobre lo que muestra la grilla (con los filtros ya aplicados).
@@ -415,7 +1035,17 @@ public partial class FormTurnos : Form
 
         string columna = DgvTurnos.Columns[e.ColumnIndex].Name;
 
-        if (columna == "colEstado")
+        if (columna == "colMedico")
+        {
+            // Sin la especialidad para ahorrar ancho; el nombre completo queda en el tooltip.
+            if (turno.Medico != null)
+            {
+                e.Value = $"{turno.Medico.Apellido}, {turno.Medico.Nombre}";
+                e.FormattingApplied = true;
+                DgvTurnos.Rows[e.RowIndex].Cells[e.ColumnIndex].ToolTipText = turno.MedicoNombre;
+            }
+        }
+        else if (columna == "colEstado")
         {
             e.Value = PaletaEstados.Texto(turno.Estado);
             e.FormattingApplied = true;
@@ -432,106 +1062,73 @@ public partial class FormTurnos : Form
         }
     }
 
-    private void BtnAsignar_Click(object sender, EventArgs e)
+    // ----------------------------------------------------- mensajes y estilo
+
+    private void MostrarMensaje(string texto, Color color)
     {
-        if (CboPaciente.SelectedItem == null || CboMedico.SelectedItem == null ||
-            CboHorario.SelectedItem == null || CboDuracion.SelectedItem == null)
-        {
-            LblMensaje.ForeColor = Color.Red;
-            LblMensaje.Text = "Debe seleccionar paciente, medico, duracion y horario.";
-            return;
-        }
-
-        try
-        {
-            var paciente = (Paciente)CboPaciente.SelectedItem;
-            var medico = (Medico)CboMedico.SelectedItem;
-            var horario = (Horario)CboHorario.SelectedItem;
-            var fecha = DateOnly.FromDateTime(DtpFecha.Value);
-            int duracion = (int)CboDuracion.SelectedItem;
-
-            _turnoService.AsignarTurno(paciente, medico, fecha, horario.HoraInicio, duracion);
-
-            CargarGrilla();
-            LimpiarSeleccion();
-            ActualizarAgenda();
-            LblMensaje.ForeColor = Color.Green;
-            LblMensaje.Text = "Turno Agendado. " + _notificacionService.AvisarTurno(
-                paciente, "Confirmacion", $"{fecha:dd/MM/yyyy} {horario.Rango} con {medico.NombreCompleto}");
-        }
-        catch (Exception ex)
-        {
-            LblMensaje.ForeColor = Color.Red;
-            LblMensaje.Text = ex.Message;
-        }
+        LblMensaje.ForeColor = color;
+        LblMensaje.Text = texto;
+        pnlEstado.Visible = !string.IsNullOrEmpty(texto);
+        AjustarMensaje();
     }
 
-    private void BtnCancelar_Click(object sender, EventArgs e)
+    private void LimpiarMensaje() => MostrarMensaje("", ColorOk);
+
+    // La franja de mensajes crece con el texto (varias lineas si hace falta).
+    private void AjustarMensaje()
     {
-        if (DgvTurnos.CurrentRow == null)
-        {
-            LblMensaje.ForeColor = Color.Red;
-            LblMensaje.Text = "Seleccione un turno de la lista primero.";
-            return;
-        }
+        if (!pnlEstado.Visible || string.IsNullOrEmpty(LblMensaje.Text)) return;
 
-        var turnoSeleccionado = (Turno)DgvTurnos.CurrentRow.DataBoundItem;
+        int ancho = pnlEstado.ClientSize.Width - pnlEstado.Padding.Horizontal;
+        if (ancho <= 0) return;
 
-        var respuesta = MessageBox.Show(
-            $"Esta seguro que desea cancelar el turno de {turnoSeleccionado.PacienteNombre} el {turnoSeleccionado.Fecha:dd/MM/yyyy}?",
-            "Confirmar cancelacion", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-
-        if (respuesta != DialogResult.Yes)
-            return;
-
-        try
-        {
-            _turnoService.CancelarTurno(turnoSeleccionado.Id);
-            CargarGrilla();
-            LimpiarSeleccion();
-            ActualizarAgenda();
-            LblMensaje.ForeColor = Color.Green;
-            LblMensaje.Text = "Turno eliminado. " + (turnoSeleccionado.Paciente != null
-                ? _notificacionService.AvisarTurno(turnoSeleccionado.Paciente, "Cancelacion", $"{turnoSeleccionado.Fecha:dd/MM/yyyy} {turnoSeleccionado.HorarioRango}")
-                : "");
-        }
-        catch (Exception ex)
-        {
-            LblMensaje.ForeColor = Color.Red;
-            LblMensaje.Text = ex.Message;
-        }
+        int alto = TextRenderer.MeasureText(LblMensaje.Text, LblMensaje.Font,
+            new Size(ancho, int.MaxValue), TextFormatFlags.WordBreak).Height;
+        int deseado = alto + pnlEstado.Padding.Vertical + EscalaDpi.Px(this, 4);
+        if (pnlEstado.Height != deseado) pnlEstado.Height = deseado;
     }
 
-    private void BtnConfirmarAsistencia_Click(object sender, EventArgs e)
+    // Limita el ancho de los textos que pueden ocupar varias lineas al de su contenedor.
+    private void AcotarEtiquetas()
     {
-        if (DgvTurnos.CurrentRow == null)
-        {
-            LblMensaje.ForeColor = Color.Red;
-            LblMensaje.Text = "Seleccione un turno de la lista primero";
-            return;
-        }
+        Acotar(LblModo, tlpNuevoTurno);
+        Acotar(LblAviso, tlpHorarios);
+        Acotar(LblVista, tlpToolbar);
+        Acotar(LblSeleccion, tlpAcciones);
+        Acotar(LblAyudaAcciones, tlpAcciones);
+        AjustarFlujos();
+        AjustarMensaje();
+    }
 
-        var turno = (Turno)DgvTurnos.CurrentRow.DataBoundItem;
+    private static void Acotar(Label etiqueta, Control contenedor)
+    {
+        int ancho = contenedor.ClientSize.Width;
+        if (ancho <= 0) return;
 
-        var dialogo = new FormConfirmarAsistencia(turno);
+        var maximo = new Size(ancho, 0);
+        if (etiqueta.MaximumSize != maximo) etiqueta.MaximumSize = maximo;
+    }
 
-        if (dialogo.ShowDialog() != DialogResult.OK)
-        {
-            return;
-        }
+    // Botones planos de color: cuando se deshabilitan pasan a un gris uniforme.
+    private void ConfigurarEstiloBotones()
+    {
+        EstilizarBoton(BtnAsignar);
+        EstilizarBoton(BtnModificar);
+        EstilizarBoton(BtnCancelar);
+        EstilizarBoton(BtnConfirmarAsistencia);
+        BtnLimpiar.Cursor = Cursors.Hand;
+    }
 
-        try
+    private static void EstilizarBoton(Button boton)
+    {
+        Color colorActivo = boton.BackColor;
+        void Aplicar()
         {
-            _turnoService.ConfirmarAsistencia(turno.Id, dialogo.Asistio, dialogo.MedioPagoSeleccionado, dialogo.MontoSeleccionado);
-            CargarGrilla();
-            ActualizarAgenda();
-            LblMensaje.ForeColor = Color.Green;
-            LblMensaje.Text = "Asistencia confirmada.";
+            boton.BackColor = boton.Enabled ? colorActivo : Color.FromArgb(226, 230, 237);
+            boton.ForeColor = boton.Enabled ? Color.White : Color.FromArgb(140, 148, 160);
+            boton.Cursor = boton.Enabled ? Cursors.Hand : Cursors.Default;
         }
-        catch (Exception ex)
-        {
-            LblMensaje.ForeColor = Color.Red;
-            LblMensaje.Text = ex.Message;
-        }
+        boton.EnabledChanged += (s, e) => Aplicar();
+        Aplicar();
     }
 }
