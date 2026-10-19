@@ -16,3 +16,6 @@ docs/referencia/
 # Connection string local de cada desarrollador - NUNCA se sube (cada uno
 # tiene su propia instancia de SQL Server). Ver appsettings.example.json.
 appsettings.Local.json
+
+# Credenciales locales de prueba: no versionar
+credenciales.txt
