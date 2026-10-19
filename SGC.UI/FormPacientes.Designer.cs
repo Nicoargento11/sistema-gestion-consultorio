@@ -15,294 +15,745 @@ partial class FormPacientes
 
     private void InitializeComponent()
     {
-        pnlFormulario = new Panel();
-        CboObraSocial = new ComboBox();
-        lblObraSocial = new Label();
-        DtpFechaNacimiento = new DateTimePicker();
-        lblFechaNacimiento = new Label();
-        LblMensaje = new Label();
+        pnlDerecho = new Panel();
+        tlpDerecho = new TableLayoutPanel();
+        pnlMarcoToolbar = new Panel();
+        pnlToolbar = new Panel();
+        tlpToolbar = new TableLayoutPanel();
+        LblVista = new Label();
+        flpFiltros = new FlowLayoutPanel();
+        lblBuscar = new Label();
+        TxtBuscar = new TextBox();
+        ChkSoloAusencias = new CheckBox();
+        FlpContadores = new FlowLayoutPanel();
+        pnlMarcoGrilla = new Panel();
+        DgvPacientes = new DataGridView();
+        pnlMarcoAcciones = new Panel();
+        pnlAcciones = new Panel();
+        tlpAcciones = new TableLayoutPanel();
+        LblSeleccion = new Label();
+        flpBotonesAccion = new FlowLayoutPanel();
         BtnEliminar = new Button();
-        BtnGuardar = new Button();
-        BtnNuevo = new Button();
-        TxtTelefono = new TextBox();
-        lblTelefono = new Label();
-        TxtEmail = new TextBox();
-        lblEmail = new Label();
-        TxtDni = new TextBox();
-        lblDni = new Label();
-        TxtApellido = new TextBox();
+        LblAyudaAcciones = new Label();
+        LblDetalle = new Label();
+        pnlIzquierdo = new Panel();
+        pnlMarcoTarjeta = new Panel();
+        pnlTarjeta = new Panel();
+        tlpTarjeta = new TableLayoutPanel();
+        lblTituloTarjeta = new Label();
+        LblModo = new Label();
+        lblGrupoPersonales = new Label();
+        lblNombre = new Label();
         lblApellido = new Label();
         TxtNombre = new TextBox();
-        lblNombre = new Label();
-        DgvPacientes = new DataGridView();
-        pnlFormulario.SuspendLayout();
+        TxtApellido = new TextBox();
+        lblDni = new Label();
+        lblFechaNacimiento = new Label();
+        TxtDni = new TextBox();
+        DtpFechaNacimiento = new DateTimePicker();
+        lblGrupoContacto = new Label();
+        lblEmail = new Label();
+        TxtEmail = new TextBox();
+        lblTelefono = new Label();
+        TxtTelefono = new TextBox();
+        lblGrupoCobertura = new Label();
+        lblObraSocial = new Label();
+        CboObraSocial = new ComboBox();
+        tlpBotonesTarjeta = new TableLayoutPanel();
+        BtnGuardar = new Button();
+        BtnNuevo = new Button();
+        pnlEstado = new Panel();
+        LblMensaje = new Label();
+        pnlDerecho.SuspendLayout();
+        tlpDerecho.SuspendLayout();
+        pnlMarcoToolbar.SuspendLayout();
+        pnlToolbar.SuspendLayout();
+        tlpToolbar.SuspendLayout();
+        flpFiltros.SuspendLayout();
+        FlpContadores.SuspendLayout();
+        pnlMarcoGrilla.SuspendLayout();
         ((System.ComponentModel.ISupportInitialize)DgvPacientes).BeginInit();
+        pnlMarcoAcciones.SuspendLayout();
+        pnlAcciones.SuspendLayout();
+        tlpAcciones.SuspendLayout();
+        flpBotonesAccion.SuspendLayout();
+        pnlIzquierdo.SuspendLayout();
+        pnlMarcoTarjeta.SuspendLayout();
+        pnlTarjeta.SuspendLayout();
+        tlpTarjeta.SuspendLayout();
+        tlpBotonesTarjeta.SuspendLayout();
+        pnlEstado.SuspendLayout();
         SuspendLayout();
-        // 
-        // pnlFormulario
-        // 
-        pnlFormulario.BackColor = Color.FromArgb(245, 246, 250);
-        pnlFormulario.Controls.Add(CboObraSocial);
-        pnlFormulario.Controls.Add(lblObraSocial);
-        pnlFormulario.Controls.Add(DtpFechaNacimiento);
-        pnlFormulario.Controls.Add(lblFechaNacimiento);
-        pnlFormulario.Controls.Add(LblMensaje);
-        pnlFormulario.Controls.Add(BtnEliminar);
-        pnlFormulario.Controls.Add(BtnGuardar);
-        pnlFormulario.Controls.Add(BtnNuevo);
-        pnlFormulario.Controls.Add(TxtTelefono);
-        pnlFormulario.Controls.Add(lblTelefono);
-        pnlFormulario.Controls.Add(TxtEmail);
-        pnlFormulario.Controls.Add(lblEmail);
-        pnlFormulario.Controls.Add(TxtDni);
-        pnlFormulario.Controls.Add(lblDni);
-        pnlFormulario.Controls.Add(TxtApellido);
-        pnlFormulario.Controls.Add(lblApellido);
-        pnlFormulario.Controls.Add(TxtNombre);
-        pnlFormulario.Controls.Add(lblNombre);
-        pnlFormulario.Dock = DockStyle.Top;
-        pnlFormulario.Location = new Point(0, 0);
-        pnlFormulario.Name = "pnlFormulario";
-        pnlFormulario.Size = new Size(1000, 260);
-        pnlFormulario.TabIndex = 1;
-        // 
-        // LblMensaje
-        // 
-        LblMensaje.AutoSize = true;
-        LblMensaje.Font = new Font("Segoe UI", 9F);
-        LblMensaje.Location = new Point(500, 175);
-        LblMensaje.MaximumSize = new Size(400, 0);
-        LblMensaje.Name = "LblMensaje";
-        LblMensaje.Size = new Size(0, 25);
-        LblMensaje.TabIndex = 0;
         //
-        // lblFechaNacimiento
+        // pnlDerecho
         //
-        lblFechaNacimiento.AutoSize = true;
-        lblFechaNacimiento.Font = new Font("Segoe UI", 9F);
-        lblFechaNacimiento.Location = new Point(20, 145);
-        lblFechaNacimiento.Name = "lblFechaNacimiento";
-        lblFechaNacimiento.Text = "Fecha de nacimiento";
+        pnlDerecho.Controls.Add(tlpDerecho);
+        pnlDerecho.Dock = DockStyle.Fill;
+        pnlDerecho.Padding = new Padding(0);
+        pnlDerecho.TabIndex = 1;
+        pnlDerecho.Name = "pnlDerecho";
         //
-        // DtpFechaNacimiento
+        // tlpDerecho
         //
-        DtpFechaNacimiento.Font = new Font("Segoe UI", 10F);
-        DtpFechaNacimiento.Format = DateTimePickerFormat.Short;
-        DtpFechaNacimiento.Location = new Point(20, 168);
-        DtpFechaNacimiento.MaxDate = DateTime.Today;
-        DtpFechaNacimiento.Name = "DtpFechaNacimiento";
-        DtpFechaNacimiento.Size = new Size(180, 34);
-        DtpFechaNacimiento.TabIndex = 8;
+        tlpDerecho.Controls.Add(pnlMarcoToolbar, 0, 0);
+        tlpDerecho.Controls.Add(FlpContadores, 0, 1);
+        tlpDerecho.Controls.Add(pnlMarcoGrilla, 0, 2);
+        tlpDerecho.Controls.Add(pnlMarcoAcciones, 0, 3);
+        tlpDerecho.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+        tlpDerecho.RowCount = 4;
+        tlpDerecho.RowStyles.Add(new RowStyle());
+        tlpDerecho.RowStyles.Add(new RowStyle());
+        tlpDerecho.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+        tlpDerecho.RowStyles.Add(new RowStyle());
+        tlpDerecho.ColumnCount = 1;
+        tlpDerecho.Dock = DockStyle.Fill;
+        tlpDerecho.TabIndex = 0;
+        tlpDerecho.Name = "tlpDerecho";
         //
-        // lblObraSocial
+        // pnlMarcoToolbar
         //
-        lblObraSocial.AutoSize = true;
-        lblObraSocial.Font = new Font("Segoe UI", 9F);
-        lblObraSocial.Location = new Point(220, 145);
-        lblObraSocial.Name = "lblObraSocial";
-        lblObraSocial.Text = "Obra social (vacio = Particular)";
+        pnlMarcoToolbar.Controls.Add(pnlToolbar);
+        pnlMarcoToolbar.AutoSize = true;
+        pnlMarcoToolbar.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+        pnlMarcoToolbar.BackColor = Color.FromArgb(214, 220, 230);
+        pnlMarcoToolbar.Dock = DockStyle.Fill;
+        pnlMarcoToolbar.Margin = new Padding(0, 0, 0, 8);
+        pnlMarcoToolbar.Padding = new Padding(1);
+        pnlMarcoToolbar.TabIndex = 0;
+        pnlMarcoToolbar.Name = "pnlMarcoToolbar";
         //
-        // CboObraSocial
+        // pnlToolbar
         //
-        CboObraSocial.DropDownStyle = ComboBoxStyle.DropDownList;
-        CboObraSocial.Font = new Font("Segoe UI", 10F);
-        CboObraSocial.Location = new Point(220, 168);
-        CboObraSocial.Name = "CboObraSocial";
-        CboObraSocial.Size = new Size(260, 34);
-        CboObraSocial.TabIndex = 9;
+        pnlToolbar.Controls.Add(tlpToolbar);
+        pnlToolbar.AutoSize = true;
+        pnlToolbar.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+        pnlToolbar.BackColor = Color.White;
+        pnlToolbar.Dock = DockStyle.Fill;
+        pnlToolbar.Padding = new Padding(14, 8, 14, 6);
+        pnlToolbar.TabIndex = 0;
+        pnlToolbar.Name = "pnlToolbar";
+        //
+        // tlpToolbar
+        //
+        tlpToolbar.Controls.Add(LblVista, 0, 0);
+        tlpToolbar.Controls.Add(flpFiltros, 0, 1);
+        tlpToolbar.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+        tlpToolbar.RowCount = 2;
+        tlpToolbar.RowStyles.Add(new RowStyle());
+        tlpToolbar.RowStyles.Add(new RowStyle());
+        tlpToolbar.ColumnCount = 1;
+        tlpToolbar.AutoSize = true;
+        tlpToolbar.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+        tlpToolbar.Dock = DockStyle.Fill;
+        tlpToolbar.TabIndex = 0;
+        tlpToolbar.Name = "tlpToolbar";
+        //
+        // LblVista
+        //
+        LblVista.AutoSize = true;
+        LblVista.Font = new Font("Segoe UI", 9F);
+        LblVista.ForeColor = Color.FromArgb(110, 120, 135);
+        LblVista.Margin = new Padding(0, 0, 0, 4);
+        LblVista.TabIndex = 0;
+        LblVista.Name = "LblVista";
+        //
+        // flpFiltros
+        //
+        flpFiltros.Controls.Add(lblBuscar);
+        flpFiltros.Controls.Add(TxtBuscar);
+        flpFiltros.Controls.Add(ChkSoloAusencias);
+        flpFiltros.Size = new Size(0, 30);
+        flpFiltros.Dock = DockStyle.Fill;
+        flpFiltros.Margin = new Padding(0);
+        flpFiltros.TabIndex = 1;
+        flpFiltros.Name = "flpFiltros";
+        //
+        // lblBuscar
+        //
+        lblBuscar.AutoSize = true;
+        lblBuscar.Font = new Font("Segoe UI", 9.5F);
+        lblBuscar.Margin = new Padding(0, 7, 6, 0);
+        lblBuscar.Text = "Buscar:";
+        lblBuscar.TabIndex = 0;
+        lblBuscar.Name = "lblBuscar";
+        //
+        // TxtBuscar
+        //
+        TxtBuscar.Font = new Font("Segoe UI", 9.5F);
+        TxtBuscar.Margin = new Padding(0, 3, 0, 3);
+        TxtBuscar.PlaceholderText = "Nombre, apellido o DNI";
+        TxtBuscar.Size = new Size(260, 29);
+        TxtBuscar.TabIndex = 1;
+        TxtBuscar.Name = "TxtBuscar";
+        //
+        // ChkSoloAusencias
+        //
+        ChkSoloAusencias.AutoSize = true;
+        ChkSoloAusencias.Font = new Font("Segoe UI", 9.5F);
+        ChkSoloAusencias.Margin = new Padding(18, 5, 0, 0);
+        ChkSoloAusencias.Text = "Solo con ausencias";
+        ChkSoloAusencias.UseVisualStyleBackColor = true;
+        ChkSoloAusencias.TabIndex = 2;
+        ChkSoloAusencias.Name = "ChkSoloAusencias";
+        //
+        // FlpContadores
+        //
+        FlpContadores.Size = new Size(0, 30);
+        FlpContadores.Dock = DockStyle.Fill;
+        FlpContadores.Margin = new Padding(0, 0, 0, 4);
+        FlpContadores.TabIndex = 1;
+        FlpContadores.Name = "FlpContadores";
+        //
+        // pnlMarcoGrilla
+        //
+        pnlMarcoGrilla.Controls.Add(DgvPacientes);
+        pnlMarcoGrilla.BackColor = Color.FromArgb(214, 220, 230);
+        pnlMarcoGrilla.Dock = DockStyle.Fill;
+        pnlMarcoGrilla.Margin = new Padding(0, 0, 0, 8);
+        pnlMarcoGrilla.Padding = new Padding(1);
+        pnlMarcoGrilla.TabIndex = 2;
+        pnlMarcoGrilla.Name = "pnlMarcoGrilla";
+        //
+        // DgvPacientes
+        //
+        DgvPacientes.AllowUserToAddRows = false;
+        DgvPacientes.AllowUserToDeleteRows = false;
+        DgvPacientes.AllowUserToResizeRows = false;
+        DgvPacientes.BackgroundColor = Color.White;
+        DgvPacientes.BorderStyle = BorderStyle.None;
+        DgvPacientes.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
+        DgvPacientes.ColumnHeadersHeight = 40;
+        DgvPacientes.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
+        DgvPacientes.Dock = DockStyle.Fill;
+        DgvPacientes.Font = new Font("Segoe UI", 9F);
+        DgvPacientes.MultiSelect = false;
+        DgvPacientes.ReadOnly = true;
+        DgvPacientes.RowHeadersVisible = false;
+        DgvPacientes.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+        DgvPacientes.TabIndex = 0;
+        DgvPacientes.Name = "DgvPacientes";
+        //
+        // pnlMarcoAcciones
+        //
+        pnlMarcoAcciones.Controls.Add(pnlAcciones);
+        pnlMarcoAcciones.AutoSize = true;
+        pnlMarcoAcciones.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+        pnlMarcoAcciones.BackColor = Color.FromArgb(214, 220, 230);
+        pnlMarcoAcciones.Dock = DockStyle.Fill;
+        pnlMarcoAcciones.Margin = new Padding(0);
+        pnlMarcoAcciones.Padding = new Padding(1);
+        pnlMarcoAcciones.TabIndex = 3;
+        pnlMarcoAcciones.Name = "pnlMarcoAcciones";
+        //
+        // pnlAcciones
+        //
+        pnlAcciones.Controls.Add(tlpAcciones);
+        pnlAcciones.AutoSize = true;
+        pnlAcciones.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+        pnlAcciones.BackColor = Color.White;
+        pnlAcciones.Dock = DockStyle.Fill;
+        pnlAcciones.Padding = new Padding(14, 8, 14, 8);
+        pnlAcciones.TabIndex = 0;
+        pnlAcciones.Name = "pnlAcciones";
+        //
+        // tlpAcciones
+        //
+        tlpAcciones.Controls.Add(LblSeleccion, 0, 0);
+        tlpAcciones.Controls.Add(flpBotonesAccion, 0, 1);
+        tlpAcciones.Controls.Add(LblDetalle, 0, 2);
+        tlpAcciones.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+        tlpAcciones.RowCount = 3;
+        tlpAcciones.RowStyles.Add(new RowStyle());
+        tlpAcciones.RowStyles.Add(new RowStyle());
+        tlpAcciones.RowStyles.Add(new RowStyle());
+        tlpAcciones.ColumnCount = 1;
+        tlpAcciones.AutoSize = true;
+        tlpAcciones.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+        tlpAcciones.Dock = DockStyle.Fill;
+        tlpAcciones.TabIndex = 0;
+        tlpAcciones.Name = "tlpAcciones";
+        //
+        // LblSeleccion
+        //
+        LblSeleccion.AutoSize = true;
+        LblSeleccion.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+        LblSeleccion.ForeColor = Color.FromArgb(27, 42, 74);
+        LblSeleccion.Margin = new Padding(0, 0, 0, 6);
+        LblSeleccion.TabIndex = 0;
+        LblSeleccion.Name = "LblSeleccion";
+        //
+        // flpBotonesAccion
+        //
+        flpBotonesAccion.Controls.Add(BtnEliminar);
+        flpBotonesAccion.Controls.Add(LblAyudaAcciones);
+        flpBotonesAccion.Size = new Size(0, 30);
+        flpBotonesAccion.Dock = DockStyle.Fill;
+        flpBotonesAccion.Margin = new Padding(0);
+        flpBotonesAccion.TabIndex = 1;
+        flpBotonesAccion.Name = "flpBotonesAccion";
         //
         // BtnEliminar
         //
         BtnEliminar.BackColor = Color.FromArgb(231, 76, 60);
         BtnEliminar.FlatAppearance.BorderSize = 0;
         BtnEliminar.FlatStyle = FlatStyle.Flat;
-        BtnEliminar.Font = new Font("Segoe UI", 9.5F);
+        BtnEliminar.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
         BtnEliminar.ForeColor = Color.White;
-        BtnEliminar.Location = new Point(240, 220);
-        BtnEliminar.Name = "BtnEliminar";
-        BtnEliminar.Size = new Size(100, 34);
-        BtnEliminar.TabIndex = 7;
+        BtnEliminar.Margin = new Padding(0, 0, 14, 0);
+        BtnEliminar.Size = new Size(116, 32);
         BtnEliminar.Text = "Eliminar";
         BtnEliminar.UseVisualStyleBackColor = false;
-        BtnEliminar.Click += BtnEliminar_Click;
-        // 
-        // BtnGuardar
-        // 
-        BtnGuardar.BackColor = Color.FromArgb(39, 174, 96);
-        BtnGuardar.FlatAppearance.BorderSize = 0;
-        BtnGuardar.FlatStyle = FlatStyle.Flat;
-        BtnGuardar.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
-        BtnGuardar.ForeColor = Color.White;
-        BtnGuardar.Location = new Point(130, 220);
-        BtnGuardar.Name = "BtnGuardar";
-        BtnGuardar.Size = new Size(100, 34);
-        BtnGuardar.TabIndex = 6;
-        BtnGuardar.Text = "Guardar";
-        BtnGuardar.UseVisualStyleBackColor = false;
-        BtnGuardar.Click += BtnGuardar_Click;
-        // 
-        // BtnNuevo
-        // 
-        BtnNuevo.BackColor = Color.FromArgb(46, 134, 222);
-        BtnNuevo.FlatAppearance.BorderSize = 0;
-        BtnNuevo.FlatStyle = FlatStyle.Flat;
-        BtnNuevo.Font = new Font("Segoe UI", 9.5F);
-        BtnNuevo.ForeColor = Color.White;
-        BtnNuevo.Location = new Point(20, 220);
-        BtnNuevo.Name = "BtnNuevo";
-        BtnNuevo.Size = new Size(100, 34);
-        BtnNuevo.TabIndex = 5;
-        BtnNuevo.Text = "Nuevo";
-        BtnNuevo.UseVisualStyleBackColor = false;
-        BtnNuevo.Click += BtnNuevo_Click;
-        // 
-        // TxtTelefono
-        // 
-        TxtTelefono.Font = new Font("Segoe UI", 10F);
-        TxtTelefono.Location = new Point(295, 103);
-        TxtTelefono.MaxLength = 15;
-        TxtTelefono.Name = "TxtTelefono";
-        TxtTelefono.Size = new Size(180, 34);
-        TxtTelefono.TabIndex = 4;
-        // 
-        // lblTelefono
-        // 
-        lblTelefono.AutoSize = true;
-        lblTelefono.Font = new Font("Segoe UI", 9F);
-        lblTelefono.Location = new Point(295, 80);
-        lblTelefono.Name = "lblTelefono";
-        lblTelefono.Size = new Size(79, 25);
-        lblTelefono.TabIndex = 5;
-        lblTelefono.Text = "Teléfono";
-        // 
-        // TxtEmail
-        // 
-        TxtEmail.Font = new Font("Segoe UI", 10F);
-        TxtEmail.Location = new Point(20, 103);
-        TxtEmail.Name = "TxtEmail";
-        TxtEmail.Size = new Size(260, 34);
-        TxtEmail.TabIndex = 3;
-        // 
-        // lblEmail
-        // 
-        lblEmail.AutoSize = true;
-        lblEmail.Font = new Font("Segoe UI", 9F);
-        lblEmail.Location = new Point(20, 80);
-        lblEmail.Name = "lblEmail";
-        lblEmail.Size = new Size(54, 25);
-        lblEmail.TabIndex = 7;
-        lblEmail.Text = "Email";
-        // 
-        // TxtDni
-        // 
-        TxtDni.Font = new Font("Segoe UI", 10F);
-        TxtDni.Location = new Point(410, 38);
-        TxtDni.MaxLength = 8;
-        TxtDni.Name = "TxtDni";
-        TxtDni.Size = new Size(150, 34);
-        TxtDni.TabIndex = 2;
-        // 
-        // lblDni
-        // 
-        lblDni.AutoSize = true;
-        lblDni.Font = new Font("Segoe UI", 9F);
-        lblDni.Location = new Point(410, 15);
-        lblDni.Name = "lblDni";
-        lblDni.Size = new Size(43, 25);
-        lblDni.TabIndex = 9;
-        lblDni.Text = "DNI";
-        // 
-        // TxtApellido
-        // 
-        TxtApellido.Font = new Font("Segoe UI", 10F);
-        TxtApellido.Location = new Point(215, 38);
-        TxtApellido.MaxLength = 80;
-        TxtApellido.Name = "TxtApellido";
-        TxtApellido.Size = new Size(180, 34);
-        TxtApellido.TabIndex = 1;
-        // 
-        // lblApellido
-        // 
-        lblApellido.AutoSize = true;
-        lblApellido.Font = new Font("Segoe UI", 9F);
-        lblApellido.Location = new Point(215, 15);
-        lblApellido.Name = "lblApellido";
-        lblApellido.Size = new Size(78, 25);
-        lblApellido.TabIndex = 11;
-        lblApellido.Text = "Apellido";
-        // 
-        // TxtNombre
-        // 
-        TxtNombre.Font = new Font("Segoe UI", 10F);
-        TxtNombre.Location = new Point(20, 38);
-        TxtNombre.MaxLength = 80;
-        TxtNombre.Name = "TxtNombre";
-        TxtNombre.Size = new Size(180, 34);
-        TxtNombre.TabIndex = 0;
-        // 
+        BtnEliminar.TabIndex = 0;
+        BtnEliminar.Name = "BtnEliminar";
+        //
+        // LblAyudaAcciones
+        //
+        LblAyudaAcciones.AutoSize = true;
+        LblAyudaAcciones.Font = new Font("Segoe UI", 9F, FontStyle.Italic);
+        LblAyudaAcciones.ForeColor = Color.FromArgb(110, 120, 135);
+        LblAyudaAcciones.Margin = new Padding(0, 7, 0, 0);
+        LblAyudaAcciones.Visible = false;
+        LblAyudaAcciones.TabIndex = 1;
+        LblAyudaAcciones.Name = "LblAyudaAcciones";
+        //
+        // LblDetalle
+        //
+        LblDetalle.AutoSize = true;
+        LblDetalle.Font = new Font("Segoe UI", 9.5F);
+        LblDetalle.ForeColor = Color.FromArgb(27, 42, 74);
+        LblDetalle.Margin = new Padding(0, 8, 0, 0);
+        LblDetalle.TabIndex = 2;
+        LblDetalle.Name = "LblDetalle";
+        //
+        // pnlIzquierdo
+        //
+        pnlIzquierdo.Controls.Add(pnlMarcoTarjeta);
+        pnlIzquierdo.Dock = DockStyle.Left;
+        pnlIzquierdo.Padding = new Padding(0, 0, 12, 0);
+        pnlIzquierdo.Size = new Size(312, 0);
+        pnlIzquierdo.TabIndex = 0;
+        pnlIzquierdo.Name = "pnlIzquierdo";
+        //
+        // pnlMarcoTarjeta
+        //
+        pnlMarcoTarjeta.Controls.Add(pnlTarjeta);
+        pnlMarcoTarjeta.BackColor = Color.FromArgb(214, 220, 230);
+        pnlMarcoTarjeta.Dock = DockStyle.Fill;
+        pnlMarcoTarjeta.Padding = new Padding(1);
+        pnlMarcoTarjeta.TabIndex = 0;
+        pnlMarcoTarjeta.Name = "pnlMarcoTarjeta";
+        //
+        // pnlTarjeta
+        //
+        pnlTarjeta.Controls.Add(tlpTarjeta);
+        pnlTarjeta.AutoScroll = true;
+        pnlTarjeta.BackColor = Color.White;
+        pnlTarjeta.Dock = DockStyle.Fill;
+        pnlTarjeta.Padding = new Padding(16, 14, 16, 14);
+        pnlTarjeta.TabIndex = 0;
+        pnlTarjeta.Name = "pnlTarjeta";
+        //
+        // tlpTarjeta
+        //
+        tlpTarjeta.Controls.Add(lblTituloTarjeta, 0, 0);
+        tlpTarjeta.Controls.Add(LblModo, 0, 1);
+        tlpTarjeta.Controls.Add(lblGrupoPersonales, 0, 2);
+        tlpTarjeta.Controls.Add(lblNombre, 0, 3);
+        tlpTarjeta.Controls.Add(lblApellido, 1, 3);
+        tlpTarjeta.Controls.Add(TxtNombre, 0, 4);
+        tlpTarjeta.Controls.Add(TxtApellido, 1, 4);
+        tlpTarjeta.Controls.Add(lblDni, 0, 5);
+        tlpTarjeta.Controls.Add(lblFechaNacimiento, 1, 5);
+        tlpTarjeta.Controls.Add(TxtDni, 0, 6);
+        tlpTarjeta.Controls.Add(DtpFechaNacimiento, 1, 6);
+        tlpTarjeta.Controls.Add(lblGrupoContacto, 0, 7);
+        tlpTarjeta.Controls.Add(lblEmail, 0, 8);
+        tlpTarjeta.Controls.Add(TxtEmail, 0, 9);
+        tlpTarjeta.Controls.Add(lblTelefono, 0, 10);
+        tlpTarjeta.Controls.Add(TxtTelefono, 0, 11);
+        tlpTarjeta.Controls.Add(lblGrupoCobertura, 0, 12);
+        tlpTarjeta.Controls.Add(lblObraSocial, 0, 13);
+        tlpTarjeta.Controls.Add(CboObraSocial, 0, 14);
+        tlpTarjeta.Controls.Add(tlpBotonesTarjeta, 0, 15);
+        tlpTarjeta.SetColumnSpan(lblTituloTarjeta, 2);
+        tlpTarjeta.SetColumnSpan(LblModo, 2);
+        tlpTarjeta.SetColumnSpan(lblGrupoPersonales, 2);
+        tlpTarjeta.SetColumnSpan(lblGrupoContacto, 2);
+        tlpTarjeta.SetColumnSpan(lblEmail, 2);
+        tlpTarjeta.SetColumnSpan(TxtEmail, 2);
+        tlpTarjeta.SetColumnSpan(lblTelefono, 2);
+        tlpTarjeta.SetColumnSpan(TxtTelefono, 2);
+        tlpTarjeta.SetColumnSpan(lblGrupoCobertura, 2);
+        tlpTarjeta.SetColumnSpan(lblObraSocial, 2);
+        tlpTarjeta.SetColumnSpan(CboObraSocial, 2);
+        tlpTarjeta.SetColumnSpan(tlpBotonesTarjeta, 2);
+        tlpTarjeta.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+        tlpTarjeta.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+        tlpTarjeta.RowCount = 16;
+        tlpTarjeta.RowStyles.Add(new RowStyle());
+        tlpTarjeta.RowStyles.Add(new RowStyle());
+        tlpTarjeta.RowStyles.Add(new RowStyle());
+        tlpTarjeta.RowStyles.Add(new RowStyle());
+        tlpTarjeta.RowStyles.Add(new RowStyle());
+        tlpTarjeta.RowStyles.Add(new RowStyle());
+        tlpTarjeta.RowStyles.Add(new RowStyle());
+        tlpTarjeta.RowStyles.Add(new RowStyle());
+        tlpTarjeta.RowStyles.Add(new RowStyle());
+        tlpTarjeta.RowStyles.Add(new RowStyle());
+        tlpTarjeta.RowStyles.Add(new RowStyle());
+        tlpTarjeta.RowStyles.Add(new RowStyle());
+        tlpTarjeta.RowStyles.Add(new RowStyle());
+        tlpTarjeta.RowStyles.Add(new RowStyle());
+        tlpTarjeta.RowStyles.Add(new RowStyle());
+        tlpTarjeta.RowStyles.Add(new RowStyle());
+        tlpTarjeta.ColumnCount = 2;
+        tlpTarjeta.AutoSize = true;
+        tlpTarjeta.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+        tlpTarjeta.Dock = DockStyle.Top;
+        tlpTarjeta.TabIndex = 0;
+        tlpTarjeta.Name = "tlpTarjeta";
+        //
+        // lblTituloTarjeta
+        //
+        lblTituloTarjeta.AutoSize = true;
+        lblTituloTarjeta.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
+        lblTituloTarjeta.ForeColor = Color.FromArgb(27, 42, 74);
+        lblTituloTarjeta.Margin = new Padding(0, 0, 0, 4);
+        lblTituloTarjeta.Text = "NUEVO PACIENTE";
+        lblTituloTarjeta.TabIndex = 0;
+        lblTituloTarjeta.Name = "lblTituloTarjeta";
+        //
+        // LblModo
+        //
+        LblModo.AutoSize = true;
+        LblModo.Font = new Font("Segoe UI", 9F);
+        LblModo.ForeColor = Color.FromArgb(176, 96, 0);
+        LblModo.Margin = new Padding(0, 0, 0, 4);
+        LblModo.Visible = false;
+        LblModo.TabIndex = 1;
+        LblModo.Name = "LblModo";
+        //
+        // lblGrupoPersonales
+        //
+        lblGrupoPersonales.AutoSize = true;
+        lblGrupoPersonales.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+        lblGrupoPersonales.ForeColor = Color.FromArgb(27, 42, 74);
+        lblGrupoPersonales.Margin = new Padding(0, 10, 0, 3);
+        lblGrupoPersonales.Text = "1. Datos personales";
+        lblGrupoPersonales.TabIndex = 2;
+        lblGrupoPersonales.Name = "lblGrupoPersonales";
+        //
         // lblNombre
-        // 
+        //
         lblNombre.AutoSize = true;
         lblNombre.Font = new Font("Segoe UI", 9F);
-        lblNombre.Location = new Point(20, 15);
-        lblNombre.Name = "lblNombre";
-        lblNombre.Size = new Size(78, 25);
-        lblNombre.TabIndex = 13;
+        lblNombre.ForeColor = Color.FromArgb(110, 120, 135);
+        lblNombre.Margin = new Padding(0, 2, 8, 2);
         lblNombre.Text = "Nombre";
-        // 
-        // DgvPacientes
-        // 
-        DgvPacientes.AllowUserToAddRows = false;
-        DgvPacientes.BackgroundColor = Color.White;
-        DgvPacientes.ColumnHeadersHeight = 34;
-        DgvPacientes.Dock = DockStyle.Fill;
-        DgvPacientes.Font = new Font("Segoe UI", 9.5F);
-        DgvPacientes.Location = new Point(0, 260);
-        DgvPacientes.MultiSelect = false;
-        DgvPacientes.Name = "DgvPacientes";
-        DgvPacientes.ReadOnly = true;
-        DgvPacientes.RowHeadersWidth = 62;
-        DgvPacientes.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-        DgvPacientes.Size = new Size(1000, 410);
-        DgvPacientes.TabIndex = 0;
-        DgvPacientes.CellContentClick += DgvPacientes_CellContentClick;
-        DgvPacientes.SelectionChanged += DgvPacientes_SelectionChanged;
-        // 
+        lblNombre.TabIndex = 3;
+        lblNombre.Name = "lblNombre";
+        //
+        // lblApellido
+        //
+        lblApellido.AutoSize = true;
+        lblApellido.Font = new Font("Segoe UI", 9F);
+        lblApellido.ForeColor = Color.FromArgb(110, 120, 135);
+        lblApellido.Margin = new Padding(0, 2, 0, 2);
+        lblApellido.Text = "Apellido";
+        lblApellido.TabIndex = 4;
+        lblApellido.Name = "lblApellido";
+        //
+        // TxtNombre
+        //
+        TxtNombre.Dock = DockStyle.Fill;
+        TxtNombre.Font = new Font("Segoe UI", 10F);
+        TxtNombre.Margin = new Padding(0, 0, 8, 4);
+        TxtNombre.MaxLength = 80;
+        TxtNombre.TabIndex = 5;
+        TxtNombre.Name = "TxtNombre";
+        //
+        // TxtApellido
+        //
+        TxtApellido.Dock = DockStyle.Fill;
+        TxtApellido.Font = new Font("Segoe UI", 10F);
+        TxtApellido.Margin = new Padding(0, 0, 0, 4);
+        TxtApellido.MaxLength = 80;
+        TxtApellido.TabIndex = 6;
+        TxtApellido.Name = "TxtApellido";
+        //
+        // lblDni
+        //
+        lblDni.AutoSize = true;
+        lblDni.Font = new Font("Segoe UI", 9F);
+        lblDni.ForeColor = Color.FromArgb(110, 120, 135);
+        lblDni.Margin = new Padding(0, 6, 8, 2);
+        lblDni.Text = "DNI";
+        lblDni.TabIndex = 7;
+        lblDni.Name = "lblDni";
+        //
+        // lblFechaNacimiento
+        //
+        lblFechaNacimiento.AutoSize = true;
+        lblFechaNacimiento.Font = new Font("Segoe UI", 9F);
+        lblFechaNacimiento.ForeColor = Color.FromArgb(110, 120, 135);
+        lblFechaNacimiento.Margin = new Padding(0, 6, 0, 2);
+        lblFechaNacimiento.Text = "Nacimiento";
+        lblFechaNacimiento.TabIndex = 8;
+        lblFechaNacimiento.Name = "lblFechaNacimiento";
+        //
+        // TxtDni
+        //
+        TxtDni.Dock = DockStyle.Fill;
+        TxtDni.Font = new Font("Segoe UI", 10F);
+        TxtDni.Margin = new Padding(0, 0, 8, 4);
+        TxtDni.MaxLength = 8;
+        TxtDni.TabIndex = 9;
+        TxtDni.Name = "TxtDni";
+        //
+        // DtpFechaNacimiento
+        //
+        DtpFechaNacimiento.Dock = DockStyle.Fill;
+        DtpFechaNacimiento.Format = DateTimePickerFormat.Custom;
+        DtpFechaNacimiento.CustomFormat = "dd/MM/yyyy";
+        DtpFechaNacimiento.Font = new Font("Segoe UI", 10F);
+        DtpFechaNacimiento.Margin = new Padding(0, 0, 0, 4);
+        DtpFechaNacimiento.TabIndex = 10;
+        DtpFechaNacimiento.Name = "DtpFechaNacimiento";
+        //
+        // lblGrupoContacto
+        //
+        lblGrupoContacto.AutoSize = true;
+        lblGrupoContacto.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+        lblGrupoContacto.ForeColor = Color.FromArgb(27, 42, 74);
+        lblGrupoContacto.Margin = new Padding(0, 10, 0, 3);
+        lblGrupoContacto.Text = "2. Contacto";
+        lblGrupoContacto.TabIndex = 11;
+        lblGrupoContacto.Name = "lblGrupoContacto";
+        //
+        // lblEmail
+        //
+        lblEmail.AutoSize = true;
+        lblEmail.Font = new Font("Segoe UI", 9F);
+        lblEmail.ForeColor = Color.FromArgb(110, 120, 135);
+        lblEmail.Margin = new Padding(0, 2, 0, 2);
+        lblEmail.Text = "Email";
+        lblEmail.TabIndex = 12;
+        lblEmail.Name = "lblEmail";
+        //
+        // TxtEmail
+        //
+        TxtEmail.Dock = DockStyle.Fill;
+        TxtEmail.Font = new Font("Segoe UI", 10F);
+        TxtEmail.Margin = new Padding(0, 0, 0, 4);
+        TxtEmail.TabIndex = 13;
+        TxtEmail.Name = "TxtEmail";
+        //
+        // lblTelefono
+        //
+        lblTelefono.AutoSize = true;
+        lblTelefono.Font = new Font("Segoe UI", 9F);
+        lblTelefono.ForeColor = Color.FromArgb(110, 120, 135);
+        lblTelefono.Margin = new Padding(0, 6, 0, 2);
+        lblTelefono.Text = "Teléfono";
+        lblTelefono.TabIndex = 14;
+        lblTelefono.Name = "lblTelefono";
+        //
+        // TxtTelefono
+        //
+        TxtTelefono.Dock = DockStyle.Fill;
+        TxtTelefono.Font = new Font("Segoe UI", 10F);
+        TxtTelefono.Margin = new Padding(0, 0, 0, 4);
+        TxtTelefono.MaxLength = 15;
+        TxtTelefono.TabIndex = 15;
+        TxtTelefono.Name = "TxtTelefono";
+        //
+        // lblGrupoCobertura
+        //
+        lblGrupoCobertura.AutoSize = true;
+        lblGrupoCobertura.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+        lblGrupoCobertura.ForeColor = Color.FromArgb(27, 42, 74);
+        lblGrupoCobertura.Margin = new Padding(0, 10, 0, 3);
+        lblGrupoCobertura.Text = "3. Cobertura";
+        lblGrupoCobertura.TabIndex = 16;
+        lblGrupoCobertura.Name = "lblGrupoCobertura";
+        //
+        // lblObraSocial
+        //
+        lblObraSocial.AutoSize = true;
+        lblObraSocial.Font = new Font("Segoe UI", 9F);
+        lblObraSocial.ForeColor = Color.FromArgb(110, 120, 135);
+        lblObraSocial.Margin = new Padding(0, 2, 0, 2);
+        lblObraSocial.Text = "Obra social (vacío = Particular)";
+        lblObraSocial.TabIndex = 17;
+        lblObraSocial.Name = "lblObraSocial";
+        //
+        // CboObraSocial
+        //
+        CboObraSocial.Dock = DockStyle.Fill;
+        CboObraSocial.DropDownStyle = ComboBoxStyle.DropDownList;
+        CboObraSocial.Font = new Font("Segoe UI", 10F);
+        CboObraSocial.FormattingEnabled = true;
+        CboObraSocial.Margin = new Padding(0, 0, 0, 4);
+        CboObraSocial.TabIndex = 18;
+        CboObraSocial.Name = "CboObraSocial";
+        //
+        // tlpBotonesTarjeta
+        //
+        tlpBotonesTarjeta.Controls.Add(BtnGuardar, 0, 0);
+        tlpBotonesTarjeta.Controls.Add(BtnNuevo, 1, 0);
+        tlpBotonesTarjeta.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 62F));
+        tlpBotonesTarjeta.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 38F));
+        tlpBotonesTarjeta.RowCount = 1;
+        tlpBotonesTarjeta.RowStyles.Add(new RowStyle());
+        tlpBotonesTarjeta.ColumnCount = 2;
+        tlpBotonesTarjeta.AutoSize = true;
+        tlpBotonesTarjeta.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+        tlpBotonesTarjeta.Dock = DockStyle.Fill;
+        tlpBotonesTarjeta.Margin = new Padding(0, 16, 0, 0);
+        tlpBotonesTarjeta.TabIndex = 19;
+        tlpBotonesTarjeta.Name = "tlpBotonesTarjeta";
+        //
+        // BtnGuardar
+        //
+        BtnGuardar.Dock = DockStyle.Fill;
+        BtnGuardar.BackColor = Color.FromArgb(46, 134, 222);
+        BtnGuardar.FlatAppearance.BorderSize = 0;
+        BtnGuardar.FlatStyle = FlatStyle.Flat;
+        BtnGuardar.Font = new Font("Segoe UI", 10.5F, FontStyle.Bold);
+        BtnGuardar.ForeColor = Color.White;
+        BtnGuardar.Margin = new Padding(0, 0, 8, 0);
+        BtnGuardar.Size = new Size(0, 40);
+        BtnGuardar.Text = "Guardar";
+        BtnGuardar.UseVisualStyleBackColor = false;
+        BtnGuardar.TabIndex = 0;
+        BtnGuardar.Name = "BtnGuardar";
+        //
+        // BtnNuevo
+        //
+        BtnNuevo.Dock = DockStyle.Fill;
+        BtnNuevo.BackColor = Color.White;
+        BtnNuevo.FlatAppearance.BorderColor = Color.FromArgb(214, 220, 230);
+        BtnNuevo.FlatAppearance.BorderSize = 1;
+        BtnNuevo.FlatStyle = FlatStyle.Flat;
+        BtnNuevo.Font = new Font("Segoe UI", 9.5F);
+        BtnNuevo.ForeColor = Color.FromArgb(27, 42, 74);
+        BtnNuevo.Margin = new Padding(0);
+        BtnNuevo.Size = new Size(0, 40);
+        BtnNuevo.Text = "Nuevo";
+        BtnNuevo.UseVisualStyleBackColor = false;
+        BtnNuevo.TabIndex = 1;
+        BtnNuevo.Name = "BtnNuevo";
+        //
+        // pnlEstado
+        //
+        pnlEstado.Controls.Add(LblMensaje);
+        pnlEstado.Dock = DockStyle.Bottom;
+        pnlEstado.Padding = new Padding(2, 8, 2, 0);
+        pnlEstado.Size = new Size(0, 36);
+        pnlEstado.Visible = false;
+        pnlEstado.TabIndex = 2;
+        pnlEstado.Name = "pnlEstado";
+        //
+        // LblMensaje
+        //
+        LblMensaje.Dock = DockStyle.Fill;
+        LblMensaje.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+        LblMensaje.TabIndex = 0;
+        LblMensaje.Name = "LblMensaje";
+        //
         // FormPacientes
-        // 
-        AutoScaleDimensions = new SizeF(10F, 25F);
+        //
+        AutoScaleDimensions = new SizeF(8F, 20F);
         AutoScaleMode = AutoScaleMode.Font;
-        ClientSize = new Size(1000, 650);
-        Controls.Add(DgvPacientes);
-        Controls.Add(pnlFormulario);
+        BackColor = Color.FromArgb(245, 246, 250);
+        ClientSize = new Size(1130, 650);
+        Controls.Add(pnlDerecho);
+        Controls.Add(pnlIzquierdo);
+        Controls.Add(pnlEstado);
         Name = "FormPacientes";
+        Padding = new Padding(16, 14, 16, 12);
         StartPosition = FormStartPosition.CenterScreen;
-        Text = "ABM de Pacientes";
-        Load += FormPacientes_Load;
-        pnlFormulario.ResumeLayout(false);
-        pnlFormulario.PerformLayout();
+        Text = "Pacientes";
+        pnlEstado.ResumeLayout(false);
+        tlpBotonesTarjeta.ResumeLayout(false);
+        tlpBotonesTarjeta.PerformLayout();
+        tlpTarjeta.ResumeLayout(false);
+        tlpTarjeta.PerformLayout();
+        pnlTarjeta.ResumeLayout(false);
+        pnlMarcoTarjeta.ResumeLayout(false);
+        pnlIzquierdo.ResumeLayout(false);
+        flpBotonesAccion.ResumeLayout(false);
+        flpBotonesAccion.PerformLayout();
+        tlpAcciones.ResumeLayout(false);
+        tlpAcciones.PerformLayout();
+        pnlAcciones.ResumeLayout(false);
+        pnlAcciones.PerformLayout();
+        pnlMarcoAcciones.ResumeLayout(false);
+        pnlMarcoAcciones.PerformLayout();
         ((System.ComponentModel.ISupportInitialize)DgvPacientes).EndInit();
+        pnlMarcoGrilla.ResumeLayout(false);
+        FlpContadores.ResumeLayout(false);
+        flpFiltros.ResumeLayout(false);
+        flpFiltros.PerformLayout();
+        tlpToolbar.ResumeLayout(false);
+        tlpToolbar.PerformLayout();
+        pnlToolbar.ResumeLayout(false);
+        pnlToolbar.PerformLayout();
+        pnlMarcoToolbar.ResumeLayout(false);
+        pnlMarcoToolbar.PerformLayout();
+        tlpDerecho.ResumeLayout(false);
+        tlpDerecho.PerformLayout();
+        pnlDerecho.ResumeLayout(false);
         ResumeLayout(false);
     }
 
-    private Panel pnlFormulario;
+    private Panel pnlDerecho;
+    private TableLayoutPanel tlpDerecho;
+    private Panel pnlMarcoToolbar;
+    private Panel pnlToolbar;
+    private TableLayoutPanel tlpToolbar;
+    private Label LblVista;
+    private FlowLayoutPanel flpFiltros;
+    private Label lblBuscar;
+    private TextBox TxtBuscar;
+    private CheckBox ChkSoloAusencias;
+    private FlowLayoutPanel FlpContadores;
+    private Panel pnlMarcoGrilla;
+    private DataGridView DgvPacientes;
+    private Panel pnlMarcoAcciones;
+    private Panel pnlAcciones;
+    private TableLayoutPanel tlpAcciones;
+    private Label LblSeleccion;
+    private FlowLayoutPanel flpBotonesAccion;
+    private Button BtnEliminar;
+    private Label LblAyudaAcciones;
+    private Label LblDetalle;
+    private Panel pnlIzquierdo;
+    private Panel pnlMarcoTarjeta;
+    private Panel pnlTarjeta;
+    private TableLayoutPanel tlpTarjeta;
+    private Label lblTituloTarjeta;
+    private Label LblModo;
+    private Label lblGrupoPersonales;
     private Label lblNombre;
-    private TextBox TxtNombre;
     private Label lblApellido;
+    private TextBox TxtNombre;
     private TextBox TxtApellido;
     private Label lblDni;
+    private Label lblFechaNacimiento;
     private TextBox TxtDni;
+    private DateTimePicker DtpFechaNacimiento;
+    private Label lblGrupoContacto;
     private Label lblEmail;
     private TextBox TxtEmail;
     private Label lblTelefono;
     private TextBox TxtTelefono;
-    private Label lblFechaNacimiento;
-    private DateTimePicker DtpFechaNacimiento;
+    private Label lblGrupoCobertura;
     private Label lblObraSocial;
     private ComboBox CboObraSocial;
-    private Button BtnNuevo;
+    private TableLayoutPanel tlpBotonesTarjeta;
     private Button BtnGuardar;
-    private Button BtnEliminar;
+    private Button BtnNuevo;
+    private Panel pnlEstado;
     private Label LblMensaje;
-    private DataGridView DgvPacientes;
 }
