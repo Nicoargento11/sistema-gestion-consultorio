@@ -1,4 +1,4 @@
-CREATE PROCEDURE sp_ObtenerTurnosPorMedicoYFecha
+CREATE OR ALTER PROCEDURE sp_ObtenerTurnosPorMedicoYFecha
     @MedicoId INT,
     @Fecha DATE = NULL,
     @IncluirCancelados BIT = 0
