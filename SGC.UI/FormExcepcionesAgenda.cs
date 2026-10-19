@@ -27,6 +27,7 @@ public partial class FormExcepcionesAgenda : Form
     private bool _cargando = true;
 
     private FranjaMensaje _mensajes = null!;
+    private readonly ToolTip _tooltip = new();
     private BarraContadores _contadores = null!;
     private Font? _fuenteNegritaCache;
     private Font _fuenteNegrita => _fuenteNegritaCache ??= new Font(DgvExcepciones.Font, FontStyle.Bold);
@@ -45,6 +46,7 @@ public partial class FormExcepcionesAgenda : Form
     public FormExcepcionesAgenda()
     {
         InitializeComponent();
+        EstiloUi.AlinearBotonesConScroll(pnlCampos, pnlBotones);
 
         _mensajes = new FranjaMensaje(pnlEstado, LblMensaje) { ReacomodarContenedor = true };
         _contadores = new BarraContadores(FlpContadores);
@@ -132,6 +134,10 @@ public partial class FormExcepcionesAgenda : Form
         _contadores.Agregar(ContPasadas, PaletaEstados.Fondo(EstadoExcepcion.Pasada), PaletaEstados.Acento(EstadoExcepcion.Pasada));
         _contadores.Agregar(ContAfectados, PaletaEstados.Fondo(EstadoTurno.Ausente), PaletaEstados.Acento(EstadoTurno.Ausente));
         ActualizarContadores(new List<ExcepcionFila>());
+
+        // Texto corto en el contador (para que quepan todos en una fila); el detalle va en el tooltip.
+        _tooltip.SetToolTip(FlpContadores.Controls.Find("lblContador" + ContAfectados, false)[0],
+            "Ausencias vigentes o próximas con turnos activos del médico superpuestos");
     }
 
     private void CargarCombos()
@@ -240,6 +246,7 @@ public partial class FormExcepcionesAgenda : Form
         LblVista.Text = string.IsNullOrEmpty(texto)
             ? $"Mostrando: todas las ausencias ({_todas.Count})"
             : $"Mostrando: {lista.Count} de {_todas.Count} · médico o motivo contiene «{texto}»";
+        LblVista.Visible = !string.IsNullOrEmpty(texto);
         AcotarEtiquetas();
 
         if (_idSeleccionado != null && !reseleccionada)
@@ -255,37 +262,37 @@ public partial class FormExcepcionesAgenda : Form
         _contadores.Poner(ContVigentes, $"Vigentes: {filas.Count(f => f.Estado == EstadoExcepcion.Vigente)}");
         _contadores.Poner(ContProximas, $"Próximas: {filas.Count(f => f.Estado == EstadoExcepcion.Proxima)}");
         _contadores.Poner(ContPasadas, $"Pasadas: {filas.Count(f => f.Estado == EstadoExcepcion.Pasada)}");
-        _contadores.Poner(ContAfectados, $"Con turnos afectados: {filas.Count(f => f.Estado != EstadoExcepcion.Pasada && f.TurnosAfectados > 0)}");
+        _contadores.Poner(ContAfectados, $"Afectadas: {filas.Count(f => f.Estado != EstadoExcepcion.Pasada && f.TurnosAfectados > 0)}");
     }
 
+    // Una sola linea: el aviso de turnos afectados o el estado vacio. Los conteos
+    // por estado ya los muestran los contadores, asi que sin nada que avisar la
+    // linea se oculta y la grilla gana ese alto.
     private void ActualizarResumen(List<ExcepcionFila> filas)
     {
+        string texto = "";
+        var color = ColorResumen;
+
         if (filas.Count == 0)
         {
-            LblResumenExcepciones.ForeColor = ColorResumen;
-            LblResumenExcepciones.Text = _todas.Count == 0
+            texto = _todas.Count == 0
                 ? "No hay excepciones de agenda cargadas."
                 : "Ninguna excepción coincide con la búsqueda.";
-            AcotarEtiquetas();
-            return;
-        }
-
-        var vigentes = filas.Count(f => f.Estado == EstadoExcepcion.Vigente);
-        var proximas = filas.Count(f => f.Estado == EstadoExcepcion.Proxima);
-        var pasadas = filas.Count - vigentes - proximas;
-        var conAfectados = filas.Where(f => f.Estado != EstadoExcepcion.Pasada && f.TurnosAfectados > 0).ToList();
-
-        var texto = $"{filas.Count} excepción(es): {vigentes} vigente(s), {proximas} próxima(s), {pasadas} pasada(s).";
-        if (conAfectados.Count > 0)
-        {
-            texto += $"  Atención: {conAfectados.Sum(f => f.TurnosAfectados)} turno(s) activo(s) se superponen con {conAfectados.Count} excepción(es) vigente(s) o próxima(s).";
-            LblResumenExcepciones.ForeColor = PaletaEstados.Acento(EstadoTurno.Ausente);
         }
         else
         {
-            LblResumenExcepciones.ForeColor = ColorResumen;
+            var conAfectados = filas.Where(f => f.Estado != EstadoExcepcion.Pasada && f.TurnosAfectados > 0).ToList();
+            if (conAfectados.Count > 0)
+            {
+                texto = $"Atención: {conAfectados.Sum(f => f.TurnosAfectados)} turno(s) activo(s) afectado(s) por {conAfectados.Count} ausencia(s).";
+                color = PaletaEstados.Acento(EstadoTurno.Ausente);
+            }
         }
+
+        LblResumenExcepciones.ForeColor = color;
         LblResumenExcepciones.Text = texto;
+        LblResumenExcepciones.Visible = texto.Length > 0;
+        _tooltip.SetToolTip(LblResumenExcepciones, texto);
         AcotarEtiquetas();
     }
 
@@ -382,10 +389,9 @@ public partial class FormExcepcionesAgenda : Form
         bool editando = _idSeleccionado != null;
         lblTituloTarjeta.Text = editando ? "EDITAR AUSENCIA" : "NUEVA AUSENCIA";
 
-        LblModo.Visible = editando;
-        LblModo.Text = editando
-            ? $"Editando la ausencia de «{FilaSeleccionada?.MedicoNombre}»: modifique los datos y pulse «Guardar»."
-            : "";
+        EstiloUi.MostrarAviso(LblModo, _tooltip,
+            editando ? $"Editando la ausencia de «{FilaSeleccionada?.MedicoNombre}»" : "",
+            editando ? $"Editando la ausencia de «{FilaSeleccionada?.MedicoNombre}»: modifique los datos y pulse «Guardar»." : "");
         AcotarEtiquetas();
     }
 
@@ -395,16 +401,16 @@ public partial class FormExcepcionesAgenda : Form
         var fila = FilaSeleccionada;
         if (fila == null)
         {
-            LblSeleccion.Text = "Ausencia seleccionada: ninguna";
+            EstiloUi.PonerTexto(LblSeleccion, _tooltip, "Ausencia seleccionada: ninguna");
             BtnEliminar.Enabled = false;
-            MostrarAyudaAcciones("Elija una fila de la tabla.");
+            MostrarAyudaAcciones("");
             LblDetalle.Text = "Seleccione una ausencia para ver su motivo y los turnos afectados.";
             AcotarEtiquetas();
             return;
         }
 
         var detalle = fila.Tipo == TipoExcepcionAgenda.DiaCompleto ? "Día completo" : fila.DescripcionTexto;
-        LblSeleccion.Text = $"Ausencia seleccionada: {fila.MedicoNombre} · {fila.Fecha:dd/MM/yyyy} · {detalle}";
+        EstiloUi.PonerTexto(LblSeleccion, _tooltip, $"Ausencia seleccionada: {fila.MedicoNombre} · {fila.Fecha:dd/MM/yyyy} · {detalle}");
         BtnEliminar.Enabled = true;
         MostrarAyudaAcciones("");
         LblDetalle.Text = (string.IsNullOrWhiteSpace(fila.Motivo) ? "" : $"Motivo: {fila.Motivo}. ") + TextoAfectados(fila);
@@ -555,10 +561,7 @@ public partial class FormExcepcionesAgenda : Form
     // Limita el ancho de los textos que pueden ocupar varias lineas al de su contenedor.
     private void AcotarEtiquetas()
     {
-        EstiloUi.Acotar(LblModo, tlpTarjeta);
         EstiloUi.Acotar(LblVista, tlpToolbar);
-        EstiloUi.Acotar(LblResumenExcepciones, tlpDerecho);
-        EstiloUi.Acotar(LblSeleccion, tlpAcciones);
         EstiloUi.Acotar(LblAyudaAcciones, tlpAcciones);
         EstiloUi.Acotar(LblDetalle, tlpAcciones);
         EstiloUi.AjustarFlujos(flpFiltros, FlpContadores, flpBotonesAccion);

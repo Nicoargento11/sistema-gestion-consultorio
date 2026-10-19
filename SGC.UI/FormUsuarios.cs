@@ -28,6 +28,7 @@ public partial class FormUsuarios : Form
     private bool _cargando = true;
 
     private FranjaMensaje _mensajes = null!;
+    private readonly ToolTip _tooltip = new();
     private BarraContadores _contadores = null!;
 
     private const string ContTotal = "Total";
@@ -43,6 +44,7 @@ public partial class FormUsuarios : Form
     public FormUsuarios()
     {
         InitializeComponent();
+        EstiloUi.AlinearBotonesConScroll(pnlCampos, pnlBotones);
 
         _mensajes = new FranjaMensaje(pnlEstado, LblMensaje) { ReacomodarContenedor = true };
         _contadores = new BarraContadores(FlpContadores);
@@ -269,6 +271,8 @@ public partial class FormUsuarios : Form
             ? $"Mostrando: {(verInactivos ? "todos los usuarios" : "usuarios activos")} ({lista.Count})"
             : $"Mostrando: {lista.Count} de {_todos.Count} · búsqueda «{texto}»";
         LblVista.Text = vista;
+        // Solo se muestra cuando hay un filtro activo (ahorra una linea de alto).
+        LblVista.Visible = !string.IsNullOrEmpty(texto) || verInactivos;
         AcotarEtiquetas();
 
         if (_idSeleccionado != null && !reseleccionado)
@@ -384,10 +388,9 @@ public partial class FormUsuarios : Form
         bool editando = _idSeleccionado != null;
         lblTituloTarjeta.Text = editando ? "EDITAR USUARIO" : "NUEVO USUARIO";
 
-        LblModo.Visible = editando;
-        LblModo.Text = editando
-            ? $"Editando «{FilaSeleccionada?.NombreUsuario}»: modifique los datos y pulse «Guardar»."
-            : "";
+        EstiloUi.MostrarAviso(LblModo, _tooltip,
+            editando ? $"Editando «{FilaSeleccionada?.NombreUsuario}»" : "",
+            editando ? $"Editando «{FilaSeleccionada?.NombreUsuario}»: modifique los datos y pulse «Guardar»." : "");
 
         TxtContrasena.PlaceholderText = editando ? "Dejar vacía para no cambiarla" : "";
         LblAyudaContrasena.Text = editando
@@ -402,22 +405,22 @@ public partial class FormUsuarios : Form
         var usuario = FilaSeleccionada;
         if (usuario == null)
         {
-            LblSeleccion.Text = "Usuario seleccionado: ninguno";
+            EstiloUi.PonerTexto(LblSeleccion, _tooltip, "Usuario seleccionado: ninguno");
             BtnEliminar.Visible = true;
             BtnEliminar.Enabled = false;
             BtnReactivar.Visible = false;
-            MostrarAyudaAcciones("Elija una fila de la tabla.");
+            MostrarAyudaAcciones("");
             LblDetalle.Text = "Seleccione un usuario para ver sus médicos.";
             AcotarEtiquetas();
             return;
         }
 
-        LblSeleccion.Text = $"Usuario seleccionado: {usuario.NombreUsuario} · {TextoRol(usuario.Rol)} · {usuario.EstadoTexto}";
+        EstiloUi.PonerTexto(LblSeleccion, _tooltip, $"Usuario seleccionado: {usuario.NombreUsuario} · {TextoRol(usuario.Rol)} · {usuario.EstadoTexto}");
         BtnEliminar.Visible = usuario.Activo;
         BtnEliminar.Enabled = usuario.Activo;
         BtnReactivar.Visible = !usuario.Activo;
         BtnReactivar.Enabled = !usuario.Activo;
-        MostrarAyudaAcciones(usuario.Activo ? "" : "Este usuario está inactivo: no puede iniciar sesión hasta reactivarlo.");
+        MostrarAyudaAcciones("");
 
         LblDetalle.Text = usuario.Rol switch
         {
@@ -425,6 +428,9 @@ public partial class FormUsuarios : Form
             RolUsuario.Recepcionista => $"Médicos asignados: {(usuario.MedicosAsignadosTexto.Length > 0 ? usuario.MedicosAsignadosTexto : "ninguno")}",
             _ => "Administrador: no tiene médicos asociados."
         };
+        // El aviso de usuario inactivo va en el detalle (a todo el ancho) y no junto al boton.
+        if (!usuario.Activo)
+            LblDetalle.Text += " · Este usuario está inactivo: no puede iniciar sesión hasta reactivarlo.";
         AcotarEtiquetas();
     }
 
@@ -620,10 +626,8 @@ public partial class FormUsuarios : Form
     // Limita el ancho de los textos que pueden ocupar varias lineas al de su contenedor.
     private void AcotarEtiquetas()
     {
-        EstiloUi.Acotar(LblModo, tlpTarjeta);
         EstiloUi.Acotar(LblAyudaContrasena, tlpTarjeta);
         EstiloUi.Acotar(LblVista, tlpToolbar);
-        EstiloUi.Acotar(LblSeleccion, tlpAcciones);
         EstiloUi.Acotar(LblAyudaAcciones, tlpAcciones);
         EstiloUi.Acotar(LblDetalle, tlpAcciones);
         EstiloUi.AjustarFlujos(flpFiltros, FlpContadores, flpBotonesAccion);

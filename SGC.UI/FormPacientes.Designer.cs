@@ -39,6 +39,7 @@ partial class FormPacientes
         pnlIzquierdo = new Panel();
         pnlMarcoTarjeta = new Panel();
         pnlTarjeta = new Panel();
+        pnlCampos = new Panel();
         tlpTarjeta = new TableLayoutPanel();
         lblTituloTarjeta = new Label();
         LblModo = new Label();
@@ -59,6 +60,7 @@ partial class FormPacientes
         lblGrupoCobertura = new Label();
         lblObraSocial = new Label();
         CboObraSocial = new ComboBox();
+        pnlBotones = new Panel();
         tlpBotonesTarjeta = new TableLayoutPanel();
         BtnGuardar = new Button();
         BtnNuevo = new Button();
@@ -80,7 +82,9 @@ partial class FormPacientes
         pnlIzquierdo.SuspendLayout();
         pnlMarcoTarjeta.SuspendLayout();
         pnlTarjeta.SuspendLayout();
+        pnlCampos.SuspendLayout();
         tlpTarjeta.SuspendLayout();
+        pnlBotones.SuspendLayout();
         tlpBotonesTarjeta.SuspendLayout();
         pnlEstado.SuspendLayout();
         SuspendLayout();
@@ -117,7 +121,7 @@ partial class FormPacientes
         pnlMarcoToolbar.AutoSizeMode = AutoSizeMode.GrowAndShrink;
         pnlMarcoToolbar.BackColor = Color.FromArgb(214, 220, 230);
         pnlMarcoToolbar.Dock = DockStyle.Fill;
-        pnlMarcoToolbar.Margin = new Padding(0, 0, 0, 8);
+        pnlMarcoToolbar.Margin = new Padding(0, 0, 0, 6);
         pnlMarcoToolbar.Padding = new Padding(1);
         pnlMarcoToolbar.TabIndex = 0;
         pnlMarcoToolbar.Name = "pnlMarcoToolbar";
@@ -129,7 +133,7 @@ partial class FormPacientes
         pnlToolbar.AutoSizeMode = AutoSizeMode.GrowAndShrink;
         pnlToolbar.BackColor = Color.White;
         pnlToolbar.Dock = DockStyle.Fill;
-        pnlToolbar.Padding = new Padding(14, 8, 14, 6);
+        pnlToolbar.Padding = new Padding(12, 5, 12, 3);
         pnlToolbar.TabIndex = 0;
         pnlToolbar.Name = "pnlToolbar";
         //
@@ -153,7 +157,8 @@ partial class FormPacientes
         LblVista.AutoSize = true;
         LblVista.Font = new Font("Segoe UI", 9F);
         LblVista.ForeColor = Color.FromArgb(110, 120, 135);
-        LblVista.Margin = new Padding(0, 0, 0, 4);
+        LblVista.Margin = new Padding(0, 0, 0, 3);
+        LblVista.Visible = false;
         LblVista.TabIndex = 0;
         LblVista.Name = "LblVista";
         //
@@ -200,7 +205,7 @@ partial class FormPacientes
         //
         FlpContadores.Size = new Size(0, 30);
         FlpContadores.Dock = DockStyle.Fill;
-        FlpContadores.Margin = new Padding(0, 0, 0, 4);
+        FlpContadores.Margin = new Padding(0, 0, 0, 2);
         FlpContadores.TabIndex = 1;
         FlpContadores.Name = "FlpContadores";
         //
@@ -209,7 +214,7 @@ partial class FormPacientes
         pnlMarcoGrilla.Controls.Add(DgvPacientes);
         pnlMarcoGrilla.BackColor = Color.FromArgb(214, 220, 230);
         pnlMarcoGrilla.Dock = DockStyle.Fill;
-        pnlMarcoGrilla.Margin = new Padding(0, 0, 0, 8);
+        pnlMarcoGrilla.Margin = new Padding(0, 0, 0, 6);
         pnlMarcoGrilla.Padding = new Padding(1);
         pnlMarcoGrilla.TabIndex = 2;
         pnlMarcoGrilla.Name = "pnlMarcoGrilla";
@@ -252,21 +257,22 @@ partial class FormPacientes
         pnlAcciones.AutoSizeMode = AutoSizeMode.GrowAndShrink;
         pnlAcciones.BackColor = Color.White;
         pnlAcciones.Dock = DockStyle.Fill;
-        pnlAcciones.Padding = new Padding(14, 8, 14, 8);
+        pnlAcciones.Padding = new Padding(12, 5, 12, 5);
         pnlAcciones.TabIndex = 0;
         pnlAcciones.Name = "pnlAcciones";
         //
         // tlpAcciones
         //
         tlpAcciones.Controls.Add(LblSeleccion, 0, 0);
-        tlpAcciones.Controls.Add(flpBotonesAccion, 0, 1);
-        tlpAcciones.Controls.Add(LblDetalle, 0, 2);
+        tlpAcciones.Controls.Add(flpBotonesAccion, 1, 0);
+        tlpAcciones.Controls.Add(LblDetalle, 0, 1);
+        tlpAcciones.SetColumnSpan(LblDetalle, 2);
         tlpAcciones.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-        tlpAcciones.RowCount = 3;
+        tlpAcciones.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+        tlpAcciones.RowCount = 2;
         tlpAcciones.RowStyles.Add(new RowStyle());
         tlpAcciones.RowStyles.Add(new RowStyle());
-        tlpAcciones.RowStyles.Add(new RowStyle());
-        tlpAcciones.ColumnCount = 1;
+        tlpAcciones.ColumnCount = 2;
         tlpAcciones.AutoSize = true;
         tlpAcciones.AutoSizeMode = AutoSizeMode.GrowAndShrink;
         tlpAcciones.Dock = DockStyle.Fill;
@@ -275,10 +281,13 @@ partial class FormPacientes
         //
         // LblSeleccion
         //
-        LblSeleccion.AutoSize = true;
+        LblSeleccion.AutoEllipsis = true;
+        LblSeleccion.AutoSize = false;
+        LblSeleccion.Dock = DockStyle.Fill;
         LblSeleccion.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
         LblSeleccion.ForeColor = Color.FromArgb(27, 42, 74);
-        LblSeleccion.Margin = new Padding(0, 0, 0, 6);
+        LblSeleccion.Margin = new Padding(0, 0, 10, 0);
+        LblSeleccion.TextAlign = ContentAlignment.MiddleLeft;
         LblSeleccion.TabIndex = 0;
         LblSeleccion.Name = "LblSeleccion";
         //
@@ -286,9 +295,11 @@ partial class FormPacientes
         //
         flpBotonesAccion.Controls.Add(BtnEliminar);
         flpBotonesAccion.Controls.Add(LblAyudaAcciones);
-        flpBotonesAccion.Size = new Size(0, 30);
+        flpBotonesAccion.AutoSize = true;
+        flpBotonesAccion.AutoSizeMode = AutoSizeMode.GrowAndShrink;
         flpBotonesAccion.Dock = DockStyle.Fill;
         flpBotonesAccion.Margin = new Padding(0);
+        flpBotonesAccion.WrapContents = false;
         flpBotonesAccion.TabIndex = 1;
         flpBotonesAccion.Name = "flpBotonesAccion";
         //
@@ -300,7 +311,7 @@ partial class FormPacientes
         BtnEliminar.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
         BtnEliminar.ForeColor = Color.White;
         BtnEliminar.Margin = new Padding(0, 0, 14, 0);
-        BtnEliminar.Size = new Size(116, 32);
+        BtnEliminar.Size = new Size(116, 30);
         BtnEliminar.Text = "Eliminar";
         BtnEliminar.UseVisualStyleBackColor = false;
         BtnEliminar.TabIndex = 0;
@@ -321,7 +332,7 @@ partial class FormPacientes
         LblDetalle.AutoSize = true;
         LblDetalle.Font = new Font("Segoe UI", 9.5F);
         LblDetalle.ForeColor = Color.FromArgb(27, 42, 74);
-        LblDetalle.Margin = new Padding(0, 8, 0, 0);
+        LblDetalle.Margin = new Padding(0, 4, 0, 0);
         LblDetalle.TabIndex = 2;
         LblDetalle.Name = "LblDetalle";
         //
@@ -345,13 +356,22 @@ partial class FormPacientes
         //
         // pnlTarjeta
         //
-        pnlTarjeta.Controls.Add(tlpTarjeta);
-        pnlTarjeta.AutoScroll = true;
+        pnlTarjeta.Controls.Add(pnlCampos);
+        pnlTarjeta.Controls.Add(pnlBotones);
         pnlTarjeta.BackColor = Color.White;
         pnlTarjeta.Dock = DockStyle.Fill;
-        pnlTarjeta.Padding = new Padding(16, 14, 16, 14);
+        pnlTarjeta.Padding = new Padding(16, 12, 16, 12);
         pnlTarjeta.TabIndex = 0;
         pnlTarjeta.Name = "pnlTarjeta";
+        //
+        // pnlCampos
+        //
+        pnlCampos.Controls.Add(tlpTarjeta);
+        pnlCampos.AutoScroll = true;
+        pnlCampos.Dock = DockStyle.Fill;
+        pnlCampos.Padding = new Padding(0);
+        pnlCampos.TabIndex = 0;
+        pnlCampos.Name = "pnlCampos";
         //
         // tlpTarjeta
         //
@@ -374,7 +394,6 @@ partial class FormPacientes
         tlpTarjeta.Controls.Add(lblGrupoCobertura, 0, 12);
         tlpTarjeta.Controls.Add(lblObraSocial, 0, 13);
         tlpTarjeta.Controls.Add(CboObraSocial, 0, 14);
-        tlpTarjeta.Controls.Add(tlpBotonesTarjeta, 0, 15);
         tlpTarjeta.SetColumnSpan(lblTituloTarjeta, 2);
         tlpTarjeta.SetColumnSpan(LblModo, 2);
         tlpTarjeta.SetColumnSpan(lblGrupoPersonales, 2);
@@ -386,11 +405,9 @@ partial class FormPacientes
         tlpTarjeta.SetColumnSpan(lblGrupoCobertura, 2);
         tlpTarjeta.SetColumnSpan(lblObraSocial, 2);
         tlpTarjeta.SetColumnSpan(CboObraSocial, 2);
-        tlpTarjeta.SetColumnSpan(tlpBotonesTarjeta, 2);
         tlpTarjeta.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
         tlpTarjeta.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
-        tlpTarjeta.RowCount = 16;
-        tlpTarjeta.RowStyles.Add(new RowStyle());
+        tlpTarjeta.RowCount = 15;
         tlpTarjeta.RowStyles.Add(new RowStyle());
         tlpTarjeta.RowStyles.Add(new RowStyle());
         tlpTarjeta.RowStyles.Add(new RowStyle());
@@ -418,17 +435,21 @@ partial class FormPacientes
         lblTituloTarjeta.AutoSize = true;
         lblTituloTarjeta.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
         lblTituloTarjeta.ForeColor = Color.FromArgb(27, 42, 74);
-        lblTituloTarjeta.Margin = new Padding(0, 0, 0, 4);
+        lblTituloTarjeta.Margin = new Padding(0, 0, 0, 2);
         lblTituloTarjeta.Text = "NUEVO PACIENTE";
         lblTituloTarjeta.TabIndex = 0;
         lblTituloTarjeta.Name = "lblTituloTarjeta";
         //
         // LblModo
         //
-        LblModo.AutoSize = true;
+        LblModo.AutoEllipsis = true;
+        LblModo.AutoSize = false;
+        LblModo.Dock = DockStyle.Fill;
         LblModo.Font = new Font("Segoe UI", 9F);
         LblModo.ForeColor = Color.FromArgb(176, 96, 0);
-        LblModo.Margin = new Padding(0, 0, 0, 4);
+        LblModo.Margin = new Padding(0, 0, 0, 2);
+        LblModo.Size = new Size(0, 20);
+        LblModo.TextAlign = ContentAlignment.MiddleLeft;
         LblModo.Visible = false;
         LblModo.TabIndex = 1;
         LblModo.Name = "LblModo";
@@ -438,7 +459,7 @@ partial class FormPacientes
         lblGrupoPersonales.AutoSize = true;
         lblGrupoPersonales.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
         lblGrupoPersonales.ForeColor = Color.FromArgb(27, 42, 74);
-        lblGrupoPersonales.Margin = new Padding(0, 10, 0, 3);
+        lblGrupoPersonales.Margin = new Padding(0, 8, 0, 3);
         lblGrupoPersonales.Text = "1. Datos personales";
         lblGrupoPersonales.TabIndex = 2;
         lblGrupoPersonales.Name = "lblGrupoPersonales";
@@ -486,7 +507,7 @@ partial class FormPacientes
         lblDni.AutoSize = true;
         lblDni.Font = new Font("Segoe UI", 9F);
         lblDni.ForeColor = Color.FromArgb(110, 120, 135);
-        lblDni.Margin = new Padding(0, 6, 8, 2);
+        lblDni.Margin = new Padding(0, 4, 8, 2);
         lblDni.Text = "DNI";
         lblDni.TabIndex = 7;
         lblDni.Name = "lblDni";
@@ -496,7 +517,7 @@ partial class FormPacientes
         lblFechaNacimiento.AutoSize = true;
         lblFechaNacimiento.Font = new Font("Segoe UI", 9F);
         lblFechaNacimiento.ForeColor = Color.FromArgb(110, 120, 135);
-        lblFechaNacimiento.Margin = new Padding(0, 6, 0, 2);
+        lblFechaNacimiento.Margin = new Padding(0, 4, 0, 2);
         lblFechaNacimiento.Text = "Nacimiento";
         lblFechaNacimiento.TabIndex = 8;
         lblFechaNacimiento.Name = "lblFechaNacimiento";
@@ -525,7 +546,7 @@ partial class FormPacientes
         lblGrupoContacto.AutoSize = true;
         lblGrupoContacto.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
         lblGrupoContacto.ForeColor = Color.FromArgb(27, 42, 74);
-        lblGrupoContacto.Margin = new Padding(0, 10, 0, 3);
+        lblGrupoContacto.Margin = new Padding(0, 8, 0, 3);
         lblGrupoContacto.Text = "2. Contacto";
         lblGrupoContacto.TabIndex = 11;
         lblGrupoContacto.Name = "lblGrupoContacto";
@@ -553,7 +574,7 @@ partial class FormPacientes
         lblTelefono.AutoSize = true;
         lblTelefono.Font = new Font("Segoe UI", 9F);
         lblTelefono.ForeColor = Color.FromArgb(110, 120, 135);
-        lblTelefono.Margin = new Padding(0, 6, 0, 2);
+        lblTelefono.Margin = new Padding(0, 4, 0, 2);
         lblTelefono.Text = "Teléfono";
         lblTelefono.TabIndex = 14;
         lblTelefono.Name = "lblTelefono";
@@ -572,7 +593,7 @@ partial class FormPacientes
         lblGrupoCobertura.AutoSize = true;
         lblGrupoCobertura.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
         lblGrupoCobertura.ForeColor = Color.FromArgb(27, 42, 74);
-        lblGrupoCobertura.Margin = new Padding(0, 10, 0, 3);
+        lblGrupoCobertura.Margin = new Padding(0, 8, 0, 3);
         lblGrupoCobertura.Text = "3. Cobertura";
         lblGrupoCobertura.TabIndex = 16;
         lblGrupoCobertura.Name = "lblGrupoCobertura";
@@ -597,6 +618,16 @@ partial class FormPacientes
         CboObraSocial.TabIndex = 18;
         CboObraSocial.Name = "CboObraSocial";
         //
+        // pnlBotones
+        //
+        pnlBotones.Controls.Add(tlpBotonesTarjeta);
+        pnlBotones.AutoSize = true;
+        pnlBotones.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+        pnlBotones.Dock = DockStyle.Bottom;
+        pnlBotones.Padding = new Padding(0, 10, 0, 0);
+        pnlBotones.TabIndex = 1;
+        pnlBotones.Name = "pnlBotones";
+        //
         // tlpBotonesTarjeta
         //
         tlpBotonesTarjeta.Controls.Add(BtnGuardar, 0, 0);
@@ -609,8 +640,8 @@ partial class FormPacientes
         tlpBotonesTarjeta.AutoSize = true;
         tlpBotonesTarjeta.AutoSizeMode = AutoSizeMode.GrowAndShrink;
         tlpBotonesTarjeta.Dock = DockStyle.Fill;
-        tlpBotonesTarjeta.Margin = new Padding(0, 16, 0, 0);
-        tlpBotonesTarjeta.TabIndex = 19;
+        tlpBotonesTarjeta.Margin = new Padding(0);
+        tlpBotonesTarjeta.TabIndex = 0;
         tlpBotonesTarjeta.Name = "tlpBotonesTarjeta";
         //
         // BtnGuardar
@@ -622,7 +653,7 @@ partial class FormPacientes
         BtnGuardar.Font = new Font("Segoe UI", 10.5F, FontStyle.Bold);
         BtnGuardar.ForeColor = Color.White;
         BtnGuardar.Margin = new Padding(0, 0, 8, 0);
-        BtnGuardar.Size = new Size(0, 40);
+        BtnGuardar.Size = new Size(0, 38);
         BtnGuardar.Text = "Guardar";
         BtnGuardar.UseVisualStyleBackColor = false;
         BtnGuardar.TabIndex = 0;
@@ -638,7 +669,7 @@ partial class FormPacientes
         BtnNuevo.Font = new Font("Segoe UI", 9.5F);
         BtnNuevo.ForeColor = Color.FromArgb(27, 42, 74);
         BtnNuevo.Margin = new Padding(0);
-        BtnNuevo.Size = new Size(0, 40);
+        BtnNuevo.Size = new Size(0, 38);
         BtnNuevo.Text = "Nuevo";
         BtnNuevo.UseVisualStyleBackColor = false;
         BtnNuevo.TabIndex = 1;
@@ -677,8 +708,11 @@ partial class FormPacientes
         pnlEstado.ResumeLayout(false);
         tlpBotonesTarjeta.ResumeLayout(false);
         tlpBotonesTarjeta.PerformLayout();
+        pnlBotones.ResumeLayout(false);
+        pnlBotones.PerformLayout();
         tlpTarjeta.ResumeLayout(false);
         tlpTarjeta.PerformLayout();
+        pnlCampos.ResumeLayout(false);
         pnlTarjeta.ResumeLayout(false);
         pnlMarcoTarjeta.ResumeLayout(false);
         pnlIzquierdo.ResumeLayout(false);
@@ -731,6 +765,7 @@ partial class FormPacientes
     private Panel pnlIzquierdo;
     private Panel pnlMarcoTarjeta;
     private Panel pnlTarjeta;
+    private Panel pnlCampos;
     private TableLayoutPanel tlpTarjeta;
     private Label lblTituloTarjeta;
     private Label LblModo;
@@ -751,6 +786,7 @@ partial class FormPacientes
     private Label lblGrupoCobertura;
     private Label lblObraSocial;
     private ComboBox CboObraSocial;
+    private Panel pnlBotones;
     private TableLayoutPanel tlpBotonesTarjeta;
     private Button BtnGuardar;
     private Button BtnNuevo;

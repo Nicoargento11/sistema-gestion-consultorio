@@ -27,6 +27,7 @@ public partial class FormPacientes : Form
     private bool _cargando = true;
 
     private FranjaMensaje _mensajes = null!;
+    private readonly ToolTip _tooltip = new();
     private BarraContadores _contadores = null!;
     private Font? _fuenteNegritaCache;
     private Font FuenteNegrita => _fuenteNegritaCache ??= new Font(DgvPacientes.Font, FontStyle.Bold);
@@ -44,6 +45,7 @@ public partial class FormPacientes : Form
     public FormPacientes(Usuario? usuarioActivo = null)
     {
         InitializeComponent();
+        EstiloUi.AlinearBotonesConScroll(pnlCampos, pnlBotones);
         _usuarioActivo = usuarioActivo;
 
         _mensajes = new FranjaMensaje(pnlEstado, LblMensaje) { ReacomodarContenedor = true };
@@ -295,6 +297,8 @@ public partial class FormPacientes : Form
         if (!string.IsNullOrEmpty(texto)) vista += $" · búsqueda «{texto}»";
         if (soloAusencias) vista += " · solo con ausencias";
         LblVista.Text = vista;
+        // Solo se muestra cuando hay un filtro activo (ahorra una linea de alto).
+        LblVista.Visible = !string.IsNullOrEmpty(texto) || soloAusencias;
         AcotarEtiquetas();
 
         if (_idSeleccionado != null && !reseleccionado)
@@ -372,10 +376,9 @@ public partial class FormPacientes : Form
         bool editando = _idSeleccionado != null;
         lblTituloTarjeta.Text = editando ? "EDITAR PACIENTE" : "NUEVO PACIENTE";
 
-        LblModo.Visible = editando;
-        LblModo.Text = editando
-            ? $"Editando a «{FilaSeleccionada?.Nombre} {FilaSeleccionada?.Apellido}»: modifique los datos y pulse «Guardar»."
-            : "";
+        EstiloUi.MostrarAviso(LblModo, _tooltip,
+            editando ? $"Editando a «{FilaSeleccionada?.Nombre} {FilaSeleccionada?.Apellido}»" : "",
+            editando ? $"Editando a «{FilaSeleccionada?.Nombre} {FilaSeleccionada?.Apellido}»: modifique los datos y pulse «Guardar»." : "");
         AcotarEtiquetas();
     }
 
@@ -385,15 +388,15 @@ public partial class FormPacientes : Form
         var fila = FilaSeleccionada;
         if (fila == null)
         {
-            LblSeleccion.Text = "Paciente seleccionado: ninguno";
+            EstiloUi.PonerTexto(LblSeleccion, _tooltip, "Paciente seleccionado: ninguno");
             BtnEliminar.Enabled = false;
-            MostrarAyudaAcciones("Elija una fila de la tabla.");
+            MostrarAyudaAcciones("");
             LblDetalle.Text = "Seleccione un paciente para ver su próximo turno y su última visita.";
             AcotarEtiquetas();
             return;
         }
 
-        LblSeleccion.Text = $"Paciente seleccionado: {fila.Apellido}, {fila.Nombre} · DNI {fila.Dni}";
+        EstiloUi.PonerTexto(LblSeleccion, _tooltip, $"Paciente seleccionado: {fila.Apellido}, {fila.Nombre} · DNI {fila.Dni}");
         BtnEliminar.Enabled = true;
         MostrarAyudaAcciones("");
 
@@ -529,9 +532,7 @@ public partial class FormPacientes : Form
     // Limita el ancho de los textos que pueden ocupar varias lineas al de su contenedor.
     private void AcotarEtiquetas()
     {
-        EstiloUi.Acotar(LblModo, tlpTarjeta);
         EstiloUi.Acotar(LblVista, tlpToolbar);
-        EstiloUi.Acotar(LblSeleccion, tlpAcciones);
         EstiloUi.Acotar(LblAyudaAcciones, tlpAcciones);
         EstiloUi.Acotar(LblDetalle, tlpAcciones);
         EstiloUi.AjustarFlujos(flpFiltros, FlpContadores, flpBotonesAccion);

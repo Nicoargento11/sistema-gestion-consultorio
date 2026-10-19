@@ -97,6 +97,38 @@ internal static class EstiloUi
         EstilizarBoton(boton);
     }
 
+    // Aviso de una sola linea (por ejemplo "Editando a ..."): el texto corto se ve
+    // en la tarjeta (con puntos suspensivos si no entra) y el completo va en el tooltip.
+    public static void MostrarAviso(Label etiqueta, ToolTip tooltip, string corto, string completo)
+    {
+        etiqueta.Visible = !string.IsNullOrEmpty(corto);
+        etiqueta.Text = corto;
+        tooltip.SetToolTip(etiqueta, completo);
+    }
+
+    // Texto de una sola linea con puntos suspensivos: el texto completo va en el tooltip.
+    public static void PonerTexto(Label etiqueta, ToolTip tooltip, string texto)
+    {
+        etiqueta.Text = texto;
+        tooltip.SetToolTip(etiqueta, texto);
+    }
+
+    // La tarjeta izquierda tiene la zona de campos (con scroll vertical propio) y
+    // una fila de botones fija abajo. Cuando aparece el scroll, los campos se
+    // angostan; el mismo margen se le da a la fila de botones para que ambos
+    // queden alineados a la derecha.
+    public static void AlinearBotonesConScroll(Panel campos, Panel botones)
+    {
+        void Ajustar()
+        {
+            int scroll = campos.Width - campos.ClientSize.Width;
+            var relleno = botones.Padding;
+            if (relleno.Right != scroll) botones.Padding = new Padding(relleno.Left, relleno.Top, scroll, relleno.Bottom);
+        }
+        campos.Layout += (s, e) => Ajustar();
+        campos.SizeChanged += (s, e) => Ajustar();
+    }
+
     // Limita el ancho de un texto que puede ocupar varias lineas al de su contenedor.
     public static void Acotar(Label etiqueta, Control contenedor)
     {

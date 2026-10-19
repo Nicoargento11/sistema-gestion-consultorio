@@ -17,6 +17,11 @@ internal static class FiltrosTexto
             e.Handled = true;
     }
 
+    // Busqueda de texto sin distinguir mayusculas ni acentos (la "e" sin tilde encuentra la "e" con tilde).
+    public static bool Contiene(string texto, string buscado) =>
+        System.Globalization.CultureInfo.CurrentCulture.CompareInfo.IndexOf(
+            texto, buscado, System.Globalization.CompareOptions.IgnoreCase | System.Globalization.CompareOptions.IgnoreNonSpace) >= 0;
+
     // Letras, numeros, '_' y '.' - mismo criterio que UsuarioService.Validar
     // para NombreUsuario.
     public static void SoloUsuario(object? sender, KeyPressEventArgs e)

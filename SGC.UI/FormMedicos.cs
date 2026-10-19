@@ -4,98 +4,283 @@ using SGC.Logica;
 
 namespace SGC.UI;
 
+// ABM de medicos (Administrador). Izquierda: tarjeta "Nuevo medico" (pasa a
+// "Editar medico" al elegir una fila) con datos personales, especialidad,
+// precio de consulta particular y obras sociales que acepta. Derecha: buscador,
+// contadores, grilla y barra del medico seleccionado (Eliminar).
+// La estructura estatica vive en el Designer; las columnas, los chips y el
+// estilo de botones se arman aca para que el disenador no los borre.
 public partial class FormMedicos : Form
 {
     private readonly MedicoService _service = new();
     private readonly ObraSocialService _obraSocialService = new();
     private static readonly CultureInfo CulturaAr = new("es-AR");
+
+    // Id del medico cargado en la tarjeta (null = modo "nuevo").
     private int? _idSeleccionado = null;
+
+    // Listado completo traido del servicio; el buscador filtra sobre esta lista.
+    private List<MedicoFila> _todos = new();
+
+    // true mientras se cargan o sincronizan controles por codigo: los eventos
+    // de seleccion y busqueda se ignoran para no recargar a mitad de camino.
+    private bool _cargando = true;
+
+    private FranjaMensaje _mensajes = null!;
+    private BarraContadores _contadores = null!;
+    private readonly ToolTip _tooltip = new();
+    private Font? _fuenteNegritaCache;
+    private Font _fuenteNegrita => _fuenteNegritaCache ??= new Font(DgvMedicos.Font, FontStyle.Bold);
+
+    private const string ContTotal = "Total";
+    private const string ContHoy = "ConTurnosHoy";
+    private const string ContMes = "ConTurnosMes";
+    private const string ContSinObras = "SinObrasSociales";
+
+    private MedicoFila? FilaSeleccionada =>
+        DgvMedicos.SelectedRows.Count > 0 ? DgvMedicos.SelectedRows[0].DataBoundItem as MedicoFila : null;
+
     public FormMedicos()
     {
         InitializeComponent();
-        ConfigurarColumnas();
-        CargarCombos();
-        CargarGrilla();
+        EstiloUi.AlinearBotonesConScroll(pnlCampos, pnlBotones);
+
+        _mensajes = new FranjaMensaje(pnlEstado, LblMensaje) { ReacomodarContenedor = true };
+        _contadores = new BarraContadores(FlpContadores);
+
         AcceptButton = BtnGuardar;
-        // SelectionChanged se engancha dentro de CargarGrilla.
-        // WinForms selecciona sola la primera fila recien cuando el control
-        // se muestra de verdad en pantalla (no en el constructor) - limpiar
-        // ahi mismo no sirve, hay que hacerlo en Load, que corre despues.
-        Load += (s, e) => BtnNuevo_Click(this, EventArgs.Empty);
-        TxtBuscar.TextChanged += (s, e) => CargarGrilla();
+        // Enter dentro del buscador no debe guardar la tarjeta.
+        TxtBuscar.Enter += (s, e) => AcceptButton = null;
+        TxtBuscar.Leave += (s, e) => AcceptButton = BtnGuardar;
+
+        BtnNuevo.Click += BtnNuevo_Click;
+        BtnGuardar.Click += BtnGuardar_Click;
+        BtnEliminar.Click += BtnEliminar_Click;
+        DgvMedicos.SelectionChanged += DgvMedicos_SelectionChanged;
+        DgvMedicos.CellFormatting += DgvMedicos_CellFormatting;
+        DgvMedicos.CellToolTipTextNeeded += DgvMedicos_CellToolTipTextNeeded;
+        TxtBuscar.TextChanged += TxtBuscar_TextChanged;
 
         TxtNombre.KeyPress += FiltrosTexto.SoloLetras;
         TxtApellido.KeyPress += FiltrosTexto.SoloLetras;
         TxtDni.KeyPress += FiltrosTexto.SoloNumeros;
         CboEspecialidad.KeyPress += FiltrosTexto.SoloLetras;
+
+        // Los textos y flujos con ancho limitado se recalculan cuando cambia el ancho.
+        tlpAcciones.SizeChanged += (s, e) => AcotarEtiquetas();
+        tlpDerecho.SizeChanged += (s, e) => AcotarEtiquetas();
+        foreach (var flujo in new[] { flpFiltros, FlpContadores, flpBotonesAccion })
+            flujo.SizeChanged += (s, e) => EstiloUi.AjustarFlujos(flpFiltros, FlpContadores, flpBotonesAccion);
+
+        Load += FormMedicos_Load;
+    }
+
+    // ------------------------------------------------------------- arranque
+
+    private void FormMedicos_Load(object? sender, EventArgs e)
+    {
+        _cargando = true;
+        try
+        {
+            ConfigurarColumnas();
+            ConfigurarBarraContadores();
+            ConfigurarEstiloBotones();
+            CargarCombos();
+        }
+        finally
+        {
+            _cargando = false;
+        }
+
+        CargarGrilla();
+        IrAModoNuevo();
+
+        // WinForms selecciona sola la primera fila recien cuando la grilla se
+        // muestra de verdad en pantalla (despues de Load, sobre todo cuando el
+        // formulario es hijo del menu). Esa seleccion automatica se ignora y se
+        // limpia una vez que el formulario termino de mostrarse.
+        _cargando = true;
+        BeginInvoke(new Action(() =>
+        {
+            if (IsDisposed) return;
+            _cargando = false;
+            IrAModoNuevo();
+        }));
+    }
+
+    private void ConfigurarEstiloBotones()
+    {
+        EstiloUi.EstilizarBoton(BtnGuardar, TipoBoton.Primario);
+        EstiloUi.EstilizarBoton(BtnNuevo, TipoBoton.Secundario);
+        EstiloUi.EstilizarBoton(BtnEliminar, TipoBoton.Peligro);
     }
 
     private void CargarCombos()
     {
-        ClbObrasSociales.DataSource = _obraSocialService.ObtenerTodos();
-        ClbObrasSociales.DisplayMember = "Nombre";
-        ClbObrasSociales.ValueMember = "Id";
+        try
+        {
+            ClbObrasSociales.DataSource = _obraSocialService.ObtenerTodos();
+            ClbObrasSociales.DisplayMember = "Nombre";
+            ClbObrasSociales.ValueMember = "Id";
+        }
+        catch (Exception ex)
+        {
+            MostrarMensaje("No se pudo cargar la lista de obras sociales: " + ex.Message, TipoMensaje.Error);
+        }
     }
 
     private void ConfigurarColumnas()
     {
         // Se configura aca, en codigo, y no en el Designer, porque el disenador
         // visual de Visual Studio borra las columnas de un DataGridView cada vez
-        // que se abre el formulario. Aca es inmune a eso.
-        // AutoSizeColumnsMode = Fill reparte el ancho disponible segun FillWeight
-        // (proporcional) en vez de pixeles fijos - necesario porque FormMedicos
-        // ahora se embebe en pnlContenido y ya no tiene un ancho de ventana fijo.
-        DgvMedicos.AutoGenerateColumns = false;
-        DgvMedicos.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-        DgvMedicos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colId", HeaderText = "Id", DataPropertyName = "Id", FillWeight = 30 });
-        DgvMedicos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colNombre", HeaderText = "Nombre", DataPropertyName = "Nombre", FillWeight = 90 });
-        DgvMedicos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colApellido", HeaderText = "Apellido", DataPropertyName = "Apellido", FillWeight = 90 });
-        DgvMedicos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colDni", HeaderText = "Dni", DataPropertyName = "Dni", FillWeight = 90 });
-        DgvMedicos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colMatricula", HeaderText = "Matrícula", DataPropertyName = "Matricula", FillWeight = 85 });
-        DgvMedicos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colEspecialidad", HeaderText = "Especialidad", DataPropertyName = "Especialidad", FillWeight = 100 });
-        DgvMedicos.Columns.Add(new DataGridViewTextBoxColumn
+        // que se abre el formulario. Aca es inmune a eso. El Id no se muestra.
+        GrillaUi.Estilizar(DgvMedicos);
+
+        int texto = EscalaDpi.Px(this, 50);
+        DataGridViewTextBoxColumn Columna(string nombre, string titulo, string propiedad, float peso, int minimo, string? formato = null)
         {
-            Name = "colPrecio",
-            HeaderText = "Precio\nparticular",
-            DataPropertyName = "PrecioConsultaParticular",
-            FillWeight = 95,
-            DefaultCellStyle = new DataGridViewCellStyle { Format = "C2", FormatProvider = CulturaAr, Alignment = DataGridViewContentAlignment.MiddleRight }
-        });
+            var columna = GrillaUi.AgregarColumna(DgvMedicos, nombre, titulo, propiedad, peso, minimo, formato);
+            // Con 9 columnas se recorta el margen extra del encabezado para que entren mas.
+            columna.MinimumWidth = Math.Max(minimo, GrillaUi.MinimoEncabezado(DgvMedicos, titulo) - EscalaDpi.Px(this, 8));
+            return columna;
+        }
+
+        Columna("colNombre", "Nombre", "Nombre", 80, texto);
+        Columna("colApellido", "Apellido", "Apellido", 80, texto);
+        Columna("colDni", "DNI", "Dni", 75, GrillaUi.MinimoPara(DgvMedicos, "00000000"));
+        Columna("colMatricula", "Matrícula", "Matricula", 70, GrillaUi.MinimoPara(DgvMedicos, "MP00000"));
+        Columna("colEspecialidad", "Especialidad", "Especialidad", 95, texto);
+        var precio = Columna("colPrecio", "Precio particular", "PrecioConsultaParticular", 85, GrillaUi.MinimoPara(DgvMedicos, "$ 000.000,00"), "C2");
+        precio.DefaultCellStyle.FormatProvider = CulturaAr;
+        precio.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
         // El texto largo se corta con puntos suspensivos; la lista completa
         // sale en el tooltip (CellToolTipTextNeeded).
-        DgvMedicos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colObrasSociales", HeaderText = "Obras sociales\naceptadas", DataPropertyName = "ObrasSocialesTexto", FillWeight = 170 });
-        DgvMedicos.Columns.Add(new DataGridViewTextBoxColumn
-        {
-            Name = "colTurnosMes",
-            HeaderText = "Turnos del mes",
-            DataPropertyName = "TurnosDelMes",
-            FillWeight = 80,
-            DefaultCellStyle = new DataGridViewCellStyle { Alignment = DataGridViewContentAlignment.MiddleCenter }
-        });
-        DgvMedicos.Columns.Add(new DataGridViewTextBoxColumn
-        {
-            Name = "colTurnosHoy",
-            HeaderText = "Turnos de hoy",
-            DataPropertyName = "TurnosDeHoy",
-            FillWeight = 80,
-            DefaultCellStyle = new DataGridViewCellStyle { Alignment = DataGridViewContentAlignment.MiddleCenter }
-        });
+        Columna("colObrasSociales", "Obras sociales aceptadas", "ObrasSocialesTexto", 160, EscalaDpi.Px(this, 90));
+        Columna("colTurnosMes", "Turnos del mes", "TurnosDelMes", 55, GrillaUi.MinimoPara(DgvMedicos, "00"))
+            .DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+        Columna("colTurnosHoy", "Turnos de hoy", "TurnosDeHoy", 55, GrillaUi.MinimoPara(DgvMedicos, "00"))
+            .DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+    }
 
-        // Con 10 columnas los encabezados largos ("Turnos del mes") se cortan:
-        // se permite que envuelvan en dos lineas y se fija un minimo por columna
-        // para que DNI y matricula no queden recortados.
-        DgvMedicos.ColumnHeadersDefaultCellStyle.WrapMode = DataGridViewTriState.True;
-        DgvMedicos.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
-        DgvMedicos.ColumnHeadersHeight = 68;
-        var minimos = new Dictionary<string, int>
-        {
-            ["colId"] = 30, ["colNombre"] = 60, ["colApellido"] = 60, ["colDni"] = 90, ["colMatricula"] = 90,
-            ["colEspecialidad"] = 85, ["colPrecio"] = 100, ["colObrasSociales"] = 120, ["colTurnosMes"] = 80, ["colTurnosHoy"] = 80
-        };
-        foreach (DataGridViewColumn columna in DgvMedicos.Columns)
-            columna.MinimumWidth = minimos.GetValueOrDefault(columna.Name, 55);
+    private void ConfigurarBarraContadores()
+    {
+        _contadores.Agregar(ContTotal, EstiloUi.Texto, Color.White);
+        _contadores.Agregar(ContHoy, PaletaEstados.Fondo(EstadoTurno.Confirmado), PaletaEstados.Acento(EstadoTurno.Confirmado));
+        _contadores.Agregar(ContMes, PaletaEstados.Fondo(EstadoTurno.Asistio), PaletaEstados.Acento(EstadoTurno.Asistio));
+        _contadores.Agregar(ContSinObras, PaletaEstados.Fondo(EstadoTurno.Pendiente), PaletaEstados.Acento(EstadoTurno.Pendiente));
+        ActualizarContadores(new List<MedicoFila>());
 
-        DgvMedicos.CellToolTipTextNeeded += DgvMedicos_CellToolTipTextNeeded;
+        // Los contadores cuentan medicos; el texto corto se aclara en el tooltip.
+        _tooltip.SetToolTip(FlpContadores.Controls.Find("lblContador" + ContTotal, false)[0], "Médicos que muestra la tabla");
+        _tooltip.SetToolTip(FlpContadores.Controls.Find("lblContador" + ContHoy, false)[0], "Médicos con turnos hoy");
+        _tooltip.SetToolTip(FlpContadores.Controls.Find("lblContador" + ContMes, false)[0], "Médicos con turnos en el mes actual");
+        _tooltip.SetToolTip(FlpContadores.Controls.Find("lblContador" + ContSinObras, false)[0], "Médicos sin ninguna obra social aceptada");
+    }
+
+    // ------------------------------------------------------- datos y buscador
+
+    // Trae el listado del servicio y lo muestra con el filtro de busqueda vigente.
+    private void CargarGrilla()
+    {
+        try
+        {
+            _todos = _service.ObtenerListado();
+        }
+        catch (Exception ex)
+        {
+            _todos = new List<MedicoFila>();
+            MostrarMensaje("No se pudo cargar el listado de médicos: " + ex.Message, TipoMensaje.Error);
+        }
+        AplicarFiltro();
+    }
+
+    private void TxtBuscar_TextChanged(object? sender, EventArgs e)
+    {
+        if (_cargando) return;
+        AplicarFiltro();
+    }
+
+    // Filtra _todos por nombre, apellido, DNI, matricula o especialidad (sin
+    // distinguir mayusculas ni acentos) y vuelve a armar la grilla. Si el medico
+    // en edicion queda fuera del filtro, la tarjeta vuelve al modo "nuevo".
+    private void AplicarFiltro()
+    {
+        string texto = TxtBuscar.Text.Trim();
+        var lista = string.IsNullOrEmpty(texto)
+            ? _todos.ToList()
+            : _todos.Where(m =>
+                FiltrosTexto.Contiene($"{m.Nombre} {m.Apellido}", texto) ||
+                FiltrosTexto.Contiene($"{m.Apellido} {m.Nombre}", texto) ||
+                FiltrosTexto.Contiene(m.Dni, texto) ||
+                FiltrosTexto.Contiene(m.Matricula, texto) ||
+                FiltrosTexto.Contiene(m.Especialidad, texto)).ToList();
+
+        bool anterior = _cargando;
+        _cargando = true;
+        bool reseleccionado = false;
+        try
+        {
+            // Se desengancha SelectionChanged mientras se reasigna el DataSource
+            // para que no corra con filas a medio cargar.
+            DgvMedicos.SelectionChanged -= DgvMedicos_SelectionChanged;
+            DgvMedicos.DataSource = lista;
+
+            // Sin esto, WinForms selecciona sola la primera fila al asignar el
+            // DataSource y precarga el formulario con ese registro.
+            DgvMedicos.ClearSelection();
+            DgvMedicos.CurrentCell = null;
+
+            // Si se estaba editando un medico y sigue en la lista, queda elegido.
+            if (_idSeleccionado != null)
+            {
+                foreach (DataGridViewRow fila in DgvMedicos.Rows)
+                {
+                    if (fila.DataBoundItem is MedicoFila f && f.Id == _idSeleccionado)
+                    {
+                        fila.Selected = true;
+                        DgvMedicos.CurrentCell = fila.Cells[0];
+                        reseleccionado = true;
+                        break;
+                    }
+                }
+            }
+            DgvMedicos.SelectionChanged += DgvMedicos_SelectionChanged;
+        }
+        finally
+        {
+            _cargando = anterior;
+        }
+
+        ActualizarContadores(lista);
+        AcotarEtiquetas();
+
+        if (_idSeleccionado != null && !reseleccionado)
+            IrAModoNuevo();
+        else
+            ActualizarAcciones();
+    }
+
+    // Cuenta sobre lo que muestra la grilla (con la busqueda ya aplicada).
+    private void ActualizarContadores(List<MedicoFila> filas)
+    {
+        _contadores.Poner(ContTotal, $"Total: {filas.Count}");
+        _contadores.Poner(ContHoy, $"Con turnos hoy: {filas.Count(f => f.TurnosDeHoy > 0)}");
+        _contadores.Poner(ContMes, $"Con turnos este mes: {filas.Count(f => f.TurnosDelMes > 0)}");
+        _contadores.Poner(ContSinObras, $"Sin obras: {filas.Count(f => f.ObrasSociales.Count == 0)}");
+    }
+
+    private void DgvMedicos_CellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
+    {
+        if (e.CellStyle == null || e.RowIndex < 0 || e.ColumnIndex < 0) return;
+        if (DgvMedicos.Rows[e.RowIndex].DataBoundItem is not MedicoFila fila) return;
+
+        // Turnos de hoy: resaltado azul (mismo tono que "Confirmado") si hay alguno.
+        if (DgvMedicos.Columns[e.ColumnIndex].Name == "colTurnosHoy" && fila.TurnosDeHoy > 0)
+        {
+            e.CellStyle.BackColor = PaletaEstados.Fondo(EstadoTurno.Confirmado);
+            e.CellStyle.ForeColor = PaletaEstados.Acento(EstadoTurno.Confirmado);
+            e.CellStyle.Font = _fuenteNegrita;
+        }
     }
 
     private void DgvMedicos_CellToolTipTextNeeded(object? sender, DataGridViewCellToolTipTextNeededEventArgs e)
@@ -106,72 +291,133 @@ public partial class FormMedicos : Form
             e.ToolTipText = fila.ObrasSocialesTexto;
     }
 
-    private void CargarGrilla()
-    {
-        List<MedicoFila> medicos;
-        try
-        {
-            medicos = _service.ObtenerListado();
-        }
-        catch (Exception ex)
-        {
-            medicos = new List<MedicoFila>();
-            LblMensaje.ForeColor = Color.Red;
-            LblMensaje.Text = "No se pudo cargar el listado de médicos: " + ex.Message;
-        }
-
-        var filtro = TxtBuscar.Text?.Trim() ?? "";
-        if (!string.IsNullOrWhiteSpace(filtro))
-        {
-            var f = filtro.ToLower();
-            medicos = medicos.Where(m =>
-                m.Apellido.ToLower().Contains(f) ||
-                m.Nombre.ToLower().Contains(f) ||
-                m.Especialidad.ToLower().Contains(f) ||
-                m.Matricula.ToLower().Contains(f) ||
-                m.Dni.Contains(f)).ToList();
-        }
-
-        // Se desengancha SelectionChanged mientras se reasigna el DataSource
-        // para que no corra con filas a medio cargar.
-        DgvMedicos.SelectionChanged -= DgvMedicos_SelectionChanged_1;
-        try
-        {
-            DgvMedicos.DataSource = medicos;
-        }
-        finally
-        {
-            // Sin esto, WinForms selecciona sola la primera fila al asignar el
-            // DataSource y precarga el formulario con ese registro - confunde
-            // (parece una pantalla vacia que no lo es) y es facil sobrescribir
-            // el primer registro de la lista sin querer.
-            DgvMedicos.ClearSelection();
-            DgvMedicos.CurrentCell = null;
-            DgvMedicos.SelectionChanged += DgvMedicos_SelectionChanged_1;
-        }
-    }
+    // ------------------------------------------------------- modo de la tarjeta
 
     private void LimpiarChecksObrasSociales()
     {
         for (int i = 0; i < ClbObrasSociales.Items.Count; i++)
-        {
             ClbObrasSociales.SetItemChecked(i, false);
-        }
     }
 
-    private void BtnNuevo_Click(object sender, EventArgs e)
+    // Vuelve al modo "nuevo medico": limpia la tarjeta y deselecciona la fila.
+    private void IrAModoNuevo()
     {
-        _idSeleccionado = null;
-        TxtNombre.Text = "";
-        TxtApellido.Text = "";
-        TxtDni.Text = "";
-        CboEspecialidad.Text = "";
-        TxtMatricula.Text = "";
-        NudPrecioConsultaParticular.Value = 0;
-        LimpiarChecksObrasSociales();
+        bool anterior = _cargando;
+        _cargando = true;
+        try
+        {
+            DgvMedicos.SelectionChanged -= DgvMedicos_SelectionChanged;
+            DgvMedicos.ClearSelection();
+            DgvMedicos.CurrentCell = null;
+            DgvMedicos.SelectionChanged += DgvMedicos_SelectionChanged;
+
+            _idSeleccionado = null;
+            TxtNombre.Text = "";
+            TxtApellido.Text = "";
+            TxtDni.Text = "";
+            CboEspecialidad.Text = "";
+            TxtMatricula.Text = "";
+            NudPrecioConsultaParticular.Value = 0;
+            LimpiarChecksObrasSociales();
+        }
+        finally
+        {
+            _cargando = anterior;
+        }
+
+        ActualizarModo();
+        ActualizarAcciones();
     }
 
-    private void BtnGuardar_Click(object sender, EventArgs e)
+    // Titulo y aviso de la tarjeta segun si hay un medico cargado para editar.
+    private void ActualizarModo()
+    {
+        bool editando = _idSeleccionado != null;
+        lblTituloTarjeta.Text = editando ? "EDITAR MÉDICO" : "NUEVO MÉDICO";
+
+        var fila = FilaSeleccionada;
+        EstiloUi.MostrarAviso(LblModo, _tooltip,
+            editando ? $"Editando a «{fila?.Nombre} {fila?.Apellido}»" : "",
+            editando ? $"Editando a «{fila?.Nombre} {fila?.Apellido}»: modifique los datos y pulse «Guardar»." : "");
+        AcotarEtiquetas();
+    }
+
+    // Texto de la barra de seleccion, detalle y estado del boton Eliminar.
+    private void ActualizarAcciones()
+    {
+        var fila = FilaSeleccionada;
+        if (fila == null)
+        {
+            EstiloUi.PonerTexto(LblSeleccion, _tooltip, "Médico seleccionado: ninguno");
+            BtnEliminar.Enabled = false;
+            MostrarAyudaAcciones("");
+            LblDetalle.Text = "Seleccione un médico para ver sus obras sociales y sus turnos.";
+            AcotarEtiquetas();
+            return;
+        }
+
+        EstiloUi.PonerTexto(LblSeleccion, _tooltip, $"Médico seleccionado: {fila.Apellido}, {fila.Nombre} · {fila.Especialidad}");
+        BtnEliminar.Enabled = true;
+        MostrarAyudaAcciones("");
+        LblDetalle.Text = $"Obras sociales: {fila.ObrasSocialesTexto} · Turnos de hoy: {fila.TurnosDeHoy} · Turnos del mes: {fila.TurnosDelMes}";
+        AcotarEtiquetas();
+    }
+
+    private void MostrarAyudaAcciones(string texto)
+    {
+        LblAyudaAcciones.Text = texto;
+        LblAyudaAcciones.Visible = !string.IsNullOrEmpty(texto);
+        AcotarEtiquetas();
+    }
+
+    // ------------------------------------------------------------ eventos
+
+    private void DgvMedicos_SelectionChanged(object? sender, EventArgs e)
+    {
+        if (_cargando) return;
+
+        var fila = FilaSeleccionada;
+        if (fila == null)
+        {
+            ActualizarAcciones();
+            return;
+        }
+
+        var medico = fila.Medico;
+        _cargando = true;
+        try
+        {
+            _idSeleccionado = medico.Id;
+            TxtNombre.Text = medico.Nombre;
+            TxtApellido.Text = medico.Apellido;
+            TxtDni.Text = medico.Dni;
+            CboEspecialidad.Text = medico.Especialidad;
+            TxtMatricula.Text = medico.Matricula;
+            NudPrecioConsultaParticular.Value = medico.PrecioConsultaParticular;
+
+            for (int i = 0; i < ClbObrasSociales.Items.Count; i++)
+            {
+                var obraSocial = (ObraSocial)ClbObrasSociales.Items[i];
+                ClbObrasSociales.SetItemChecked(i, medico.ObrasSocialesAceptadasIds.Contains(obraSocial.Id));
+            }
+        }
+        finally
+        {
+            _cargando = false;
+        }
+
+        LimpiarMensaje();
+        ActualizarModo();
+        ActualizarAcciones();
+    }
+
+    private void BtnNuevo_Click(object? sender, EventArgs e)
+    {
+        LimpiarMensaje();
+        IrAModoNuevo();
+    }
+
+    private void BtnGuardar_Click(object? sender, EventArgs e)
     {
         try
         {
@@ -194,33 +440,31 @@ public partial class FormMedicos : Form
             {
                 _service.Modificar(medico);
             }
-            CargarGrilla();
-            BtnNuevo_Click(sender, e);
-
-            LblMensaje.ForeColor = Color.Green;
-            LblMensaje.Text = "Medico guardado correctamente";
         }
         catch (Exception ex)
         {
-            LblMensaje.ForeColor = Color.Red;
-            LblMensaje.Text = ex.Message;
-        }
-    }
-
-    private void BtnEliminar_Click(object sender, EventArgs e)
-    {
-        if (DgvMedicos.CurrentRow == null)
-        {
-            LblMensaje.ForeColor = Color.Red;
-            LblMensaje.Text = "Seleccione un medico de la lista primero.";
+            MostrarMensaje(ex.Message, TipoMensaje.Error);
             return;
         }
 
-        var medicoSeleccionado = ((MedicoFila)DgvMedicos.CurrentRow.DataBoundItem).Medico;
+        CargarGrilla();
+        IrAModoNuevo();
+        MostrarMensaje("Médico guardado correctamente", TipoMensaje.Ok);
+    }
+
+    private void BtnEliminar_Click(object? sender, EventArgs e)
+    {
+        var fila = FilaSeleccionada;
+        if (fila == null)
+        {
+            MostrarMensaje("Seleccione un médico de la lista primero.", TipoMensaje.Error);
+            return;
+        }
+        var medicoSeleccionado = fila.Medico;
 
         var respuesta = MessageBox.Show(
-                   $"Esta seguro que desea eliminar a {medicoSeleccionado.Nombre} {medicoSeleccionado.Apellido}?",
-                   "Confirmar eliminacion", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            $"¿Está seguro que desea eliminar a {medicoSeleccionado.Nombre} {medicoSeleccionado.Apellido}?",
+            "Confirmar eliminación", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
 
         if (respuesta != DialogResult.Yes)
             return;
@@ -228,37 +472,30 @@ public partial class FormMedicos : Form
         try
         {
             _service.EliminarLogico(medicoSeleccionado.Id);
-            CargarGrilla();
-            BtnNuevo_Click(sender, e);
-
-            LblMensaje.ForeColor = Color.Green;
-            LblMensaje.Text = "Medico eliminado correctamente.";
         }
         catch (Exception ex)
         {
-            LblMensaje.ForeColor = Color.Red;
-            LblMensaje.Text = ex.Message;
+            MostrarMensaje(ex.Message, TipoMensaje.Error);
+            return;
         }
+
+        CargarGrilla();
+        IrAModoNuevo();
+        MostrarMensaje("Médico eliminado correctamente.", TipoMensaje.Ok);
     }
 
-    private void DgvMedicos_SelectionChanged_1(object? sender, EventArgs e)
+    // ----------------------------------------------------- mensajes y estilo
+
+    private void MostrarMensaje(string texto, TipoMensaje tipo) => _mensajes.Mostrar(texto, tipo);
+
+    private void LimpiarMensaje() => _mensajes.Limpiar();
+
+    // Limita el ancho de los textos que pueden ocupar varias lineas al de su contenedor.
+    private void AcotarEtiquetas()
     {
-        if (DgvMedicos.CurrentRow == null) return;
-
-        var medico = ((MedicoFila)DgvMedicos.CurrentRow.DataBoundItem).Medico;
-
-        _idSeleccionado = medico.Id;
-        TxtNombre.Text = medico.Nombre;
-        TxtApellido.Text = medico.Apellido;
-        TxtDni.Text = medico.Dni;
-        CboEspecialidad.Text = medico.Especialidad;
-        TxtMatricula.Text = medico.Matricula;
-        NudPrecioConsultaParticular.Value = medico.PrecioConsultaParticular;
-
-        for (int i = 0; i < ClbObrasSociales.Items.Count; i++)
-        {
-            var obraSocial = (ObraSocial)ClbObrasSociales.Items[i];
-            ClbObrasSociales.SetItemChecked(i, medico.ObrasSocialesAceptadasIds.Contains(obraSocial.Id));
-        }
+        EstiloUi.Acotar(LblAyudaAcciones, tlpAcciones);
+        EstiloUi.Acotar(LblDetalle, tlpAcciones);
+        EstiloUi.AjustarFlujos(flpFiltros, FlpContadores, flpBotonesAccion);
+        _mensajes.Ajustar();
     }
 }
