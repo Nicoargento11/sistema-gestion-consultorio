@@ -31,8 +31,6 @@ public class FormInicio : Form
     private static readonly Font FuenteNumero = new("Segoe UI", 22F, FontStyle.Bold);
     private static readonly Font FuenteNumeroMedio = new("Segoe UI", 16F, FontStyle.Bold);
 
-    private const int AltoTarjeta = 92;
-
     private readonly Usuario _usuario;
     private readonly DateOnly _fecha;
     private readonly ResumenService _resumenService = new();
@@ -120,10 +118,10 @@ public class FormInicio : Form
 
         AgregarSeccion("Resumen general");
         var tarjetas = CrearFilaTarjetas();
-        tarjetas.Controls.Add(CrearTarjeta(resumen.TurnosSemana.ToString(CulturaAr), "Turnos de la semana", ColorAzul));
-        tarjetas.Controls.Add(CrearTarjeta(resumen.AusentesMes.ToString(CulturaAr), "Ausentes del mes", PaletaEstados.Acento(EstadoTurno.Ausente)));
-        tarjetas.Controls.Add(CrearTarjeta(resumen.RecaudacionMes.ToString("C2", CulturaAr), "Recaudación del mes", PaletaEstados.Acento(EstadoTurno.Asistio), 210));
-        tarjetas.Controls.Add(CrearTarjeta(resumen.MedicosConAgendaHoy.ToString(CulturaAr), EsHoy ? "Médicos con agenda hoy" : "Médicos con agenda ese día", ColorTexto, 200));
+        tarjetas.Controls.Add(CrearTarjeta(resumen.TurnosSemana.ToString(CulturaAr), "Turnos de la semana", ColorAzul, IconoCalendario));
+        tarjetas.Controls.Add(CrearTarjeta(resumen.AusentesMes.ToString(CulturaAr), "Ausentes del mes", PaletaEstados.Acento(EstadoTurno.Ausente), IconoAlerta));
+        tarjetas.Controls.Add(CrearTarjeta(resumen.RecaudacionMes.ToString("C2", CulturaAr), "Recaudación del mes", PaletaEstados.Acento(EstadoTurno.Asistio), IconoDinero));
+        tarjetas.Controls.Add(CrearTarjeta(resumen.MedicosConAgendaHoy.ToString(CulturaAr), EsHoy ? "Médicos con agenda hoy" : "Médicos con agenda ese día", ColorTexto, IconoPersonas));
         _contenido.Controls.Add(tarjetas);
 
         AgregarAvisos(_notificacionService.ObtenerAvisos(), "Avisos");
@@ -149,12 +147,12 @@ public class FormInicio : Form
         var desde = EsHoy ? TimeOnly.FromDateTime(DateTime.Now) : TimeOnly.MinValue;
         var proximo = _resumenService.ObtenerProximoPaciente(medicoId, _fecha, desde);
         if (proximo != null)
-            tarjetas.Controls.Add(CrearTarjeta(proximo.HoraInicio.ToString("HH:mm"), "Próximo paciente", PaletaEstados.Acento(EstadoTurno.Confirmado), 300, proximo.PacienteNombre));
+            tarjetas.Controls.Add(CrearTarjeta(proximo.HoraInicio.ToString("HH:mm"), "Próximo paciente", PaletaEstados.Acento(EstadoTurno.Confirmado), IconoPersona, 260, proximo.PacienteNombre));
         else
-            tarjetas.Controls.Add(CrearTarjeta("-", "Próximo paciente", PaletaEstados.Acento(EstadoTurno.Cancelado), 300, EsHoy ? "No quedan pacientes por atender hoy" : "No hay pacientes pendientes ese día"));
+            tarjetas.Controls.Add(CrearTarjeta("-", "Próximo paciente", PaletaEstados.Acento(EstadoTurno.Cancelado), IconoPersona, 260, EsHoy ? "No quedan pacientes por atender hoy" : "No hay pacientes pendientes ese día"));
 
-        tarjetas.Controls.Add(CrearTarjeta(resumen.TurnosSemana.ToString(CulturaAr), "Turnos de la semana", ColorAzul));
-        tarjetas.Controls.Add(CrearTarjeta(resumen.AusentesMes.ToString(CulturaAr), "Ausentes del mes", PaletaEstados.Acento(EstadoTurno.Ausente)));
+        tarjetas.Controls.Add(CrearTarjeta(resumen.TurnosSemana.ToString(CulturaAr), "Turnos de la semana", ColorAzul, IconoCalendario));
+        tarjetas.Controls.Add(CrearTarjeta(resumen.AusentesMes.ToString(CulturaAr), "Ausentes del mes", PaletaEstados.Acento(EstadoTurno.Ausente), IconoAlerta));
         _contenido.Controls.Add(tarjetas);
 
         var medico = _usuario.Medico ?? _medicoService.ObtenerPorId(medicoId);
@@ -177,8 +175,8 @@ public class FormInicio : Form
 
         AgregarSeccion("Esta semana y este mes");
         var tarjetas = CrearFilaTarjetas();
-        tarjetas.Controls.Add(CrearTarjeta(resumen.TurnosSemana.ToString(CulturaAr), "Turnos de la semana", ColorAzul));
-        tarjetas.Controls.Add(CrearTarjeta(resumen.AusentesMes.ToString(CulturaAr), "Ausentes del mes", PaletaEstados.Acento(EstadoTurno.Ausente)));
+        tarjetas.Controls.Add(CrearTarjeta(resumen.TurnosSemana.ToString(CulturaAr), "Turnos de la semana", ColorAzul, IconoCalendario));
+        tarjetas.Controls.Add(CrearTarjeta(resumen.AusentesMes.ToString(CulturaAr), "Ausentes del mes", PaletaEstados.Acento(EstadoTurno.Ausente), IconoAlerta));
         _contenido.Controls.Add(tarjetas);
 
         AgregarSeccion("Próximos turnos sin confirmar");
@@ -193,7 +191,7 @@ public class FormInicio : Form
 
     private Control CrearEncabezado()
     {
-        var panel = new Panel { Height = 64, Margin = new Padding(0, 0, 0, 14), Name = "pnlEncabezado" };
+        var panel = new Panel { Margin = new Padding(0, 0, 0, EscalaDpi.Px(this, 14)), Name = "pnlEncabezado" };
 
         var saludo = new Label
         {
@@ -213,10 +211,13 @@ public class FormInicio : Form
             AutoSize = true,
             Font = FuenteNormal,
             ForeColor = ColorSecundario,
-            Location = new Point(2, 38),
             Text = $"{fechaTexto}  |  {DescripcionRol()}",
             Name = "lblFechaRol"
         };
+        // Debajo del saludo segun su altura real (la fuente escala con la
+        // pantalla, un Y fijo en pixeles pisaba el titulo).
+        subtitulo.Location = new Point(2, saludo.PreferredHeight);
+        panel.Height = saludo.PreferredHeight + subtitulo.PreferredSize.Height + EscalaDpi.Px(this, 6);
 
         var actualizar = new Button
         {
@@ -226,8 +227,10 @@ public class FormInicio : Form
             BackColor = ColorAzul,
             ForeColor = Color.White,
             Font = FuenteNormal,
-            Size = new Size(100, 28),
-            Location = new Point(0, 6)
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            Padding = new Padding(EscalaDpi.Px(this, 10), EscalaDpi.Px(this, 3), EscalaDpi.Px(this, 10), EscalaDpi.Px(this, 3)),
+            Location = new Point(0, EscalaDpi.Px(this, 6))
         };
         actualizar.FlatAppearance.BorderSize = 0;
         actualizar.Click += (s, e) => Cargar();
@@ -260,11 +263,12 @@ public class FormInicio : Form
         AgregarSeccion(EsHoy ? "Turnos de hoy" : $"Turnos del {_fecha:dd/MM/yyyy}");
 
         var tarjetas = CrearFilaTarjetas();
-        tarjetas.Controls.Add(CrearTarjeta(resumen.Pendientes.ToString(CulturaAr), "Pendientes", PaletaEstados.Acento(EstadoTurno.Pendiente)));
-        tarjetas.Controls.Add(CrearTarjeta(resumen.Confirmados.ToString(CulturaAr), "Confirmados", PaletaEstados.Acento(EstadoTurno.Confirmado)));
-        tarjetas.Controls.Add(CrearTarjeta(resumen.Asistieron.ToString(CulturaAr), "Asistieron", PaletaEstados.Acento(EstadoTurno.Asistio)));
-        tarjetas.Controls.Add(CrearTarjeta(resumen.Ausentes.ToString(CulturaAr), "Ausentes", PaletaEstados.Acento(EstadoTurno.Ausente)));
-        tarjetas.Controls.Add(CrearTarjeta(resumen.Cancelados.ToString(CulturaAr), "Cancelados", PaletaEstados.Acento(EstadoTurno.Cancelado)));
+        tarjetas.Controls.Add(CrearTarjeta(resumen.Pendientes.ToString(CulturaAr), "Pendientes", PaletaEstados.Acento(EstadoTurno.Pendiente), IconoReloj));
+        tarjetas.Controls.Add(CrearTarjeta(resumen.Confirmados.ToString(CulturaAr), "Confirmados", PaletaEstados.Acento(EstadoTurno.Confirmado), IconoConfirmado));
+        tarjetas.Controls.Add(CrearTarjeta(resumen.Asistieron.ToString(CulturaAr), "Asistieron", PaletaEstados.Acento(EstadoTurno.Asistio), IconoPersona));
+        tarjetas.Controls.Add(CrearTarjeta(resumen.Ausentes.ToString(CulturaAr), "Ausentes", PaletaEstados.Acento(EstadoTurno.Ausente), IconoAlerta));
+        tarjetas.Controls.Add(CrearTarjeta(resumen.Cancelados.ToString(CulturaAr), "Cancelados", PaletaEstados.Acento(EstadoTurno.Cancelado), IconoCancelar));
+        IgualarAnchos(tarjetas);
         _contenido.Controls.Add(tarjetas);
 
         if (resumen.TotalDia == 0)
@@ -377,60 +381,137 @@ public class FormInicio : Form
         };
     }
 
-    // Tarjeta de indicador: numero grande + descripcion. Es un unico Panel
-    // plano con una franja de color a la izquierda dibujada en Paint (sin
-    // paneles anidados).
-    private static Panel CrearTarjeta(string valor, string titulo, Color acento, int ancho = 168, string? detalle = null)
+    // Glifos de la fuente de iconos de Windows (Segoe Fluent Icons en Windows 11,
+    // Segoe MDL2 Assets en Windows 10; comparten los mismos codigos). Si ninguna
+    // esta instalada se usa Segoe UI Symbol.
+    private const string IconoReloj = "";
+    private const string IconoConfirmado = "";
+    private const string IconoPersona = "";
+    private const string IconoAlerta = "";
+    private const string IconoCancelar = "";
+    private const string IconoCalendario = "";
+    private const string IconoDinero = "$";
+    private const string IconoPersonas = "";
+
+    private static readonly string FamiliaIconos = ElegirFamiliaIconos();
+
+    private static string ElegirFamiliaIconos()
     {
+        var instaladas = new System.Drawing.Text.InstalledFontCollection().Families
+            .Select(f => f.Name)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var nombre in new[] { "Segoe Fluent Icons", "Segoe MDL2 Assets" })
+            if (instaladas.Contains(nombre))
+                return nombre;
+
+        return "Segoe UI Symbol";
+    }
+
+    // Tarjeta de indicador: icono en un circulo de color suave + numero grande +
+    // descripcion. Es un unico Panel plano (sin paneles anidados). El tamano se
+    // calcula midiendo los textos reales, asi nunca se cortan sin importar la
+    // escala de pantalla de Windows (las fuentes escalan, los pixeles fijos no).
+    private Panel CrearTarjeta(string valor, string titulo, Color acento, string icono, int anchoMinimo = 0, string? detalle = null)
+    {
+        var fuenteValor = valor.Length > 9 ? FuenteNumeroMedio : FuenteNumero;
+        const TextFormatFlags medir = TextFormatFlags.NoPadding | TextFormatFlags.SingleLine;
+
+        int margen = EscalaDpi.Px(this, 10);
+        int diametro = EscalaDpi.Px(this, 36);
+        int separacion = EscalaDpi.Px(this, 8);
+        int xTexto = margen + diametro + separacion;
+
+        var tamValor = TextRenderer.MeasureText(valor, fuenteValor, Size.Empty, medir);
+        var tamTitulo = TextRenderer.MeasureText(titulo, FuenteNormal, Size.Empty, medir);
+        var tamDetalle = detalle == null
+            ? Size.Empty
+            : TextRenderer.MeasureText(detalle, FuenteChica, Size.Empty, medir);
+
+        // Holgura: la etiqueta reserva unos pixeles mas que MeasureText con
+        // NoPadding; sin ella el texto se parte en dos lineas y se corta.
+        int anchoTexto = Math.Max(tamValor.Width, Math.Max(tamTitulo.Width, tamDetalle.Width)) + EscalaDpi.Px(this, 10);
+        int ancho = Math.Max(EscalaDpi.Px(this, anchoMinimo), xTexto + anchoTexto + margen);
+
+        int altoTexto = tamValor.Height + tamTitulo.Height + (detalle == null ? 0 : tamDetalle.Height);
+        int alto = Math.Max(diametro, altoTexto) + margen * 2 - EscalaDpi.Px(this, 4);
+
         var tarjeta = new Panel
         {
-            Size = new Size(ancho, AltoTarjeta),
+            Size = new Size(ancho, alto),
             BackColor = Color.White,
-            Margin = new Padding(0, 0, 12, 12)
-        };
-        tarjeta.Paint += (s, e) =>
-        {
-            using var pincel = new SolidBrush(acento);
-            e.Graphics.FillRectangle(pincel, 0, 0, 5, tarjeta.Height);
-            using var lapiz = new Pen(Color.FromArgb(226, 229, 236));
-            e.Graphics.DrawRectangle(lapiz, 0, 0, tarjeta.Width - 1, tarjeta.Height - 1);
+            Margin = new Padding(0, 0, EscalaDpi.Px(this, 12), EscalaDpi.Px(this, 12))
         };
 
+        var circulo = new Rectangle(margen, (alto - diametro) / 2, diametro, diametro);
+        var fondoCirculo = Color.FromArgb(
+            255 - (255 - acento.R) * 22 / 100,
+            255 - (255 - acento.G) * 22 / 100,
+            255 - (255 - acento.B) * 22 / 100);
+        // La fuente se usa en Paint (despues de salir de este metodo): se libera
+        // junto con la tarjeta, no antes.
+        var fuenteIcono = new Font(FamiliaIconos, icono == IconoDinero ? 15F : 14F,
+            icono == IconoDinero ? FontStyle.Bold : FontStyle.Regular);
+        tarjeta.Disposed += (s, e) => fuenteIcono.Dispose();
+
+        tarjeta.Paint += (s, e) =>
+        {
+            e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+            using var lapiz = new Pen(Color.FromArgb(226, 229, 236));
+            e.Graphics.DrawRectangle(lapiz, 0, 0, tarjeta.Width - 1, tarjeta.Height - 1);
+            using var pincel = new SolidBrush(fondoCirculo);
+            e.Graphics.FillEllipse(pincel, circulo);
+            TextRenderer.DrawText(e.Graphics, icono, fuenteIcono, circulo, acento,
+                TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPadding);
+        };
+
+        int y = (alto - altoTexto) / 2;
         tarjeta.Controls.Add(new Label
         {
             AutoSize = false,
-            AutoEllipsis = true,
-            Font = valor.Length > 9 ? FuenteNumeroMedio : FuenteNumero,
+            Font = fuenteValor,
             ForeColor = acento,
-            Location = new Point(16, 8),
-            Size = new Size(ancho - 24, 38),
+            Location = new Point(xTexto, y),
+            Size = new Size(ancho - xTexto - margen / 2, tamValor.Height),
             TextAlign = ContentAlignment.MiddleLeft,
+            UseCompatibleTextRendering = false,
             Text = valor
         });
+        y += tamValor.Height;
         tarjeta.Controls.Add(new Label
         {
             AutoSize = false,
-            AutoEllipsis = true,
             Font = FuenteNormal,
             ForeColor = ColorTexto,
-            Location = new Point(16, 48),
-            Size = new Size(ancho - 24, 20),
+            Location = new Point(xTexto, y),
+            Size = new Size(ancho - xTexto - margen / 2, tamTitulo.Height),
+            TextAlign = ContentAlignment.MiddleLeft,
             Text = titulo
         });
+        y += tamTitulo.Height;
         if (detalle != null)
         {
             tarjeta.Controls.Add(new Label
             {
                 AutoSize = false,
-                AutoEllipsis = true,
                 Font = FuenteChica,
                 ForeColor = ColorSecundario,
-                Location = new Point(16, 68),
-                Size = new Size(ancho - 24, 18),
+                Location = new Point(xTexto, y),
+                Size = new Size(ancho - xTexto - margen / 2, tamDetalle.Height),
+                TextAlign = ContentAlignment.MiddleLeft,
                 Text = detalle
             });
         }
         return tarjeta;
+    }
+
+    // Deja todas las tarjetas de una fila con el ancho de la mas ancha, para que
+    // la fila quede pareja (las etiquetas internas quedan alineadas a la izquierda).
+    private static void IgualarAnchos(FlowLayoutPanel fila)
+    {
+        int maximo = fila.Controls.Cast<Control>().Max(c => c.Width);
+        foreach (Control c in fila.Controls)
+            c.Width = maximo;
     }
 
     private static Label CrearAviso(string texto, Color color)
