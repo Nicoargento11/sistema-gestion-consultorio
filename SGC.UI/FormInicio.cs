@@ -408,8 +408,7 @@ public class FormInicio : Form
         return "Segoe UI Symbol";
     }
 
-    // Tarjeta de indicador: icono en un circulo de color suave + numero grande +
-    // descripcion. Es un unico Panel plano (sin paneles anidados). El tamano se
+    // Tarjeta de indicador: icono + numero grande + descripcion. Es un unico Panel plano (sin paneles anidados). El tamano se
     // calcula midiendo los textos reales, asi nunca se cortan sin importar la
     // escala de pantalla de Windows (las fuentes escalan, los pixeles fijos no).
     private Panel CrearTarjeta(string valor, string titulo, Color acento, string icono, int anchoMinimo = 0, string? detalle = null)
@@ -443,25 +442,19 @@ public class FormInicio : Form
             Margin = new Padding(0, 0, EscalaDpi.Px(this, 12), EscalaDpi.Px(this, 12))
         };
 
-        var circulo = new Rectangle(margen, (alto - diametro) / 2, diametro, diametro);
-        var fondoCirculo = Color.FromArgb(
-            255 - (255 - acento.R) * 22 / 100,
-            255 - (255 - acento.G) * 22 / 100,
-            255 - (255 - acento.B) * 22 / 100);
+        // Icono solo, del color del indicador, sin circulo ni fondo.
+        var zonaIcono = new Rectangle(margen, 0, diametro, alto);
         // La fuente se usa en Paint (despues de salir de este metodo): se libera
         // junto con la tarjeta, no antes.
-        var fuenteIcono = new Font(FamiliaIconos, icono == IconoDinero ? 15F : 14F,
+        var fuenteIcono = new Font(FamiliaIconos, 20F,
             icono == IconoDinero ? FontStyle.Bold : FontStyle.Regular);
         tarjeta.Disposed += (s, e) => fuenteIcono.Dispose();
 
         tarjeta.Paint += (s, e) =>
         {
-            e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
             using var lapiz = new Pen(Color.FromArgb(226, 229, 236));
             e.Graphics.DrawRectangle(lapiz, 0, 0, tarjeta.Width - 1, tarjeta.Height - 1);
-            using var pincel = new SolidBrush(fondoCirculo);
-            e.Graphics.FillEllipse(pincel, circulo);
-            TextRenderer.DrawText(e.Graphics, icono, fuenteIcono, circulo, acento,
+            TextRenderer.DrawText(e.Graphics, icono, fuenteIcono, zonaIcono, acento,
                 TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPadding);
         };
 
