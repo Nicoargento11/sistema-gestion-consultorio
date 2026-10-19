@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using SGC.Datos;
 using SGC.Entidades;
 
@@ -9,6 +10,46 @@ public class ObraSocialService
     {
         using var contexto = SGCContextFactory.Crear();
         return contexto.ObrasSociales.Where(o => o.Activo).ToList();
+    }
+
+    // Listado con cantidad de medicos que la aceptan y pacientes afiliados.
+    // Tres consultas en total (obras, pares medico-obra, conteo de pacientes),
+    // sin consultas por fila.
+    public List<ObraSocialFila> ObtenerListado()
+    {
+        using var contexto = SGCContextFactory.Crear();
+
+        var obras = contexto.ObrasSociales.AsNoTracking().Where(o => o.Activo).ToList();
+
+        // Pares (obra social, medico activo) desde la tabla M:N.
+        var pares = contexto.Medicos
+            .AsNoTracking()
+            .Where(m => m.Activo)
+            .SelectMany(m => m.ObrasSocialesAceptadas.Select(o => new { ObraSocialId = o.Id, m.Apellido, m.Nombre }))
+            .ToList();
+
+        var medicosPorObra = pares
+            .GroupBy(p => p.ObraSocialId)
+            .ToDictionary(
+                g => g.Key,
+                g => (IReadOnlyList<string>)g
+                    .Select(p => $"{p.Apellido}, {p.Nombre}")
+                    .OrderBy(n => n, StringComparer.CurrentCultureIgnoreCase)
+                    .ToList());
+
+        var afiliados = contexto.Pacientes
+            .AsNoTracking()
+            .Where(p => p.Activo && p.ObraSocialId != null)
+            .GroupBy(p => p.ObraSocialId!.Value)
+            .Select(g => new { ObraSocialId = g.Key, Cantidad = g.Count() })
+            .ToDictionary(x => x.ObraSocialId, x => x.Cantidad);
+
+        return obras.Select(o => new ObraSocialFila
+        {
+            ObraSocial = o,
+            Medicos = medicosPorObra.TryGetValue(o.Id, out var meds) ? meds : Array.Empty<string>(),
+            PacientesAfiliados = afiliados.TryGetValue(o.Id, out var n) ? n : 0
+        }).ToList();
     }
 
     public ObraSocial? ObtenerPorId(int id)

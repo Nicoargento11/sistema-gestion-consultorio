@@ -18,6 +18,45 @@ public class MedicoService
         return medicos;
     }
 
+    // Listado con obras sociales aceptadas y turnos de hoy / del mes. Dos
+    // consultas (medicos con sus obras, conteo de turnos agrupado), sin
+    // consultas por fila.
+    public List<MedicoFila> ObtenerListado()
+    {
+        using var contexto = SGCContextFactory.Crear();
+
+        var medicos = contexto.Medicos
+            .AsNoTracking()
+            .Where(m => m.Activo)
+            .Include(m => m.ObrasSocialesAceptadas)
+            .ToList();
+        medicos.ForEach(SincronizarIds);
+
+        var hoy = DateOnly.FromDateTime(DateTime.Today);
+        var inicioMes = new DateOnly(hoy.Year, hoy.Month, 1);
+        var finMes = inicioMes.AddMonths(1).AddDays(-1);
+
+        var conteos = contexto.Turnos
+            .AsNoTracking()
+            .Where(t => t.Activo && t.Estado != EstadoTurno.Cancelado
+                        && t.Fecha >= inicioMes && t.Fecha <= finMes)
+            .GroupBy(t => t.MedicoId)
+            .Select(g => new { MedicoId = g.Key, Mes = g.Count(), Hoy = g.Count(t => t.Fecha == hoy) })
+            .ToDictionary(x => x.MedicoId);
+
+        return medicos.Select(m => new MedicoFila
+        {
+            Medico = m,
+            ObrasSociales = m.ObrasSocialesAceptadas
+                .Where(o => o.Activo)
+                .Select(o => o.Nombre)
+                .OrderBy(n => n, StringComparer.CurrentCultureIgnoreCase)
+                .ToList(),
+            TurnosDelMes = conteos.TryGetValue(m.Id, out var c) ? c.Mes : 0,
+            TurnosDeHoy = conteos.TryGetValue(m.Id, out var c2) ? c2.Hoy : 0
+        }).ToList();
+    }
+
     public Medico? ObtenerPorId(int id)
     {
         using var contexto = SGCContextFactory.Crear();
