@@ -22,7 +22,6 @@ public partial class FormReportes : Form
 {
     private static readonly CultureInfo CulturaAr = new("es-AR");
     private static readonly Color ColorAzul = Color.FromArgb(46, 134, 222);
-    private static readonly Color ColorVerde = Color.FromArgb(39, 174, 96);
     private static readonly Color ColorFondo = Color.FromArgb(245, 246, 250);
 
     // Limite del procedimiento de ocupacion (un registro por dia).
@@ -31,6 +30,7 @@ public partial class FormReportes : Form
     private readonly ReporteService _reporteService = new();
     private readonly MedicoService _medicoService = new();
     private readonly Usuario _usuarioActivo;
+    private readonly FranjaMensaje _franja;
 
     private VistaReporte _vistaTurnos = null!;
     private VistaReporte? _vistaRecaudacion;
@@ -55,6 +55,7 @@ public partial class FormReportes : Form
         public DateTimePicker Hasta = null!;
         public ComboBox? CboMedico;
         public ComboBox? CboOpcion;
+        public FlowLayoutPanel Filtros = null!;
         public Button BtnGenerar = null!;
         public Button BtnExportar = null!;
         public DataGridView Grilla = null!;
@@ -71,10 +72,13 @@ public partial class FormReportes : Form
     {
         _usuarioActivo = usuarioActivo ?? throw new ArgumentNullException(nameof(usuarioActivo));
         InitializeComponent();
+        _franja = new FranjaMensaje(pnlMensaje, LblMensaje) { ReacomodarContenedor = true };
 
         // Todo se arma en codigo (no en el Designer) para que el disenador
         // visual de Visual Studio no pueda borrarlo.
         ConstruirPestaniasPorRol();
+        foreach (var vista in TodasLasVistas())
+            AjustarMinimosDeColumnas(vista.Grilla);
         CargarCombos();
 
         // Los rangos por defecto (mes actual) son validos; si el usuario no
@@ -83,6 +87,10 @@ public partial class FormReportes : Form
             vista.BtnGenerar.Enabled = !_sinAcceso;
 
         TabReportes.SelectedIndexChanged += (s, e) => RevalidarPestaniaActual();
+
+        // Los combos ya tienen sus items: el flujo de filtros recalcula su alto.
+        foreach (var vista in TodasLasVistas())
+            EstiloUi.AjustarFlujos(vista.Filtros);
     }
 
     // ---------------------------------------------------------------
@@ -120,51 +128,78 @@ public partial class FormReportes : Form
         {
             Clave = clave,
             LimitaUnAnio = limitaUnAnio,
-            Pagina = new TabPage(titulo) { Name = "Tab" + clave, BackColor = ColorFondo }
+            // Tamano inicial no vacio: el grafico acoplado a la derecha no admite alto 0.
+            Pagina = new TabPage(titulo) { Name = "Tab" + clave, BackColor = ColorFondo, Size = new Size(EscalaDpi.Px(this, 800), EscalaDpi.Px(this, 400)) }
         };
 
         var hoy = DateTime.Today;
         var primerDia = new DateTime(hoy.Year, hoy.Month, 1);
         var ultimoDia = primerDia.AddMonths(1).AddDays(-1);
 
-        // --- Panel de filtros ---
-        var pnlFiltros = new Panel { Dock = DockStyle.Top, Height = 96, BackColor = ColorFondo };
+        // --- Filtros: flujo que parte en filas si la ventana es angosta; cada
+        // campo es un grupo "etiqueta arriba, control abajo" medido con su fuente. ---
+        var flujoFiltros = new FlowLayoutPanel
+        {
+            Name = "FlpFiltros" + clave,
+            Dock = DockStyle.Top,
+            WrapContents = true,
+            BackColor = ColorFondo,
+            Padding = new Padding(EscalaDpi.Px(this, 14), EscalaDpi.Px(this, 6), EscalaDpi.Px(this, 14), EscalaDpi.Px(this, 2))
+        };
+        vista.Filtros = flujoFiltros;
 
-        int x = 14;
-        vista.Desde = CrearSelectorFecha(pnlFiltros, "Desde", x, "Dtp" + clave + "Desde", primerDia);
-        x += 134;
-        vista.Hasta = CrearSelectorFecha(pnlFiltros, "Hasta", x, "Dtp" + clave + "Hasta", ultimoDia);
-        x += 134;
+        vista.Desde = CrearSelectorFecha("Dtp" + clave + "Desde", primerDia);
+        flujoFiltros.Controls.Add(CrearGrupo("Desde", vista.Desde));
+        vista.Hasta = CrearSelectorFecha("Dtp" + clave + "Hasta", ultimoDia);
+        flujoFiltros.Controls.Add(CrearGrupo("Hasta", vista.Hasta));
 
         if (conMedico)
         {
-            vista.CboMedico = CrearCombo(pnlFiltros, "Médico", x, 220, "Cbo" + clave + "Medico");
-            x += 232;
+            vista.CboMedico = CrearCombo("Cbo" + clave + "Medico");
+            flujoFiltros.Controls.Add(CrearGrupo("Médico", vista.CboMedico));
         }
 
         if (etiquetaOpcion != null)
         {
-            vista.CboOpcion = CrearCombo(pnlFiltros, etiquetaOpcion, x, 170, "Cbo" + clave + "Opcion");
+            vista.CboOpcion = CrearCombo("Cbo" + clave + "Opcion");
+            flujoFiltros.Controls.Add(CrearGrupo(etiquetaOpcion, vista.CboOpcion));
         }
 
-        vista.BtnGenerar = CrearBoton("Generar", ColorVerde, 14, 56, 110, "Btn" + clave + "Generar", negrita: true);
-        vista.BtnExportar = CrearBoton("Exportar a CSV", ColorAzul, 132, 56, 150, "Btn" + clave + "Exportar", negrita: false);
+        // Los botones se alinean con la fila de controles (debajo de las etiquetas).
+        int altoControl = Math.Max(vista.Desde.Height, vista.Hasta.Height);
+        int bajadaBotones = new Font("Segoe UI", 9F, FontStyle.Bold).Height + EscalaDpi.Px(this, 2);
+
+        vista.BtnGenerar = CrearBoton("Generar", TipoBoton.Exito, altoControl, "Btn" + clave + "Generar", negrita: true);
+        vista.BtnGenerar.Margin = new Padding(0, bajadaBotones, EscalaDpi.Px(this, 8), EscalaDpi.Px(this, 4));
+        vista.BtnExportar = CrearBoton("Exportar a CSV", TipoBoton.Primario, altoControl, "Btn" + clave + "Exportar", negrita: false);
         vista.BtnExportar.Enabled = false;
-        pnlFiltros.Controls.Add(vista.BtnGenerar);
-        pnlFiltros.Controls.Add(vista.BtnExportar);
+        flujoFiltros.Controls.Add(vista.BtnGenerar);
+        flujoFiltros.SizeChanged += (s, e) => EstiloUi.AjustarFlujos(flujoFiltros);
 
         // --- Resumen (abajo) ---
-        var pnlResumen = new Panel { Dock = DockStyle.Bottom, Height = 34, BackColor = Color.White, Padding = new Padding(14, 0, 14, 0) };
+        var fuenteResumen = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+        var pnlResumen = new Panel
+        {
+            Dock = DockStyle.Bottom,
+            BackColor = Color.White,
+            Padding = new Padding(EscalaDpi.Px(this, 14), EscalaDpi.Px(this, 4), EscalaDpi.Px(this, 14), EscalaDpi.Px(this, 4))
+        };
+        pnlResumen.Height = Math.Max(fuenteResumen.Height + EscalaDpi.Px(this, 12), altoControl + pnlResumen.Padding.Vertical);
         vista.LblResumen = new Label
         {
             Dock = DockStyle.Fill,
-            Font = new Font("Segoe UI", 9.5F, FontStyle.Bold),
+            Font = fuenteResumen,
             ForeColor = Color.FromArgb(27, 42, 74),
             TextAlign = ContentAlignment.MiddleLeft,
             AutoEllipsis = true,
             Name = "LblResumen" + clave
         };
         pnlResumen.Controls.Add(vista.LblResumen);
+
+        // "Exportar a CSV" va junto al resumen del resultado que exporta, a la
+        // derecha (asi la fila de filtros entra completa en una sola linea).
+        vista.BtnExportar.Dock = DockStyle.Right;
+        pnlResumen.Controls.Add(vista.BtnExportar);
 
         // --- Grilla ---
         vista.Grilla = new DataGridView
@@ -173,29 +208,38 @@ public partial class FormReportes : Form
             Dock = DockStyle.Fill,
             AllowUserToAddRows = false,
             AllowUserToDeleteRows = false,
-            AutoGenerateColumns = false,
+            AllowUserToResizeRows = false,
             BackgroundColor = Color.White,
-            ColumnHeadersHeight = 34,
+            BorderStyle = BorderStyle.None,
+            CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal,
+            ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing,
             Font = new Font("Segoe UI", 9.5F),
             MultiSelect = false,
             ReadOnly = true,
             RowHeadersVisible = false,
-            SelectionMode = DataGridViewSelectionMode.FullRowSelect,
-            AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
+            SelectionMode = DataGridViewSelectionMode.FullRowSelect
         };
+        GrillaUi.Estilizar(vista.Grilla, altoEncabezado: 38, altoFila: 28);
 
         // El orden de agregado importa para el docking: primero el control
-        // Fill, despues los que se pegan a los bordes.
+        // Fill, despues los que se pegan a los bordes (el ultimo agregado se
+        // acomoda primero).
         vista.Pagina.Controls.Add(vista.Grilla);
 
         if (conGrafico)
         {
+            // El grafico va a la derecha de la tabla (no debajo): en ventanas
+            // bajas la tabla conserva todo el alto disponible.
+            var separador = new Panel { Dock = DockStyle.Right, Width = EscalaDpi.Px(this, 8), BackColor = ColorFondo };
             vista.Grafico = CrearGrafico("Grafico" + clave);
+            vista.Pagina.Controls.Add(separador);
             vista.Pagina.Controls.Add(vista.Grafico);
+            vista.Pagina.SizeChanged += (s, e) =>
+                vista.Grafico.Width = Math.Max(EscalaDpi.Px(this, 280), (int)(vista.Pagina.ClientSize.Width * 0.36));
         }
 
         vista.Pagina.Controls.Add(pnlResumen);
-        vista.Pagina.Controls.Add(pnlFiltros);
+        vista.Pagina.Controls.Add(flujoFiltros);
 
         // Eventos de la pestania.
         vista.Desde.ValueChanged += (s, e) => RevalidarVista(vista);
@@ -206,81 +250,92 @@ public partial class FormReportes : Form
         return vista;
     }
 
-    private static DateTimePicker CrearSelectorFecha(Panel padre, string etiqueta, int x, string nombre, DateTime valor)
+    // Grupo "etiqueta arriba, control abajo" que se mueve junto en el flujo de filtros.
+    private FlowLayoutPanel CrearGrupo(string etiqueta, Control control)
     {
-        padre.Controls.Add(new Label
+        var grupo = new FlowLayoutPanel
+        {
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            FlowDirection = FlowDirection.TopDown,
+            WrapContents = false,
+            BackColor = ColorFondo,
+            Margin = new Padding(0, 0, EscalaDpi.Px(this, 10), EscalaDpi.Px(this, 4))
+        };
+        grupo.Controls.Add(new Label
         {
             AutoSize = true,
             Font = new Font("Segoe UI", 9F, FontStyle.Bold),
             ForeColor = Color.FromArgb(50, 60, 75),
-            Location = new Point(x, 8),
+            Margin = new Padding(0, 0, 0, EscalaDpi.Px(this, 2)),
             Text = etiqueta
         });
+        control.Margin = new Padding(0);
+        grupo.Controls.Add(control);
+        return grupo;
+    }
 
-        var selector = new DateTimePicker
+    // El ancho sale de medir una fecha completa con la fuente real (mas el boton
+    // del calendario), asi no se corta con ningun DPI.
+    private DateTimePicker CrearSelectorFecha(string nombre, DateTime valor)
+    {
+        var fuente = new Font("Segoe UI", 10F);
+        return new DateTimePicker
         {
             Name = nombre,
-            Font = new Font("Segoe UI", 10F),
+            Font = fuente,
             Format = DateTimePickerFormat.Custom,
             CustomFormat = "dd/MM/yyyy",
             MinDate = new DateTime(2000, 1, 1),
             MaxDate = new DateTime(2100, 12, 31),
-            Location = new Point(x, 28),
-            Size = new Size(122, 25),
+            Width = TextRenderer.MeasureText("88/88/8888", fuente).Width + SystemInformation.VerticalScrollBarWidth + EscalaDpi.Px(this, 10),
             Value = valor
         };
-        padre.Controls.Add(selector);
-        return selector;
     }
 
-    private static ComboBox CrearCombo(Panel padre, string etiqueta, int x, int ancho, string nombre)
+    // El ancho se ajusta al contenido en AjustarAnchoCombo (cuando se cargan los items).
+    private ComboBox CrearCombo(string nombre)
     {
-        padre.Controls.Add(new Label
-        {
-            AutoSize = true,
-            Font = new Font("Segoe UI", 9F, FontStyle.Bold),
-            ForeColor = Color.FromArgb(50, 60, 75),
-            Location = new Point(x, 8),
-            Text = etiqueta
-        });
-
-        var combo = new ComboBox
+        return new ComboBox
         {
             Name = nombre,
             DropDownStyle = ComboBoxStyle.DropDownList,
             Font = new Font("Segoe UI", 10F),
-            Location = new Point(x, 28),
-            Size = new Size(ancho, 25)
+            Width = EscalaDpi.Px(this, 140)
         };
-        padre.Controls.Add(combo);
-        return combo;
     }
 
-    private static Button CrearBoton(string texto, Color color, int x, int y, int ancho, string nombre, bool negrita)
+    // Ancho del combo = el item mas largo + flecha, entre un minimo y un maximo.
+    private void AjustarAnchoCombo(ComboBox combo, int minimoDiseno, int maximoDiseno)
     {
+        int texto = combo.Items.Cast<object>()
+            .Select(o => TextRenderer.MeasureText(combo.GetItemText(o), combo.Font).Width)
+            .DefaultIfEmpty(0).Max();
+        int ancho = texto + SystemInformation.VerticalScrollBarWidth + EscalaDpi.Px(this, 10);
+        combo.Width = Math.Clamp(ancho, EscalaDpi.Px(this, minimoDiseno), EscalaDpi.Px(this, maximoDiseno));
+    }
+
+    private Button CrearBoton(string texto, TipoBoton tipo, int alto, string nombre, bool negrita)
+    {
+        var fuente = new Font("Segoe UI", 9.5F, negrita ? FontStyle.Bold : FontStyle.Regular);
         var boton = new Button
         {
             Name = nombre,
-            BackColor = color,
-            FlatStyle = FlatStyle.Flat,
-            Font = new Font("Segoe UI", 9.5F, negrita ? FontStyle.Bold : FontStyle.Regular),
-            ForeColor = Color.White,
-            Location = new Point(x, y),
-            Size = new Size(ancho, 30),
-            Text = texto,
-            UseVisualStyleBackColor = false
+            Font = fuente,
+            Size = new Size(TextRenderer.MeasureText(texto, fuente).Width + EscalaDpi.Px(this, 22), alto),
+            Text = texto
         };
-        boton.FlatAppearance.BorderSize = 0;
+        EstiloUi.EstilizarBoton(boton, tipo);
         return boton;
     }
 
-    private static Chart CrearGrafico(string nombre)
+    private Chart CrearGrafico(string nombre)
     {
         var grafico = new Chart
         {
             Name = nombre,
-            Dock = DockStyle.Bottom,
-            Height = 190,
+            Dock = DockStyle.Right,
+            Size = new Size(EscalaDpi.Px(this, 400), EscalaDpi.Px(this, 200)),
             BackColor = Color.White
         };
 
@@ -366,6 +421,24 @@ public partial class FormReportes : Form
         grilla.Columns.Add(Col("colOcupacion", "% de ocupación", nameof(ReporteOcupacionFila.PorcentajeOcupacion), 90, "0.00'%'", DataGridViewContentAlignment.MiddleRight));
     }
 
+    // Cada columna conserva al menos el ancho de su titulo (sin partir palabras)
+    // y de un valor tipico; si no entran, la tabla scrollea en horizontal.
+    private static void AjustarMinimosDeColumnas(DataGridView grilla)
+    {
+        foreach (DataGridViewColumn columna in grilla.Columns)
+        {
+            string muestra = columna.DefaultCellStyle.Format switch
+            {
+                "C2" => "$ 888.888,88",
+                "dd/MM/yyyy" => "88/88/8888",
+                "HH:mm" => "88:88",
+                _ when columna.Name == "colEstado" => "Confirmado",
+                _ => "8888"
+            };
+            columna.MinimumWidth = Math.Max(GrillaUi.MinimoEncabezado(grilla, columna.HeaderText), GrillaUi.MinimoPara(grilla, muestra));
+        }
+    }
+
     // ---------------------------------------------------------------
     // Carga de combos
     // ---------------------------------------------------------------
@@ -382,6 +455,7 @@ public partial class FormReportes : Form
             vista.CboMedico.DisplayMember = nameof(OpcionMedico.Nombre);
             vista.CboMedico.ValueMember = nameof(OpcionMedico.Id);
             vista.CboMedico.SelectedIndex = 0;
+            AjustarAnchoCombo(vista.CboMedico, 150, 380);
 
             // El Medico no puede elegir a otro profesional.
             vista.CboMedico.Enabled = _usuarioActivo.Rol != RolUsuario.Medico;
@@ -400,6 +474,7 @@ public partial class FormReportes : Form
         _vistaTurnos.CboOpcion.DisplayMember = nameof(OpcionEstado.Texto);
         _vistaTurnos.CboOpcion.ValueMember = nameof(OpcionEstado.Valor);
         _vistaTurnos.CboOpcion.SelectedIndex = 0;
+        AjustarAnchoCombo(_vistaTurnos.CboOpcion, 110, 220);
 
         if (_vistaRecaudacion?.CboOpcion != null)
         {
@@ -413,6 +488,7 @@ public partial class FormReportes : Form
             _vistaRecaudacion.CboOpcion.DisplayMember = nameof(OpcionAgrupacion.Texto);
             _vistaRecaudacion.CboOpcion.ValueMember = nameof(OpcionAgrupacion.Valor);
             _vistaRecaudacion.CboOpcion.SelectedIndex = 0;
+            AjustarAnchoCombo(_vistaRecaudacion.CboOpcion, 110, 220);
         }
     }
 
@@ -833,26 +909,11 @@ public partial class FormReportes : Form
     // Mensajes
     // ---------------------------------------------------------------
 
-    private void MostrarError(string texto)
-    {
-        LblMensaje.ForeColor = Color.Red;
-        LblMensaje.Text = texto;
-    }
+    private void MostrarError(string texto) => _franja.Mostrar(texto, TipoMensaje.Error);
 
-    private void MostrarExito(string texto)
-    {
-        LblMensaje.ForeColor = Color.Green;
-        LblMensaje.Text = texto;
-    }
+    private void MostrarExito(string texto) => _franja.Mostrar(texto, TipoMensaje.Ok);
 
-    private void MostrarAviso(string texto)
-    {
-        LblMensaje.ForeColor = Color.DarkOrange;
-        LblMensaje.Text = texto;
-    }
+    private void MostrarAviso(string texto) => _franja.Mostrar(texto, TipoMensaje.Advertencia);
 
-    private void LimpiarMensaje()
-    {
-        LblMensaje.Text = "";
-    }
+    private void LimpiarMensaje() => _franja.Limpiar();
 }

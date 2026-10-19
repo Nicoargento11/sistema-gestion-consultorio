@@ -13,162 +13,237 @@ partial class FormLogin
         base.Dispose(disposing);
     }
 
+    // Estructura estatica del login: una tarjeta blanca centrada sobre el fondo de
+    // la app. Los tamanos de la ventana se calculan desde el contenido en
+    // FormLogin.cs (ver AjustarVentana).
     private void InitializeComponent()
     {
-        pnlMarca = new Panel();
-        lblSubtitulo = new Label();
+        tlpRaiz = new TableLayoutPanel();
+        pnlMarco = new Panel();
+        pnlTarjeta = new Panel();
+        tlpTarjeta = new TableLayoutPanel();
+        lblIconoMarca = new Label();
         lblMarca = new Label();
-        pnlFormulario = new Panel();
-        LblError = new Label();
-        BtnIngresar = new Button();
-        TxtContrasenia = new TextBox();
-        label2 = new Label();
-        TxtUsuario = new TextBox();
+        lblSubtitulo = new Label();
         label1 = new Label();
-        pnlMarca.SuspendLayout();
-        pnlFormulario.SuspendLayout();
+        TxtUsuario = new TextBox();
+        label2 = new Label();
+        TxtContrasenia = new TextBox();
+        BtnIngresar = new Button();
+        pnlEstado = new Panel();
+        LblError = new Label();
+        tlpRaiz.SuspendLayout();
+        pnlMarco.SuspendLayout();
+        pnlTarjeta.SuspendLayout();
+        tlpTarjeta.SuspendLayout();
+        pnlEstado.SuspendLayout();
         SuspendLayout();
-        // 
-        // pnlMarca
-        // 
-        pnlMarca.BackColor = Color.FromArgb(27, 42, 74);
-        pnlMarca.Controls.Add(lblSubtitulo);
-        pnlMarca.Controls.Add(lblMarca);
-        pnlMarca.Dock = DockStyle.Left;
-        pnlMarca.Location = new Point(0, 0);
-        pnlMarca.Name = "pnlMarca";
-        pnlMarca.Size = new Size(320, 500);
-        pnlMarca.TabIndex = 1;
-        // 
-        // lblSubtitulo
-        // 
-        lblSubtitulo.AutoSize = true;
-        lblSubtitulo.Font = new Font("Segoe UI", 11F);
-        lblSubtitulo.ForeColor = Color.FromArgb(180, 195, 220);
-        lblSubtitulo.Location = new Point(30, 300);
-        lblSubtitulo.Name = "lblSubtitulo";
-        lblSubtitulo.Size = new Size(136, 30);
-        lblSubtitulo.TabIndex = 0;
-        lblSubtitulo.Text = "Iniciar sesión";
-        // 
+        //
+        // tlpRaiz
+        //
+        tlpRaiz.ColumnCount = 3;
+        tlpRaiz.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+        tlpRaiz.ColumnStyles.Add(new ColumnStyle());
+        tlpRaiz.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+        tlpRaiz.Controls.Add(pnlMarco, 1, 1);
+        tlpRaiz.Dock = DockStyle.Fill;
+        tlpRaiz.Name = "tlpRaiz";
+        tlpRaiz.RowCount = 3;
+        tlpRaiz.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
+        tlpRaiz.RowStyles.Add(new RowStyle());
+        tlpRaiz.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
+        tlpRaiz.TabIndex = 0;
+        //
+        // pnlMarco
+        //
+        pnlMarco.Anchor = AnchorStyles.None;
+        pnlMarco.AutoSize = true;
+        pnlMarco.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+        pnlMarco.BackColor = Color.FromArgb(214, 220, 230);
+        pnlMarco.Controls.Add(pnlTarjeta);
+        pnlMarco.Margin = new Padding(0);
+        pnlMarco.Name = "pnlMarco";
+        pnlMarco.Padding = new Padding(1);
+        pnlMarco.TabIndex = 0;
+        //
+        // pnlTarjeta
+        //
+        pnlTarjeta.AutoSize = true;
+        pnlTarjeta.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+        pnlTarjeta.BackColor = Color.White;
+        pnlTarjeta.Controls.Add(tlpTarjeta);
+        pnlTarjeta.Dock = DockStyle.Fill;
+        pnlTarjeta.Name = "pnlTarjeta";
+        pnlTarjeta.Padding = new Padding(28, 16, 28, 18);
+        pnlTarjeta.TabIndex = 0;
+        //
+        // tlpTarjeta
+        //
+        tlpTarjeta.AutoSize = true;
+        tlpTarjeta.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+        tlpTarjeta.ColumnCount = 1;
+        tlpTarjeta.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+        tlpTarjeta.Controls.Add(lblIconoMarca, 0, 0);
+        tlpTarjeta.Controls.Add(lblMarca, 0, 1);
+        tlpTarjeta.Controls.Add(lblSubtitulo, 0, 2);
+        tlpTarjeta.Controls.Add(label1, 0, 3);
+        tlpTarjeta.Controls.Add(TxtUsuario, 0, 4);
+        tlpTarjeta.Controls.Add(label2, 0, 5);
+        tlpTarjeta.Controls.Add(TxtContrasenia, 0, 6);
+        tlpTarjeta.Controls.Add(BtnIngresar, 0, 7);
+        tlpTarjeta.Controls.Add(pnlEstado, 0, 8);
+        tlpTarjeta.Dock = DockStyle.Fill;
+        tlpTarjeta.MinimumSize = new Size(300, 0);
+        tlpTarjeta.Name = "tlpTarjeta";
+        tlpTarjeta.RowCount = 9;
+        tlpTarjeta.RowStyles.Add(new RowStyle());
+        tlpTarjeta.RowStyles.Add(new RowStyle());
+        tlpTarjeta.RowStyles.Add(new RowStyle());
+        tlpTarjeta.RowStyles.Add(new RowStyle());
+        tlpTarjeta.RowStyles.Add(new RowStyle());
+        tlpTarjeta.RowStyles.Add(new RowStyle());
+        tlpTarjeta.RowStyles.Add(new RowStyle());
+        tlpTarjeta.RowStyles.Add(new RowStyle());
+        tlpTarjeta.RowStyles.Add(new RowStyle());
+        tlpTarjeta.TabIndex = 0;
+        //
+        // lblIconoMarca
+        //
+        lblIconoMarca.Anchor = AnchorStyles.None;
+        lblIconoMarca.AutoSize = true;
+        lblIconoMarca.Font = new Font("Segoe MDL2 Assets", 22F);
+        lblIconoMarca.ForeColor = Color.FromArgb(46, 134, 222);
+        lblIconoMarca.Margin = new Padding(0, 0, 0, 4);
+        lblIconoMarca.Name = "lblIconoMarca";
+        lblIconoMarca.TabIndex = 9;
+        //
         // lblMarca
-        // 
+        //
+        lblMarca.Anchor = AnchorStyles.None;
         lblMarca.AutoSize = true;
-        lblMarca.Font = new Font("Segoe UI", 20F, FontStyle.Bold);
-        lblMarca.ForeColor = Color.White;
-        lblMarca.Location = new Point(30, 180);
-        lblMarca.MaximumSize = new Size(260, 0);
+        lblMarca.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
+        lblMarca.ForeColor = Color.FromArgb(27, 42, 74);
+        lblMarca.Margin = new Padding(0);
         lblMarca.Name = "lblMarca";
-        lblMarca.Size = new Size(240, 108);
-        lblMarca.TabIndex = 1;
+        lblMarca.TabIndex = 8;
         lblMarca.Text = "Gestión de Consultorio";
-        // 
-        // pnlFormulario
-        // 
-        pnlFormulario.BackColor = Color.FromArgb(245, 246, 250);
-        pnlFormulario.Controls.Add(LblError);
-        pnlFormulario.Controls.Add(BtnIngresar);
-        pnlFormulario.Controls.Add(TxtContrasenia);
-        pnlFormulario.Controls.Add(label2);
-        pnlFormulario.Controls.Add(TxtUsuario);
-        pnlFormulario.Controls.Add(label1);
-        pnlFormulario.Dock = DockStyle.Fill;
-        pnlFormulario.Location = new Point(320, 0);
-        pnlFormulario.Name = "pnlFormulario";
-        pnlFormulario.Size = new Size(580, 500);
-        pnlFormulario.TabIndex = 0;
-        // 
-        // LblError
-        // 
-        LblError.AutoSize = true;
-        LblError.Font = new Font("Segoe UI", 9F);
-        LblError.ForeColor = Color.FromArgb(200, 40, 40);
-        LblError.Location = new Point(80, 360);
-        LblError.MaximumSize = new Size(260, 0);
-        LblError.Name = "LblError";
-        LblError.Size = new Size(0, 25);
-        LblError.TabIndex = 0;
-        // 
+        //
+        // lblSubtitulo
+        //
+        lblSubtitulo.Anchor = AnchorStyles.None;
+        lblSubtitulo.AutoSize = true;
+        lblSubtitulo.Font = new Font("Segoe UI", 10F);
+        lblSubtitulo.ForeColor = Color.FromArgb(110, 120, 135);
+        lblSubtitulo.Margin = new Padding(0, 0, 0, 4);
+        lblSubtitulo.Name = "lblSubtitulo";
+        lblSubtitulo.TabIndex = 7;
+        lblSubtitulo.Text = "Iniciar sesión";
+        //
+        // label1
+        //
+        label1.AutoSize = true;
+        label1.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+        label1.ForeColor = Color.FromArgb(27, 42, 74);
+        label1.Margin = new Padding(0, 10, 0, 3);
+        label1.Name = "label1";
+        label1.TabIndex = 5;
+        label1.Text = "1. Usuario";
+        //
+        // TxtUsuario
+        //
+        TxtUsuario.Dock = DockStyle.Fill;
+        TxtUsuario.Font = new Font("Segoe UI", 11F);
+        TxtUsuario.Margin = new Padding(0, 0, 0, 4);
+        TxtUsuario.Name = "TxtUsuario";
+        TxtUsuario.TabIndex = 0;
+        //
+        // label2
+        //
+        label2.AutoSize = true;
+        label2.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+        label2.ForeColor = Color.FromArgb(27, 42, 74);
+        label2.Margin = new Padding(0, 10, 0, 3);
+        label2.Name = "label2";
+        label2.TabIndex = 6;
+        label2.Text = "2. Contraseña";
+        //
+        // TxtContrasenia
+        //
+        TxtContrasenia.Dock = DockStyle.Fill;
+        TxtContrasenia.Font = new Font("Segoe UI", 11F);
+        TxtContrasenia.Margin = new Padding(0, 0, 0, 4);
+        TxtContrasenia.Name = "TxtContrasenia";
+        TxtContrasenia.PasswordChar = '*';
+        TxtContrasenia.TabIndex = 1;
+        //
         // BtnIngresar
-        // 
+        //
         BtnIngresar.BackColor = Color.FromArgb(46, 134, 222);
+        BtnIngresar.Dock = DockStyle.Fill;
         BtnIngresar.FlatAppearance.BorderSize = 0;
         BtnIngresar.FlatStyle = FlatStyle.Flat;
         BtnIngresar.Font = new Font("Segoe UI", 10.5F, FontStyle.Bold);
         BtnIngresar.ForeColor = Color.White;
-        BtnIngresar.Location = new Point(80, 305);
+        BtnIngresar.Margin = new Padding(0, 12, 0, 0);
         BtnIngresar.Name = "BtnIngresar";
-        BtnIngresar.Size = new Size(260, 42);
+        BtnIngresar.Size = new Size(0, 40);
         BtnIngresar.TabIndex = 2;
         BtnIngresar.Text = "Ingresar";
         BtnIngresar.UseVisualStyleBackColor = false;
         BtnIngresar.Click += BtnIngresar_Click;
-        // 
-        // TxtContrasenia
-        // 
-        TxtContrasenia.Font = new Font("Segoe UI", 11F);
-        TxtContrasenia.Location = new Point(80, 253);
-        TxtContrasenia.Name = "TxtContrasenia";
-        TxtContrasenia.PasswordChar = '*';
-        TxtContrasenia.Size = new Size(260, 37);
-        TxtContrasenia.TabIndex = 1;
-        // 
-        // label2
-        // 
-        label2.AutoSize = true;
-        label2.Font = new Font("Segoe UI", 10F);
-        label2.ForeColor = Color.FromArgb(27, 42, 74);
-        label2.Location = new Point(80, 225);
-        label2.Name = "label2";
-        label2.Size = new Size(110, 28);
-        label2.TabIndex = 3;
-        label2.Text = "Contraseña";
-        // 
-        // TxtUsuario
-        // 
-        TxtUsuario.Font = new Font("Segoe UI", 11F);
-        TxtUsuario.Location = new Point(80, 178);
-        TxtUsuario.Name = "TxtUsuario";
-        TxtUsuario.Size = new Size(260, 37);
-        TxtUsuario.TabIndex = 0;
-        // 
-        // label1
-        // 
-        label1.AutoSize = true;
-        label1.Font = new Font("Segoe UI", 10F);
-        label1.ForeColor = Color.FromArgb(27, 42, 74);
-        label1.Location = new Point(80, 150);
-        label1.Name = "label1";
-        label1.Size = new Size(79, 28);
-        label1.TabIndex = 5;
-        label1.Text = "Usuario";
-        // 
+        //
+        // pnlEstado
+        //
+        pnlEstado.Controls.Add(LblError);
+        pnlEstado.Dock = DockStyle.Fill;
+        pnlEstado.Margin = new Padding(0);
+        pnlEstado.Name = "pnlEstado";
+        pnlEstado.Padding = new Padding(2, 8, 2, 0);
+        pnlEstado.Size = new Size(0, 36);
+        pnlEstado.TabIndex = 3;
+        pnlEstado.Visible = false;
+        //
+        // LblError
+        //
+        LblError.Dock = DockStyle.Fill;
+        LblError.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+        LblError.Name = "LblError";
+        LblError.TabIndex = 0;
+        //
         // FormLogin
-        // 
-        AutoScaleDimensions = new SizeF(10F, 25F);
+        //
+        AutoScaleDimensions = new SizeF(8F, 20F);
         AutoScaleMode = AutoScaleMode.Font;
-        ClientSize = new Size(900, 500);
-        Controls.Add(pnlFormulario);
-        Controls.Add(pnlMarca);
+        BackColor = Color.FromArgb(245, 246, 250);
+        ClientSize = new Size(560, 520);
+        Controls.Add(tlpRaiz);
         Name = "FormLogin";
         StartPosition = FormStartPosition.CenterScreen;
         Text = "Sistema de Gestión de Consultorio - Login";
-        Load += FormLogin_Load;
-        pnlMarca.ResumeLayout(false);
-        pnlMarca.PerformLayout();
-        pnlFormulario.ResumeLayout(false);
-        pnlFormulario.PerformLayout();
+        tlpRaiz.ResumeLayout(false);
+        tlpRaiz.PerformLayout();
+        pnlMarco.ResumeLayout(false);
+        pnlMarco.PerformLayout();
+        pnlTarjeta.ResumeLayout(false);
+        pnlTarjeta.PerformLayout();
+        tlpTarjeta.ResumeLayout(false);
+        tlpTarjeta.PerformLayout();
+        pnlEstado.ResumeLayout(false);
         ResumeLayout(false);
     }
 
-    private Panel pnlMarca;
+    private TableLayoutPanel tlpRaiz;
+    private Panel pnlMarco;
+    private Panel pnlTarjeta;
+    private TableLayoutPanel tlpTarjeta;
+    private Label lblIconoMarca;
     private Label lblMarca;
     private Label lblSubtitulo;
-    private Panel pnlFormulario;
     private Label label1;
     private TextBox TxtUsuario;
     private Label label2;
     private TextBox TxtContrasenia;
     private Button BtnIngresar;
+    private Panel pnlEstado;
     private Label LblError;
 }

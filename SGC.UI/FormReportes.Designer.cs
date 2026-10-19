@@ -15,9 +15,9 @@ partial class FormReportes
 
     private void InitializeComponent()
     {
-        pnlHeader = new Panel();
-        lblSubtitulo = new Label();
+        pnlHeader = new TableLayoutPanel();
         lblTitulo = new Label();
+        lblSubtitulo = new Label();
         pnlMensaje = new Panel();
         LblMensaje = new Label();
         TabReportes = new TabControl();
@@ -25,83 +25,86 @@ partial class FormReportes
         pnlMensaje.SuspendLayout();
         SuspendLayout();
 
-        // 
+        //
         // pnlHeader
-        // 
+        //
+        pnlHeader.AutoSize = true;
+        pnlHeader.AutoSizeMode = AutoSizeMode.GrowAndShrink;
         pnlHeader.BackColor = Color.FromArgb(27, 42, 74);
-        pnlHeader.Controls.Add(lblSubtitulo);
-        pnlHeader.Controls.Add(lblTitulo);
+        pnlHeader.ColumnCount = 2;
+        pnlHeader.ColumnStyles.Add(new ColumnStyle());
+        pnlHeader.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+        pnlHeader.Controls.Add(lblTitulo, 0, 0);
+        pnlHeader.Controls.Add(lblSubtitulo, 1, 0);
         pnlHeader.Dock = DockStyle.Top;
-        pnlHeader.Location = new Point(0, 0);
         pnlHeader.Name = "pnlHeader";
-        pnlHeader.Padding = new Padding(20, 10, 20, 10);
-        pnlHeader.Size = new Size(1000, 75);
+        pnlHeader.Padding = new Padding(20, 8, 20, 8);
+        pnlHeader.RowCount = 1;
+        pnlHeader.RowStyles.Add(new RowStyle());
         pnlHeader.TabIndex = 0;
 
-        // 
-        // lblSubtitulo
-        // 
-        lblSubtitulo.AutoSize = true;
-        lblSubtitulo.Font = new Font("Segoe UI", 10F);
-        lblSubtitulo.ForeColor = Color.FromArgb(180, 205, 235);
-        lblSubtitulo.Location = new Point(20, 42);
-        lblSubtitulo.Name = "lblSubtitulo";
-        lblSubtitulo.Size = new Size(395, 23);
-        lblSubtitulo.TabIndex = 1;
-        lblSubtitulo.Text = "Estadísticas del consultorio generadas desde la base de datos";
-
-        // 
+        //
         // lblTitulo
-        // 
+        //
+        lblTitulo.Anchor = AnchorStyles.Left;
         lblTitulo.AutoSize = true;
         lblTitulo.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
         lblTitulo.ForeColor = Color.White;
-        lblTitulo.Location = new Point(18, 10);
+        lblTitulo.Margin = new Padding(0, 0, 18, 0);
         lblTitulo.Name = "lblTitulo";
-        lblTitulo.Size = new Size(230, 32);
         lblTitulo.TabIndex = 0;
         lblTitulo.Text = "Reportes y estadísticas";
 
-        // 
+        //
+        // lblSubtitulo
+        //
+        lblSubtitulo.AutoEllipsis = true;
+        lblSubtitulo.Dock = DockStyle.Fill;
+        lblSubtitulo.Font = new Font("Segoe UI", 10F);
+        lblSubtitulo.ForeColor = Color.FromArgb(180, 205, 235);
+        lblSubtitulo.Margin = new Padding(0);
+        lblSubtitulo.Name = "lblSubtitulo";
+        lblSubtitulo.Size = new Size(0, 23);
+        lblSubtitulo.TabIndex = 1;
+        lblSubtitulo.Text = "Estadísticas del consultorio generadas desde la base de datos";
+        lblSubtitulo.TextAlign = ContentAlignment.MiddleLeft;
+
+        //
         // pnlMensaje
-        // 
+        //
         pnlMensaje.BackColor = Color.FromArgb(245, 246, 250);
         pnlMensaje.Controls.Add(LblMensaje);
         pnlMensaje.Dock = DockStyle.Bottom;
-        pnlMensaje.Location = new Point(0, 620);
         pnlMensaje.Name = "pnlMensaje";
-        pnlMensaje.Padding = new Padding(20, 6, 20, 6);
-        pnlMensaje.Size = new Size(1000, 30);
+        pnlMensaje.Padding = new Padding(20, 8, 20, 0);
+        pnlMensaje.Size = new Size(1000, 36);
         pnlMensaje.TabIndex = 2;
+        pnlMensaje.Visible = false;
 
-        // 
+        //
         // LblMensaje
-        // 
-        LblMensaje.AutoEllipsis = true;
+        //
         LblMensaje.Dock = DockStyle.Fill;
-        LblMensaje.Font = new Font("Segoe UI", 9.5F);
-        LblMensaje.Location = new Point(20, 6);
+        LblMensaje.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
         LblMensaje.Name = "LblMensaje";
-        LblMensaje.Size = new Size(960, 18);
         LblMensaje.TabIndex = 0;
         LblMensaje.TextAlign = ContentAlignment.MiddleLeft;
 
-        // 
+        //
         // TabReportes
-        // 
+        //
         TabReportes.Dock = DockStyle.Fill;
         TabReportes.Font = new Font("Segoe UI", 10F);
-        TabReportes.Location = new Point(0, 75);
         TabReportes.Name = "TabReportes";
         TabReportes.Padding = new Point(14, 4);
         TabReportes.SelectedIndex = 0;
         TabReportes.Size = new Size(1000, 545);
         TabReportes.TabIndex = 1;
 
-        // 
+        //
         // FormReportes
-        // 
-        AutoScaleDimensions = new SizeF(7F, 15F);
+        //
+        AutoScaleDimensions = new SizeF(8F, 20F);
         AutoScaleMode = AutoScaleMode.Font;
         BackColor = Color.FromArgb(245, 246, 250);
         ClientSize = new Size(1000, 650);
@@ -115,9 +118,10 @@ partial class FormReportes
         pnlHeader.PerformLayout();
         pnlMensaje.ResumeLayout(false);
         ResumeLayout(false);
+        PerformLayout();
     }
 
-    private Panel pnlHeader;
+    private TableLayoutPanel pnlHeader;
     private Label lblSubtitulo;
     private Label lblTitulo;
     private Panel pnlMensaje;
