@@ -1,130 +1,334 @@
+using System.Globalization;
 using SGC.Entidades;
 using SGC.Logica;
 
 namespace SGC.UI;
 
+// Pantalla de Obras Sociales (Administrador). Izquierda: tarjeta "Nueva obra
+// social" (pasa a "Editar obra social" al elegir una fila) con el flujo
+// nombre -> porcentaje -> Guardar. Derecha: buscador, contadores, grilla y
+// barra de la obra social seleccionada (Eliminar + medicos que la aceptan).
+// La estructura estatica vive en el Designer; las columnas, los chips y el
+// estilo de botones se arman aca para que el disenador no los borre.
 public partial class FormObrasSociales : Form
 {
     private readonly ObraSocialService _service = new();
+
+    // Id de la obra social cargada en la tarjeta (null = modo "nueva").
     private int? _idSeleccionado = null;
 
-    // Detalle de la obra social seleccionada (medicos que la aceptan). Se crea
-    // en codigo y no en el Designer para que el disenador no lo borre.
-    private readonly Label _lblDetalle = new();
-    private readonly ToolTip _toolTip = new();
+    // Listado completo traido del servicio; el buscador filtra sobre esta lista.
+    private List<ObraSocialFila> _todas = new();
+
+    // true mientras se cargan o sincronizan controles por codigo: los eventos
+    // de seleccion y busqueda se ignoran para no recargar a mitad de camino.
+    private bool _cargando = true;
+
+    private FranjaMensaje _mensajes = null!;
+    private BarraContadores _contadores = null!;
+
+    private const string ContTotal = "Total";
+    private const string ContConMedicos = "ConMedicos";
+    private const string ContConAfiliados = "ConAfiliados";
+
+    private ObraSocialFila? FilaSeleccionada =>
+        DgvObrasSociales.SelectedRows.Count > 0 ? DgvObrasSociales.SelectedRows[0].DataBoundItem as ObraSocialFila : null;
 
     public FormObrasSociales()
     {
         InitializeComponent();
-        ConfigurarDetalle();
-        ConfigurarColumnas();
+
+        _mensajes = new FranjaMensaje(pnlEstado, LblMensaje) { ReacomodarContenedor = true };
+        _contadores = new BarraContadores(FlpContadores);
+
+        BtnNuevo.Click += BtnNuevo_Click;
+        BtnGuardar.Click += BtnGuardar_Click;
+        BtnEliminar.Click += BtnEliminar_Click;
+        DgvObrasSociales.SelectionChanged += DgvObrasSociales_SelectionChanged;
+        TxtBuscar.TextChanged += TxtBuscar_TextChanged;
+
+        // Los textos y flujos con ancho limitado se recalculan cuando cambia el ancho.
+        tlpTarjeta.SizeChanged += (s, e) => AcotarEtiquetas();
+        tlpToolbar.SizeChanged += (s, e) => AcotarEtiquetas();
+        tlpAcciones.SizeChanged += (s, e) => AcotarEtiquetas();
+        foreach (var flujo in new[] { flpFiltros, FlpContadores, flpBotonesAccion })
+            flujo.SizeChanged += (s, e) => EstiloUi.AjustarFlujos(flpFiltros, FlpContadores, flpBotonesAccion);
+
+        Load += FormObrasSociales_Load;
+    }
+
+    // ------------------------------------------------------------- arranque
+
+    private void FormObrasSociales_Load(object? sender, EventArgs e)
+    {
+        _cargando = true;
+        try
+        {
+            ConfigurarColumnas();
+            ConfigurarBarraContadores();
+            ConfigurarEstiloBotones();
+        }
+        finally
+        {
+            _cargando = false;
+        }
+
         CargarGrilla();
-        // WinForms selecciona sola la primera fila recien cuando el control
-        // se muestra de verdad en pantalla (no en el constructor) - limpiar
-        // ahi mismo no sirve, hay que hacerlo en Load, que corre despues.
-        Load += (s, e) => BtnNuevo_Click(this, EventArgs.Empty);
+        IrAModoNuevo();
+
+        // WinForms selecciona sola la primera fila recien cuando la grilla se
+        // muestra de verdad en pantalla (despues de Load, sobre todo cuando el
+        // formulario es hijo del menu). Esa seleccion automatica se ignora y se
+        // limpia una vez que el formulario termino de mostrarse.
+        _cargando = true;
+        BeginInvoke(new Action(() =>
+        {
+            if (IsDisposed) return;
+            _cargando = false;
+            IrAModoNuevo();
+        }));
+    }
+
+    private void ConfigurarEstiloBotones()
+    {
+        EstiloUi.EstilizarBoton(BtnGuardar, TipoBoton.Primario);
+        EstiloUi.EstilizarBoton(BtnNuevo, TipoBoton.Secundario);
+        EstiloUi.EstilizarBoton(BtnEliminar, TipoBoton.Peligro);
     }
 
     private void ConfigurarColumnas()
     {
-        DgvObrasSociales.AutoGenerateColumns = false;
-        DgvObrasSociales.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-        DgvObrasSociales.Columns.Add(new DataGridViewTextBoxColumn { Name = "colNombre", HeaderText = "Nombre", DataPropertyName = "Nombre", FillWeight = 200 });
-        DgvObrasSociales.Columns.Add(new DataGridViewTextBoxColumn { Name = "colPorcentaje", HeaderText = "% Cobertura", DataPropertyName = "PorcentajeCobertura", FillWeight = 100 });
-        DgvObrasSociales.Columns.Add(new DataGridViewTextBoxColumn
-        {
-            Name = "colMedicos",
-            HeaderText = "Médicos que la aceptan",
-            DataPropertyName = "MedicosQueAceptan",
-            FillWeight = 130,
-            DefaultCellStyle = new DataGridViewCellStyle { Alignment = DataGridViewContentAlignment.MiddleCenter }
-        });
-        DgvObrasSociales.Columns.Add(new DataGridViewTextBoxColumn
-        {
-            Name = "colPacientes",
-            HeaderText = "Pacientes afiliados",
-            DataPropertyName = "PacientesAfiliados",
-            FillWeight = 110,
-            DefaultCellStyle = new DataGridViewCellStyle { Alignment = DataGridViewContentAlignment.MiddleCenter }
-        });
-        AjustarEncabezados();
+        GrillaUi.Estilizar(DgvObrasSociales);
+
+        GrillaUi.AgregarColumna(DgvObrasSociales, "colNombre", "Nombre", "Nombre", 200, EscalaDpi.Px(this, 80));
+
+        var porcentaje = GrillaUi.AgregarColumna(DgvObrasSociales, "colPorcentaje", "% Cobertura", "PorcentajeCobertura", 100,
+            GrillaUi.MinimoPara(DgvObrasSociales, "100%"), "0.##");
+        porcentaje.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+
+        var medicos = GrillaUi.AgregarColumna(DgvObrasSociales, "colMedicos", "Médicos que la aceptan", "MedicosQueAceptan", 130,
+            EscalaDpi.Px(this, 60));
+        medicos.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+
+        var pacientes = GrillaUi.AgregarColumna(DgvObrasSociales, "colPacientes", "Pacientes afiliados", "PacientesAfiliados", 110,
+            EscalaDpi.Px(this, 60));
+        pacientes.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
     }
 
-    // Los encabezados largos envuelven en dos lineas en vez de cortarse.
-    private void AjustarEncabezados()
+    private void ConfigurarBarraContadores()
     {
-        DgvObrasSociales.ColumnHeadersDefaultCellStyle.WrapMode = DataGridViewTriState.True;
-        DgvObrasSociales.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
-        DgvObrasSociales.ColumnHeadersHeight = 52;
-        foreach (DataGridViewColumn columna in DgvObrasSociales.Columns)
-            columna.MinimumWidth = 90;
+        _contadores.Agregar(ContTotal, EstiloUi.Texto, Color.White);
+        _contadores.Agregar(ContConMedicos, PaletaEstados.Fondo(EstadoTurno.Asistio), EstiloUi.Ok);
+        _contadores.Agregar(ContConAfiliados, PaletaEstados.Fondo(EstadoTurno.Confirmado), PaletaEstados.Acento(EstadoTurno.Confirmado));
+        ActualizarContadores(new List<ObraSocialFila>());
     }
 
-    private void ConfigurarDetalle()
-    {
-        _lblDetalle.Dock = DockStyle.Bottom;
-        _lblDetalle.Height = 54;
-        _lblDetalle.Padding = new Padding(20, 6, 20, 6);
-        _lblDetalle.Font = new Font("Segoe UI", 9.5F);
-        _lblDetalle.ForeColor = Color.FromArgb(27, 42, 74);
-        _lblDetalle.BackColor = Color.FromArgb(244, 246, 250);
-        _lblDetalle.AutoEllipsis = true;
-        _lblDetalle.TextAlign = ContentAlignment.MiddleLeft;
-        Controls.Add(_lblDetalle);
-        MostrarDetalle(null);
-    }
+    // ------------------------------------------------------- datos y buscador
 
-    // Muestra los medicos que aceptan la obra social elegida; el texto largo se
-    // corta con puntos suspensivos y el tooltip muestra la lista completa.
-    private void MostrarDetalle(ObraSocialFila? fila)
-    {
-        string texto;
-        if (fila == null)
-            texto = "Seleccione una obra social para ver los médicos que la aceptan.";
-        else if (fila.Medicos.Count == 0)
-            texto = $"{fila.Nombre}: ningún médico activo la acepta por el momento.";
-        else
-            texto = $"Médicos que aceptan {fila.Nombre} ({fila.Medicos.Count}): {string.Join("; ", fila.Medicos)}";
-
-        _lblDetalle.Text = texto;
-        _toolTip.SetToolTip(_lblDetalle, texto);
-    }
-
+    // Trae el listado del servicio y lo muestra con el filtro de busqueda vigente.
     private void CargarGrilla()
     {
-        // Se desengancha SelectionChanged mientras se reasigna el DataSource
-        // para que no corra con filas a medio cargar.
-        DgvObrasSociales.SelectionChanged -= DgvObrasSociales_SelectionChanged;
         try
         {
-            DgvObrasSociales.DataSource = _service.ObtenerListado();
+            _todas = _service.ObtenerListado();
         }
         catch (Exception ex)
         {
-            DgvObrasSociales.DataSource = new List<ObraSocialFila>();
-            LblMensaje.ForeColor = Color.Red;
-            LblMensaje.Text = "No se pudo cargar el listado de obras sociales: " + ex.Message;
+            _todas = new List<ObraSocialFila>();
+            MostrarMensaje("No se pudo cargar el listado de obras sociales: " + ex.Message, TipoMensaje.Error);
         }
-        finally
+        AplicarFiltro();
+    }
+
+    private void TxtBuscar_TextChanged(object? sender, EventArgs e)
+    {
+        if (_cargando) return;
+        AplicarFiltro();
+    }
+
+    // Filtra _todas por nombre (sin distinguir mayusculas ni acentos) y vuelve a
+    // armar la grilla. Si la obra social en edicion queda fuera del filtro, la
+    // tarjeta vuelve al modo "nueva".
+    private void AplicarFiltro()
+    {
+        string texto = TxtBuscar.Text.Trim();
+        var lista = string.IsNullOrEmpty(texto)
+            ? _todas.ToList()
+            : _todas.Where(f => CultureInfo.CurrentCulture.CompareInfo.IndexOf(
+                f.Nombre, texto, CompareOptions.IgnoreCase | CompareOptions.IgnoreNonSpace) >= 0).ToList();
+
+        bool anterior = _cargando;
+        _cargando = true;
+        bool reseleccionada = false;
+        try
         {
+            // Se desengancha SelectionChanged mientras se reasigna el DataSource
+            // para que no corra con filas a medio cargar.
+            DgvObrasSociales.SelectionChanged -= DgvObrasSociales_SelectionChanged;
+            DgvObrasSociales.DataSource = lista;
+
             // Sin esto, WinForms selecciona sola la primera fila al asignar el
             // DataSource y precarga el formulario con ese registro.
             DgvObrasSociales.ClearSelection();
             DgvObrasSociales.CurrentCell = null;
+
+            // Si se estaba editando una obra social y sigue en la lista, queda elegida.
+            if (_idSeleccionado != null)
+            {
+                foreach (DataGridViewRow fila in DgvObrasSociales.Rows)
+                {
+                    if (fila.DataBoundItem is ObraSocialFila f && f.Id == _idSeleccionado)
+                    {
+                        fila.Selected = true;
+                        DgvObrasSociales.CurrentCell = fila.Cells[0];
+                        reseleccionada = true;
+                        break;
+                    }
+                }
+            }
             DgvObrasSociales.SelectionChanged += DgvObrasSociales_SelectionChanged;
         }
-        MostrarDetalle(null);
+        finally
+        {
+            _cargando = anterior;
+        }
+
+        ActualizarContadores(lista);
+
+        LblVista.Text = string.IsNullOrEmpty(texto)
+            ? $"Mostrando: todas las obras sociales ({_todas.Count})"
+            : $"Mostrando: {lista.Count} de {_todas.Count} · nombre contiene «{texto}»";
+        AcotarEtiquetas();
+
+        if (_idSeleccionado != null && !reseleccionada)
+            IrAModoNuevo();
+        else
+            ActualizarAcciones();
     }
 
-    private void BtnNuevo_Click(object sender, EventArgs e)
+    // Cuenta sobre lo que muestra la grilla (con la busqueda ya aplicada).
+    private void ActualizarContadores(List<ObraSocialFila> filas)
     {
-        _idSeleccionado = null;
-        MostrarDetalle(null);
-        TxtNombre.Text = "";
-        NudPorcentaje.Value = 0;
+        _contadores.Poner(ContTotal, $"Total: {filas.Count}");
+        _contadores.Poner(ContConMedicos, $"Con médicos: {filas.Count(f => f.MedicosQueAceptan > 0)}");
+        _contadores.Poner(ContConAfiliados, $"Con afiliados: {filas.Count(f => f.PacientesAfiliados > 0)}");
     }
 
-    private void BtnGuardar_Click(object sender, EventArgs e)
+    // ------------------------------------------------------- modo de la tarjeta
+
+    // Vuelve al modo "nueva obra social": limpia la tarjeta y deselecciona la fila.
+    private void IrAModoNuevo()
+    {
+        bool anterior = _cargando;
+        _cargando = true;
+        try
+        {
+            DgvObrasSociales.SelectionChanged -= DgvObrasSociales_SelectionChanged;
+            DgvObrasSociales.ClearSelection();
+            DgvObrasSociales.CurrentCell = null;
+            DgvObrasSociales.SelectionChanged += DgvObrasSociales_SelectionChanged;
+
+            _idSeleccionado = null;
+            TxtNombre.Text = "";
+            NudPorcentaje.Value = 0;
+        }
+        finally
+        {
+            _cargando = anterior;
+        }
+
+        ActualizarModo();
+        ActualizarAcciones();
+    }
+
+    // Titulo y aviso de la tarjeta segun si hay una obra social cargada para editar.
+    private void ActualizarModo()
+    {
+        bool editando = _idSeleccionado != null;
+        lblTituloTarjeta.Text = editando ? "EDITAR OBRA SOCIAL" : "NUEVA OBRA SOCIAL";
+
+        LblModo.Visible = editando;
+        LblModo.Text = editando
+            ? $"Editando «{FilaSeleccionada?.Nombre}»: modifique los datos y pulse «Guardar»."
+            : "";
+        AcotarEtiquetas();
+    }
+
+    // Texto de la barra de seleccion, detalle de medicos y estado del boton Eliminar.
+    private void ActualizarAcciones()
+    {
+        var fila = FilaSeleccionada;
+        if (fila == null)
+        {
+            LblSeleccion.Text = "Obra social seleccionada: ninguna";
+            BtnEliminar.Enabled = false;
+            MostrarAyudaAcciones("Elija una fila de la tabla.");
+            MostrarDetalle(null);
+            return;
+        }
+
+        LblSeleccion.Text = $"Obra social seleccionada: {fila.Nombre} · {fila.PorcentajeCobertura:0.##}% de cobertura";
+        BtnEliminar.Enabled = true;
+        MostrarAyudaAcciones("");
+        MostrarDetalle(fila);
+    }
+
+    private void MostrarAyudaAcciones(string texto)
+    {
+        LblAyudaAcciones.Text = texto;
+        LblAyudaAcciones.Visible = !string.IsNullOrEmpty(texto);
+        AcotarEtiquetas();
+    }
+
+    // Muestra los medicos que aceptan la obra social elegida.
+    private void MostrarDetalle(ObraSocialFila? fila)
+    {
+        if (fila == null)
+            LblDetalle.Text = "Seleccione una obra social para ver los médicos que la aceptan.";
+        else if (fila.Medicos.Count == 0)
+            LblDetalle.Text = $"{fila.Nombre}: ningún médico activo la acepta por el momento.";
+        else
+            LblDetalle.Text = $"Médicos que aceptan {fila.Nombre} ({fila.Medicos.Count}): {string.Join("; ", fila.Medicos)}";
+        AcotarEtiquetas();
+    }
+
+    // ------------------------------------------------------------ eventos
+
+    private void DgvObrasSociales_SelectionChanged(object? sender, EventArgs e)
+    {
+        if (_cargando) return;
+
+        var fila = FilaSeleccionada;
+        if (fila == null)
+        {
+            ActualizarAcciones();
+            return;
+        }
+
+        _cargando = true;
+        try
+        {
+            _idSeleccionado = fila.Id;
+            TxtNombre.Text = fila.Nombre;
+            NudPorcentaje.Value = Math.Clamp(fila.PorcentajeCobertura, NudPorcentaje.Minimum, NudPorcentaje.Maximum);
+        }
+        finally
+        {
+            _cargando = false;
+        }
+
+        LimpiarMensaje();
+        ActualizarModo();
+        ActualizarAcciones();
+    }
+
+    private void BtnNuevo_Click(object? sender, EventArgs e)
+    {
+        LimpiarMensaje();
+        IrAModoNuevo();
+    }
+
+    private void BtnGuardar_Click(object? sender, EventArgs e)
     {
         try
         {
@@ -142,32 +346,31 @@ public partial class FormObrasSociales : Form
             {
                 _service.Modificar(obraSocial);
             }
-            CargarGrilla();
-            BtnNuevo_Click(sender, e);
-
-            LblMensaje.ForeColor = Color.Green;
-            LblMensaje.Text = "Obra social guardada correctamente.";
         }
         catch (Exception ex)
         {
-            LblMensaje.ForeColor = Color.Red;
-            LblMensaje.Text = $"Error: {ex.Message}";
-        }
-    }
-
-    private void BtnEliminar_Click(object sender, EventArgs e)
-    {
-        if (DgvObrasSociales.CurrentRow == null)
-        {
-            LblMensaje.ForeColor = Color.Red;
-            LblMensaje.Text = "Debe seleccionar una obra social para eliminar.";
+            MostrarMensaje($"Error: {ex.Message}", TipoMensaje.Error);
             return;
         }
-        var obraSocialSeleccionada = ((ObraSocialFila)DgvObrasSociales.CurrentRow.DataBoundItem).ObraSocial;
+
+        CargarGrilla();
+        IrAModoNuevo();
+        MostrarMensaje("Obra social guardada correctamente.", TipoMensaje.Ok);
+    }
+
+    private void BtnEliminar_Click(object? sender, EventArgs e)
+    {
+        var fila = FilaSeleccionada;
+        if (fila == null)
+        {
+            MostrarMensaje("Debe seleccionar una obra social para eliminar.", TipoMensaje.Error);
+            return;
+        }
+        var obraSocialSeleccionada = fila.ObraSocial;
 
         var respuesta = MessageBox.Show(
-            $"Esta seguro que desea eliminar la obra social {obraSocialSeleccionada.Nombre}?",
-            "Confirmar eliminacion",
+            $"¿Está seguro que desea eliminar la obra social {obraSocialSeleccionada.Nombre}?",
+            "Confirmar eliminación",
             MessageBoxButtons.YesNo,
             MessageBoxIcon.Warning);
 
@@ -176,26 +379,33 @@ public partial class FormObrasSociales : Form
         try
         {
             _service.EliminarLogico(obraSocialSeleccionada.Id);
-            CargarGrilla();
-            BtnNuevo_Click(sender, e);
-            LblMensaje.ForeColor = Color.Green;
-            LblMensaje.Text = "Obra social eliminada correctamente.";
         }
         catch (Exception ex)
         {
-            LblMensaje.ForeColor = Color.Red;
-            LblMensaje.Text = $"Error: {ex.Message}";
+            MostrarMensaje($"Error: {ex.Message}", TipoMensaje.Error);
+            return;
         }
+
+        CargarGrilla();
+        IrAModoNuevo();
+        MostrarMensaje("Obra social eliminada correctamente.", TipoMensaje.Ok);
     }
 
-    private void DgvObrasSociales_SelectionChanged(object? sender, EventArgs e)
+    // ----------------------------------------------------- mensajes y estilo
+
+    private void MostrarMensaje(string texto, TipoMensaje tipo) => _mensajes.Mostrar(texto, tipo);
+
+    private void LimpiarMensaje() => _mensajes.Limpiar();
+
+    // Limita el ancho de los textos que pueden ocupar varias lineas al de su contenedor.
+    private void AcotarEtiquetas()
     {
-        if (DgvObrasSociales.CurrentRow == null) return;
-        var fila = (ObraSocialFila)DgvObrasSociales.CurrentRow.DataBoundItem;
-        var obraSocialSeleccionada = fila.ObraSocial;
-        MostrarDetalle(fila);
-        _idSeleccionado = obraSocialSeleccionada.Id;
-        TxtNombre.Text = obraSocialSeleccionada.Nombre;
-        NudPorcentaje.Value = obraSocialSeleccionada.PorcentajeCobertura;
+        EstiloUi.Acotar(LblModo, tlpTarjeta);
+        EstiloUi.Acotar(LblVista, tlpToolbar);
+        EstiloUi.Acotar(LblSeleccion, tlpAcciones);
+        EstiloUi.Acotar(LblAyudaAcciones, tlpAcciones);
+        EstiloUi.Acotar(LblDetalle, tlpAcciones);
+        EstiloUi.AjustarFlujos(flpFiltros, FlpContadores, flpBotonesAccion);
+        _mensajes.Ajustar();
     }
 }

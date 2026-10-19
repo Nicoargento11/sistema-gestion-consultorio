@@ -36,24 +36,17 @@ public partial class FormTurnos : Form
     private const string ColACobrar = "colACobrar";
     private static readonly System.Globalization.CultureInfo CulturaAr = new("es-AR");
 
-    // Colores: misma paleta que el resto de la app (FormInicio / FormMedicos).
-    private static readonly Color ColorTexto = Color.FromArgb(27, 42, 74);
-    private static readonly Color ColorSecundario = Color.FromArgb(110, 120, 135);
-    private static readonly Color ColorAzul = Color.FromArgb(46, 134, 222);
-    private static readonly Color ColorBorde = Color.FromArgb(214, 220, 230);
-    private static readonly Color ColorOk = Color.FromArgb(28, 120, 66);
-    private static readonly Color ColorError = Color.FromArgb(192, 57, 43);
-    private static readonly Color ColorAdvertencia = Color.FromArgb(176, 96, 0);
+    // Colores y fuentes compartidos: ver EstiloUi. Aca solo los propios de los chips de horario.
     private static readonly Color ChipLibreBorde = Color.FromArgb(39, 174, 96);
     private static readonly Color ChipLibreHover = Color.FromArgb(232, 246, 238);
     private static readonly Color ChipOcupadoFondo = Color.FromArgb(236, 238, 242);
     private static readonly Color ChipOcupadoBorde = Color.FromArgb(214, 218, 226);
     private static readonly Color ChipOcupadoTexto = Color.FromArgb(130, 138, 150);
-    private static readonly Font FuenteChip = new("Segoe UI", 9.5F);
-    private static readonly Font FuenteChica = new("Segoe UI", 8.5F);
 
-    // Barra de contadores (se arma en ConfigurarBarraContadores, no en el disenador).
-    private readonly Dictionary<string, Label> _contadores = new();
+    // Franja de mensajes y barra de contadores (piezas compartidas, ver EstiloUi).
+    // Los chips se arman en ConfigurarBarraContadores, no en el disenador.
+    private FranjaMensaje _mensajes = null!;
+    private BarraContadores _contadores = null!;
     private const string ContTotal = "Total";
     private const string ContPendientes = "Pendientes";
     private const string ContConfirmados = "Confirmados";
@@ -113,7 +106,8 @@ public partial class FormTurnos : Form
         tlpAcciones.SizeChanged += (s, e) => AcotarEtiquetas();
         foreach (var flujo in new[] { flpFiltros, FlpContadores, flpBotonesAccion, FlpLeyenda })
             flujo.SizeChanged += (s, e) => AjustarFlujos();
-        pnlEstado.SizeChanged += (s, e) => AjustarMensaje();
+        _mensajes = new FranjaMensaje(pnlEstado, LblMensaje);
+        _contadores = new BarraContadores(FlpContadores);
 
         Load += FormTurnos_Load;
     }
@@ -155,15 +149,8 @@ public partial class FormTurnos : Form
     // contadores, botones, leyenda) no usan AutoSize: dentro de contenedores
     // AutoSize anidados se calcula su alto con un ancho equivocado. En su lugar
     // el alto se fija aca con el ancho real, cada vez que cambia el ancho o el contenido.
-    private void AjustarFlujos()
-    {
-        foreach (var flujo in new[] { flpFiltros, FlpContadores, flpBotonesAccion, FlpLeyenda })
-        {
-            if (flujo.Width <= 0) continue;
-            int alto = flujo.GetPreferredSize(new Size(flujo.Width, 0)).Height;
-            if (flujo.Height != alto) flujo.Height = alto;
-        }
-    }
+    private void AjustarFlujos() =>
+        EstiloUi.AjustarFlujos(flpFiltros, FlpContadores, flpBotonesAccion, FlpLeyenda);
 
     private void ConfigurarAyudas()
     {
@@ -214,7 +201,7 @@ public partial class FormTurnos : Form
         }
 
         string? aviso;
-        Color colorAviso = ColorAdvertencia;
+        Color colorAviso = EstiloUi.Advertencia;
 
         if (CboMedico.SelectedItem is not Medico medico)
         {
@@ -234,7 +221,7 @@ public partial class FormTurnos : Form
             catch (Exception ex)
             {
                 aviso = "No se pudo consultar la agenda del médico: " + ex.Message;
-                colorAviso = ColorError;
+                colorAviso = EstiloUi.Error;
             }
         }
 
@@ -309,7 +296,7 @@ public partial class FormTurnos : Form
             Text = slot.HoraInicio.ToString("HH:mm"),
             Tag = slot,
             FlatStyle = FlatStyle.Flat,
-            Font = FuenteChip,
+            Font = EstiloUi.FuenteChip,
             UseVisualStyleBackColor = false,
             Margin = new Padding(0, 0, EscalaDpi.Px(this, 5), EscalaDpi.Px(this, 5)),
             Enabled = estado == EstadoChip.Libre,
@@ -353,16 +340,16 @@ public partial class FormTurnos : Form
             }
             else if (_horarioElegido != null && horario != null && horario.HoraInicio == _horarioElegido.HoraInicio)
             {
-                chip.BackColor = ColorAzul;
+                chip.BackColor = EstiloUi.Azul;
                 chip.ForeColor = Color.White;
-                chip.FlatAppearance.BorderColor = ColorAzul;
-                chip.FlatAppearance.MouseOverBackColor = ColorAzul;
-                chip.FlatAppearance.MouseDownBackColor = ColorAzul;
+                chip.FlatAppearance.BorderColor = EstiloUi.Azul;
+                chip.FlatAppearance.MouseOverBackColor = EstiloUi.Azul;
+                chip.FlatAppearance.MouseDownBackColor = EstiloUi.Azul;
             }
             else
             {
                 chip.BackColor = Color.White;
-                chip.ForeColor = ColorOk;
+                chip.ForeColor = EstiloUi.Ok;
                 chip.FlatAppearance.BorderColor = ChipLibreBorde;
                 chip.FlatAppearance.MouseOverBackColor = ChipLibreHover;
                 chip.FlatAppearance.MouseDownBackColor = ChipLibreHover;
@@ -381,13 +368,13 @@ public partial class FormTurnos : Form
     {
         FlpLeyenda.Controls.Add(CrearItemLeyenda("Libre", Color.White, ChipLibreBorde));
         FlpLeyenda.Controls.Add(CrearItemLeyenda("Ocupado", ChipOcupadoFondo, ChipOcupadoBorde));
-        FlpLeyenda.Controls.Add(CrearItemLeyenda("Elegido", ColorAzul, ColorAzul));
+        FlpLeyenda.Controls.Add(CrearItemLeyenda("Elegido", EstiloUi.Azul, EstiloUi.Azul));
 
         _lblLeyendaDuracion = new Label
         {
             AutoSize = true,
-            Font = FuenteChica,
-            ForeColor = ColorSecundario,
+            Font = EstiloUi.FuenteChica,
+            ForeColor = EstiloUi.Secundario,
             Margin = new Padding(0)
         };
         FlpLeyenda.Controls.Add(_lblLeyendaDuracion);
@@ -416,8 +403,8 @@ public partial class FormTurnos : Form
         var etiqueta = new Label
         {
             AutoSize = true,
-            Font = FuenteChica,
-            ForeColor = ColorSecundario,
+            Font = EstiloUi.FuenteChica,
+            ForeColor = EstiloUi.Secundario,
             Margin = new Padding(0),
             Text = texto
         };
@@ -585,7 +572,7 @@ public partial class FormTurnos : Form
 
         if (faltantes.Count > 0)
         {
-            MostrarMensaje("Debe seleccionar " + string.Join(", ", faltantes) + ".", ColorError);
+            MostrarMensaje("Debe seleccionar " + string.Join(", ", faltantes) + ".", TipoMensaje.Error);
             return;
         }
 
@@ -602,7 +589,7 @@ public partial class FormTurnos : Form
         catch (Exception ex)
         {
             // El horario pudo ocuparse desde otra pantalla: se refrescan los botones.
-            MostrarMensaje(ex.Message, ColorError);
+            MostrarMensaje(ex.Message, TipoMensaje.Error);
             ActualizarHorarios();
             return;
         }
@@ -622,7 +609,7 @@ public partial class FormTurnos : Form
         {
             aviso = "No se pudo avisar al paciente: " + ex.Message;
         }
-        MostrarMensaje("Turno agendado. " + aviso, ColorOk);
+        MostrarMensaje("Turno agendado. " + aviso, TipoMensaje.Ok);
     }
 
     private void BtnModificar_Click(object? sender, EventArgs e)
@@ -630,13 +617,13 @@ public partial class FormTurnos : Form
         var seleccionado = TurnoSeleccionado;
         if (seleccionado == null || _idTurnoSeleccionado == null)
         {
-            MostrarMensaje("Seleccione un turno de la lista para modificar.", ColorError);
+            MostrarMensaje("Seleccione un turno de la lista para modificar.", TipoMensaje.Error);
             return;
         }
 
         if (_horarioElegido == null || CboDuracion.SelectedItem is not int duracion)
         {
-            MostrarMensaje("Seleccione un horario libre y una duración para reprogramar el turno.", ColorError);
+            MostrarMensaje("Seleccione un horario libre y una duración para reprogramar el turno.", TipoMensaje.Error);
             return;
         }
 
@@ -650,7 +637,7 @@ public partial class FormTurnos : Form
         }
         catch (Exception ex)
         {
-            MostrarMensaje(ex.Message, ColorError);
+            MostrarMensaje(ex.Message, TipoMensaje.Error);
             ActualizarHorarios();
             return;
         }
@@ -671,7 +658,7 @@ public partial class FormTurnos : Form
         _horarioElegido = null;
         CargarGrilla();
         ActualizarHorarios();
-        MostrarMensaje("Turno modificado. " + aviso, ColorOk);
+        MostrarMensaje("Turno modificado. " + aviso, TipoMensaje.Ok);
     }
 
     private void BtnCancelar_Click(object? sender, EventArgs e)
@@ -679,7 +666,7 @@ public partial class FormTurnos : Form
         var turnoSeleccionado = TurnoSeleccionado;
         if (turnoSeleccionado == null)
         {
-            MostrarMensaje("Seleccione un turno de la lista primero.", ColorError);
+            MostrarMensaje("Seleccione un turno de la lista primero.", TipoMensaje.Error);
             return;
         }
 
@@ -696,7 +683,7 @@ public partial class FormTurnos : Form
         }
         catch (Exception ex)
         {
-            MostrarMensaje(ex.Message, ColorError);
+            MostrarMensaje(ex.Message, TipoMensaje.Error);
             return;
         }
 
@@ -715,7 +702,7 @@ public partial class FormTurnos : Form
         _horarioElegido = null;
         CargarGrilla();
         ActualizarHorarios();
-        MostrarMensaje("Turno cancelado. " + aviso, ColorOk);
+        MostrarMensaje("Turno cancelado. " + aviso, TipoMensaje.Ok);
     }
 
     private void BtnConfirmarAsistencia_Click(object? sender, EventArgs e)
@@ -723,7 +710,7 @@ public partial class FormTurnos : Form
         var turno = TurnoSeleccionado;
         if (turno == null)
         {
-            MostrarMensaje("Seleccione un turno de la lista primero.", ColorError);
+            MostrarMensaje("Seleccione un turno de la lista primero.", TipoMensaje.Error);
             return;
         }
 
@@ -738,7 +725,7 @@ public partial class FormTurnos : Form
             }
             catch (Exception ex)
             {
-                MostrarMensaje(ex.Message, ColorError);
+                MostrarMensaje(ex.Message, TipoMensaje.Error);
                 return;
             }
         }
@@ -747,28 +734,14 @@ public partial class FormTurnos : Form
         _horarioElegido = null;
         CargarGrilla();
         ActualizarHorarios();
-        MostrarMensaje("Asistencia confirmada.", ColorOk);
+        MostrarMensaje("Asistencia confirmada.", TipoMensaje.Ok);
     }
 
     // ----------------------------------------------------------- grilla y datos
 
     private void ConfigurarColumnas()
     {
-        DgvTurnos.AutoGenerateColumns = false;
-        DgvTurnos.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-        DgvTurnos.ColumnHeadersHeight = EscalaDpi.Px(this, 46);
-        DgvTurnos.RowTemplate.Height = EscalaDpi.Px(this, 28);
-
-        // Encabezado claro, acorde al resto de la app.
-        DgvTurnos.EnableHeadersVisualStyles = false;
-        DgvTurnos.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(245, 246, 250);
-        DgvTurnos.ColumnHeadersDefaultCellStyle.ForeColor = ColorTexto;
-        DgvTurnos.ColumnHeadersDefaultCellStyle.SelectionBackColor = Color.FromArgb(245, 246, 250);
-        DgvTurnos.ColumnHeadersDefaultCellStyle.SelectionForeColor = ColorTexto;
-        DgvTurnos.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
-        DgvTurnos.ColumnHeadersDefaultCellStyle.WrapMode = DataGridViewTriState.True;
-        DgvTurnos.ColumnHeadersDefaultCellStyle.Padding = new Padding(EscalaDpi.Px(this, 4), 0, 0, 0);
-        DgvTurnos.GridColor = Color.FromArgb(228, 232, 240);
+        GrillaUi.Estilizar(DgvTurnos);
 
         // MinimumWidth hace que, en una ventana angosta, la tabla scrollee
         // horizontalmente dentro de si misma en vez de apretar las columnas.
@@ -790,40 +763,13 @@ public partial class FormTurnos : Form
         var acobrar = AgregarColumna(ColACobrar, "A cobrar (estimado)", null, 110, MinimoPara("$ 00.000,00"));
         acobrar.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
 
-        // Fila seleccionada: mismo azul que el resto de la app, texto blanco.
-        DgvTurnos.DefaultCellStyle.SelectionBackColor = ColorAzul;
-        DgvTurnos.DefaultCellStyle.SelectionForeColor = Color.White;
     }
 
     // Ancho en pixeles reales del texto de muestra con la fuente de la grilla, mas holgura.
-    private int MinimoPara(string muestra) =>
-        TextRenderer.MeasureText(muestra, DgvTurnos.Font).Width + EscalaDpi.Px(this, 6);
+    private int MinimoPara(string muestra) => GrillaUi.MinimoPara(DgvTurnos, muestra);
 
-    // El encabezado puede partirse en varias lineas, pero no una palabra: el
-    // minimo de la columna alcanza para la palabra mas larga del titulo.
-    private int MinimoEncabezado(string titulo)
-    {
-        var fuente = DgvTurnos.ColumnHeadersDefaultCellStyle.Font ?? DgvTurnos.Font;
-        int palabra = titulo.Split(' ').Max(w => TextRenderer.MeasureText(w, fuente).Width);
-        return palabra + EscalaDpi.Px(this, 14);
-    }
-
-    private DataGridViewTextBoxColumn AgregarColumna(string nombre, string titulo, string? propiedad, float peso, int anchoMinimo, string? formato = null)
-    {
-        var columna = new DataGridViewTextBoxColumn
-        {
-            Name = nombre,
-            HeaderText = titulo,
-            FillWeight = peso,
-            MinimumWidth = Math.Max(anchoMinimo, MinimoEncabezado(titulo)),
-            SortMode = DataGridViewColumnSortMode.NotSortable
-        };
-        if (propiedad != null) columna.DataPropertyName = propiedad;
-        if (formato != null) columna.DefaultCellStyle.Format = formato;
-        columna.DefaultCellStyle.NullValue = "-";
-        DgvTurnos.Columns.Add(columna);
-        return columna;
-    }
+    private DataGridViewTextBoxColumn AgregarColumna(string nombre, string titulo, string? propiedad, float peso, int anchoMinimo, string? formato = null) =>
+        GrillaUi.AgregarColumna(DgvTurnos, nombre, titulo, propiedad, peso, anchoMinimo, formato);
 
     private void CargarCombos()
     {
@@ -834,7 +780,7 @@ public partial class FormTurnos : Form
         }
         catch (Exception ex)
         {
-            MostrarMensaje("No se pudieron cargar los pacientes: " + ex.Message, ColorError);
+            MostrarMensaje("No se pudieron cargar los pacientes: " + ex.Message, TipoMensaje.Error);
         }
 
         CboPaciente.DataSource = pacientes;
@@ -861,7 +807,7 @@ public partial class FormTurnos : Form
         catch (Exception ex)
         {
             CboMedico.DataSource = new List<Medico>();
-            MostrarMensaje("No se pudieron cargar los médicos: " + ex.Message, ColorError);
+            MostrarMensaje("No se pudieron cargar los médicos: " + ex.Message, TipoMensaje.Error);
         }
 
         CboMedico.DisplayMember = "NombreCompleto";
@@ -951,7 +897,7 @@ public partial class FormTurnos : Form
         // Resumen de lo que muestra la tabla ahora (los filtros aplicados).
         if (errorCarga != null)
         {
-            LblVista.ForeColor = ColorError;
+            LblVista.ForeColor = EstiloUi.Error;
             LblVista.Text = errorCarga;
         }
         else
@@ -961,7 +907,7 @@ public partial class FormTurnos : Form
                 : (EsRecepcionista ? "todos sus médicos" : "todos los médicos");
             string textoFecha = fechaFiltro != null ? fechaFiltro.Value.ToString("dd/MM/yyyy") : "todas las fechas";
             string cancelados = ChkMostrarCancelados.Checked ? " · incluye cancelados" : "";
-            LblVista.ForeColor = ColorSecundario;
+            LblVista.ForeColor = EstiloUi.Secundario;
             LblVista.Text = $"Mostrando: {textoMedico} · {textoFecha} · {textoPaciente}{cancelados}";
         }
         AcotarEtiquetas();
@@ -982,29 +928,13 @@ public partial class FormTurnos : Form
     // para que el disenador no la borre.
     private void ConfigurarBarraContadores()
     {
-        AgregarContador(ContTotal, Color.FromArgb(27, 42, 74), Color.White);
-        AgregarContador(ContPendientes, PaletaEstados.Fondo(EstadoTurno.Pendiente), PaletaEstados.Acento(EstadoTurno.Pendiente));
-        AgregarContador(ContConfirmados, PaletaEstados.Fondo(EstadoTurno.Confirmado), PaletaEstados.Acento(EstadoTurno.Confirmado));
-        AgregarContador(ContAtendidos, PaletaEstados.Fondo(EstadoTurno.Asistio), Color.FromArgb(28, 120, 66));
-        AgregarContador(ContAusentes, PaletaEstados.Fondo(EstadoTurno.Ausente), Color.FromArgb(180, 50, 38));
-        AgregarContador(ContCancelados, PaletaEstados.Fondo(EstadoTurno.Cancelado), Color.FromArgb(90, 98, 112));
+        _contadores.Agregar(ContTotal, Color.FromArgb(27, 42, 74), Color.White);
+        _contadores.Agregar(ContPendientes, PaletaEstados.Fondo(EstadoTurno.Pendiente), PaletaEstados.Acento(EstadoTurno.Pendiente));
+        _contadores.Agregar(ContConfirmados, PaletaEstados.Fondo(EstadoTurno.Confirmado), PaletaEstados.Acento(EstadoTurno.Confirmado));
+        _contadores.Agregar(ContAtendidos, PaletaEstados.Fondo(EstadoTurno.Asistio), Color.FromArgb(28, 120, 66));
+        _contadores.Agregar(ContAusentes, PaletaEstados.Fondo(EstadoTurno.Ausente), Color.FromArgb(180, 50, 38));
+        _contadores.Agregar(ContCancelados, PaletaEstados.Fondo(EstadoTurno.Cancelado), Color.FromArgb(90, 98, 112));
         ActualizarContadores(new List<Turno>());
-    }
-
-    private void AgregarContador(string clave, Color fondo, Color texto)
-    {
-        var etiqueta = new Label
-        {
-            AutoSize = true,
-            Font = new Font("Segoe UI", 9F, FontStyle.Bold),
-            BackColor = fondo,
-            ForeColor = texto,
-            Margin = new Padding(0, 0, EscalaDpi.Px(this, 6), EscalaDpi.Px(this, 4)),
-            Padding = new Padding(EscalaDpi.Px(this, 8), EscalaDpi.Px(this, 4), EscalaDpi.Px(this, 8), EscalaDpi.Px(this, 4)),
-            Name = "lblContador" + clave
-        };
-        _contadores[clave] = etiqueta;
-        FlpContadores.Controls.Add(etiqueta);
     }
 
     // Cuenta sobre lo que muestra la grilla (con los filtros ya aplicados).
@@ -1012,12 +942,12 @@ public partial class FormTurnos : Form
     {
         int Contar(EstadoTurno estado) => turnos.Count(t => t.Estado == estado);
 
-        _contadores[ContTotal].Text = $"Total: {turnos.Count}";
-        _contadores[ContPendientes].Text = $"Pendientes: {Contar(EstadoTurno.Pendiente)}";
-        _contadores[ContConfirmados].Text = $"Confirmados: {Contar(EstadoTurno.Confirmado)}";
-        _contadores[ContAtendidos].Text = $"Atendidos: {Contar(EstadoTurno.Asistio)}";
-        _contadores[ContAusentes].Text = $"Ausentes: {Contar(EstadoTurno.Ausente)}";
-        _contadores[ContCancelados].Text = $"Cancelados: {Contar(EstadoTurno.Cancelado)}";
+        _contadores.Poner(ContTotal, $"Total: {turnos.Count}");
+        _contadores.Poner(ContPendientes, $"Pendientes: {Contar(EstadoTurno.Pendiente)}");
+        _contadores.Poner(ContConfirmados, $"Confirmados: {Contar(EstadoTurno.Confirmado)}");
+        _contadores.Poner(ContAtendidos, $"Atendidos: {Contar(EstadoTurno.Asistio)}");
+        _contadores.Poner(ContAusentes, $"Ausentes: {Contar(EstadoTurno.Ausente)}");
+        _contadores.Poner(ContCancelados, $"Cancelados: {Contar(EstadoTurno.Cancelado)}");
     }
 
     // Color de fila por estado, texto de estado con acento y monto estimado.
@@ -1064,71 +994,29 @@ public partial class FormTurnos : Form
 
     // ----------------------------------------------------- mensajes y estilo
 
-    private void MostrarMensaje(string texto, Color color)
-    {
-        LblMensaje.ForeColor = color;
-        LblMensaje.Text = texto;
-        pnlEstado.Visible = !string.IsNullOrEmpty(texto);
-        AjustarMensaje();
-    }
+    private void MostrarMensaje(string texto, TipoMensaje tipo) => _mensajes.Mostrar(texto, tipo);
 
-    private void LimpiarMensaje() => MostrarMensaje("", ColorOk);
-
-    // La franja de mensajes crece con el texto (varias lineas si hace falta).
-    private void AjustarMensaje()
-    {
-        if (!pnlEstado.Visible || string.IsNullOrEmpty(LblMensaje.Text)) return;
-
-        int ancho = pnlEstado.ClientSize.Width - pnlEstado.Padding.Horizontal;
-        if (ancho <= 0) return;
-
-        int alto = TextRenderer.MeasureText(LblMensaje.Text, LblMensaje.Font,
-            new Size(ancho, int.MaxValue), TextFormatFlags.WordBreak).Height;
-        int deseado = alto + pnlEstado.Padding.Vertical + EscalaDpi.Px(this, 4);
-        if (pnlEstado.Height != deseado) pnlEstado.Height = deseado;
-    }
+    private void LimpiarMensaje() => _mensajes.Limpiar();
 
     // Limita el ancho de los textos que pueden ocupar varias lineas al de su contenedor.
     private void AcotarEtiquetas()
     {
-        Acotar(LblModo, tlpNuevoTurno);
-        Acotar(LblAviso, tlpHorarios);
-        Acotar(LblVista, tlpToolbar);
-        Acotar(LblSeleccion, tlpAcciones);
-        Acotar(LblAyudaAcciones, tlpAcciones);
+        EstiloUi.Acotar(LblModo, tlpNuevoTurno);
+        EstiloUi.Acotar(LblAviso, tlpHorarios);
+        EstiloUi.Acotar(LblVista, tlpToolbar);
+        EstiloUi.Acotar(LblSeleccion, tlpAcciones);
+        EstiloUi.Acotar(LblAyudaAcciones, tlpAcciones);
         AjustarFlujos();
-        AjustarMensaje();
-    }
-
-    private static void Acotar(Label etiqueta, Control contenedor)
-    {
-        int ancho = contenedor.ClientSize.Width;
-        if (ancho <= 0) return;
-
-        var maximo = new Size(ancho, 0);
-        if (etiqueta.MaximumSize != maximo) etiqueta.MaximumSize = maximo;
+        _mensajes.Ajustar();
     }
 
     // Botones planos de color: cuando se deshabilitan pasan a un gris uniforme.
     private void ConfigurarEstiloBotones()
     {
-        EstilizarBoton(BtnAsignar);
-        EstilizarBoton(BtnModificar);
-        EstilizarBoton(BtnCancelar);
-        EstilizarBoton(BtnConfirmarAsistencia);
+        EstiloUi.EstilizarBoton(BtnAsignar);
+        EstiloUi.EstilizarBoton(BtnModificar);
+        EstiloUi.EstilizarBoton(BtnCancelar);
+        EstiloUi.EstilizarBoton(BtnConfirmarAsistencia);
         BtnLimpiar.Cursor = Cursors.Hand;
-    }
-
-    private static void EstilizarBoton(Button boton)
-    {
-        Color colorActivo = boton.BackColor;
-        void Aplicar()
-        {
-            boton.BackColor = boton.Enabled ? colorActivo : Color.FromArgb(226, 230, 237);
-            boton.ForeColor = boton.Enabled ? Color.White : Color.FromArgb(140, 148, 160);
-            boton.Cursor = boton.Enabled ? Cursors.Hand : Cursors.Default;
-        }
-        boton.EnabledChanged += (s, e) => Aplicar();
-        Aplicar();
     }
 }
