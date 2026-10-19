@@ -1,0 +1,182 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Atención médica y historial clínico",
+    "output": "flujo-atencion-medica.html",
+    "viewBox": [
+      1400,
+      912
+    ],
+    "column_fit": "spread",
+    "quality_profile": "showcase"
+  },
+  "participants": [
+    {
+      "id": "med",
+      "type": "external",
+      "label": "Médico"
+    },
+    {
+      "id": "agenda",
+      "type": "frontend",
+      "label": "FormAgendaMedico"
+    },
+    {
+      "id": "agsvc",
+      "type": "backend",
+      "label": "AgendaDiariaService"
+    },
+    {
+      "id": "reg",
+      "type": "frontend",
+      "label": "FormRegistrarActividad"
+    },
+    {
+      "id": "act",
+      "type": "backend",
+      "label": "ActividadMedicaService"
+    },
+    {
+      "id": "hist",
+      "type": "frontend",
+      "label": "FormHistorialClinico"
+    },
+    {
+      "id": "sql",
+      "type": "database",
+      "label": "SQL Server"
+    }
+  ],
+  "segments": [
+    {
+      "from": 157,
+      "to": 333,
+      "label": "Mi agenda"
+    },
+    {
+      "from": 347,
+      "to": 565,
+      "label": "Registrar la consulta"
+    },
+    {
+      "from": 579,
+      "to": 797,
+      "label": "Historial clínico"
+    }
+  ],
+  "messages": [
+    {
+      "id": "m1",
+      "from": "med",
+      "to": "agenda",
+      "y": 185,
+      "label": "abre Mi agenda",
+      "variant": "default"
+    },
+    {
+      "id": "m2",
+      "from": "agenda",
+      "to": "agsvc",
+      "y": 227,
+      "label": "ObtenerAgenda(médico, fecha)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "m3",
+      "from": "agsvc",
+      "to": "sql",
+      "y": 269,
+      "label": "sp_ObtenerTurnosPorMedicoYFecha",
+      "variant": "security"
+    },
+    {
+      "id": "m4",
+      "from": "agsvc",
+      "to": "agenda",
+      "y": 311,
+      "label": "TurnoAgendaItem (edad, obra social)",
+      "variant": "return"
+    },
+    {
+      "id": "m5",
+      "from": "med",
+      "to": "agenda",
+      "y": 375,
+      "label": "doble clic: Atender Paciente",
+      "variant": "default"
+    },
+    {
+      "id": "m6",
+      "from": "agenda",
+      "to": "reg",
+      "y": 417,
+      "label": "navegador(new FormRegistrarActividad)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "m7",
+      "from": "med",
+      "to": "reg",
+      "y": 459,
+      "label": "escribe motivo, procedimiento y receta",
+      "variant": "default"
+    },
+    {
+      "id": "m8",
+      "from": "reg",
+      "to": "act",
+      "y": 501,
+      "label": "RegistrarOModificarActividad(turno, ...)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "m9",
+      "from": "act",
+      "to": "sql",
+      "y": 543,
+      "label": "INSERT o UPDATE ActividadMedica",
+      "variant": "default"
+    },
+    {
+      "id": "m10",
+      "from": "med",
+      "to": "reg",
+      "y": 607,
+      "label": "pulsa Ver historial",
+      "variant": "default"
+    },
+    {
+      "id": "m11",
+      "from": "reg",
+      "to": "hist",
+      "y": 649,
+      "label": "navegador(new FormHistorialClinico)",
+      "variant": "default"
+    },
+    {
+      "id": "m12",
+      "from": "hist",
+      "to": "act",
+      "y": 691,
+      "label": "ConsultarFilas(rol Médico, paciente)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "m13",
+      "from": "act",
+      "to": "sql",
+      "y": 733,
+      "label": "SELECT actividades + turno + paciente",
+      "variant": "default"
+    },
+    {
+      "id": "m14",
+      "from": "act",
+      "to": "hist",
+      "y": 775,
+      "label": "AtencionFila (con datos clínicos)",
+      "variant": "return"
+    }
+  ]
+}

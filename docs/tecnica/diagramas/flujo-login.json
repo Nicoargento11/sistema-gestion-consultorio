@@ -1,0 +1,167 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Arranque de la app y login",
+    "output": "flujo-login.html",
+    "viewBox": [
+      1080,
+      828
+    ],
+    "column_fit": "spread",
+    "quality_profile": "showcase"
+  },
+  "participants": [
+    {
+      "id": "program",
+      "type": "frontend",
+      "label": "Program.Main"
+    },
+    {
+      "id": "datos",
+      "type": "backend",
+      "label": "SGC.Datos"
+    },
+    {
+      "id": "sql",
+      "type": "database",
+      "label": "SQL Server"
+    },
+    {
+      "id": "login",
+      "type": "frontend",
+      "label": "FormLogin"
+    },
+    {
+      "id": "usuarios",
+      "type": "backend",
+      "label": "UsuarioService"
+    },
+    {
+      "id": "hasher",
+      "type": "security",
+      "label": "PasswordHasher"
+    },
+    {
+      "id": "menu",
+      "type": "frontend",
+      "label": "FormMenuPrincipal"
+    }
+  ],
+  "segments": [
+    {
+      "from": 157,
+      "to": 375,
+      "label": "Arranque"
+    },
+    {
+      "from": 389,
+      "to": 649,
+      "label": "Login"
+    },
+    {
+      "from": 663,
+      "to": 713,
+      "label": "Menú"
+    }
+  ],
+  "messages": [
+    {
+      "id": "m1",
+      "from": "program",
+      "to": "datos",
+      "y": 185,
+      "label": "Crear() + Migrate()",
+      "variant": "emphasis"
+    },
+    {
+      "id": "m2",
+      "from": "datos",
+      "to": "sql",
+      "y": 227,
+      "label": "crea la base y aplica migraciones",
+      "variant": "default"
+    },
+    {
+      "id": "m3",
+      "from": "program",
+      "to": "datos",
+      "y": 269,
+      "label": "DbSeeder.Sembrar",
+      "variant": "default"
+    },
+    {
+      "id": "m4",
+      "from": "datos",
+      "to": "sql",
+      "y": 311,
+      "label": "INSERT solo si no hay médicos",
+      "variant": "dashed"
+    },
+    {
+      "id": "m5",
+      "from": "program",
+      "to": "login",
+      "y": 353,
+      "label": "Application.Run(new FormLogin())",
+      "variant": "emphasis"
+    },
+    {
+      "id": "m6",
+      "from": "login",
+      "to": "usuarios",
+      "y": 417,
+      "label": "Autenticar(usuario, clave)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "m7",
+      "from": "usuarios",
+      "to": "sql",
+      "y": 459,
+      "label": "SELECT usuario activo",
+      "variant": "default"
+    },
+    {
+      "id": "m8",
+      "from": "sql",
+      "to": "usuarios",
+      "y": 501,
+      "label": "fila o nada",
+      "variant": "return"
+    },
+    {
+      "id": "m9",
+      "from": "usuarios",
+      "to": "hasher",
+      "y": 543,
+      "label": "Verificar(clave, hash)",
+      "variant": "security"
+    },
+    {
+      "id": "m10",
+      "from": "hasher",
+      "to": "usuarios",
+      "y": 585,
+      "label": "true / false",
+      "variant": "return"
+    },
+    {
+      "id": "m11",
+      "from": "usuarios",
+      "to": "login",
+      "y": 627,
+      "label": "Usuario o null",
+      "variant": "return"
+    },
+    {
+      "id": "m12",
+      "from": "login",
+      "to": "menu",
+      "y": 691,
+      "label": "new FormMenuPrincipal(usuario)",
+      "variant": "emphasis",
+      "note": "Botones según rol y abre FormInicio. El login se oculta (Hide), no se cierra."
+    }
+  ]
+}

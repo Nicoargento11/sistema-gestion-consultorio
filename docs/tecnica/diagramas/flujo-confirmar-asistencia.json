@@ -1,0 +1,143 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Confirmar asistencia y cobro",
+    "output": "flujo-confirmar-asistencia.html",
+    "viewBox": [
+      1200,
+      764
+    ],
+    "column_fit": "spread",
+    "quality_profile": "showcase"
+  },
+  "participants": [
+    {
+      "id": "rec",
+      "type": "external",
+      "label": "Recepcionista"
+    },
+    {
+      "id": "turnos",
+      "type": "frontend",
+      "label": "FormTurnos"
+    },
+    {
+      "id": "dlg",
+      "type": "frontend",
+      "label": "FormConfirmarAsistencia"
+    },
+    {
+      "id": "tserv",
+      "type": "backend",
+      "label": "TurnoService"
+    },
+    {
+      "id": "sql",
+      "type": "database",
+      "label": "SQL Server"
+    }
+  ],
+  "segments": [
+    {
+      "from": 157,
+      "to": 417,
+      "label": "Diálogo"
+    },
+    {
+      "from": 431,
+      "to": 649,
+      "label": "Guardar"
+    }
+  ],
+  "messages": [
+    {
+      "id": "m1",
+      "from": "rec",
+      "to": "turnos",
+      "y": 185,
+      "label": "elige un turno Confirmado y pulsa el botón",
+      "variant": "default"
+    },
+    {
+      "id": "m2",
+      "from": "turnos",
+      "to": "dlg",
+      "y": 227,
+      "label": "ShowDialog(turno)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "m3",
+      "from": "dlg",
+      "to": "tserv",
+      "y": 269,
+      "label": "MedicoAceptaObraSocialDelPaciente",
+      "variant": "default"
+    },
+    {
+      "id": "m4",
+      "from": "rec",
+      "to": "dlg",
+      "y": 311,
+      "label": "marca Asistió y el medio de pago",
+      "variant": "default"
+    },
+    {
+      "id": "m5",
+      "from": "dlg",
+      "to": "tserv",
+      "y": 353,
+      "label": "CalcularMontoParticular / ConObraSocial",
+      "variant": "default"
+    },
+    {
+      "id": "m6",
+      "from": "dlg",
+      "to": "turnos",
+      "y": 395,
+      "label": "Asistio, MedioPago, Monto (OK)",
+      "variant": "return"
+    },
+    {
+      "id": "m7",
+      "from": "turnos",
+      "to": "tserv",
+      "y": 459,
+      "label": "ConfirmarAsistencia(id, asistio, medio, monto)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "m8",
+      "from": "tserv",
+      "to": "sql",
+      "y": 501,
+      "label": "SELECT turno (Confirmado, fecha <= hoy)",
+      "variant": "default"
+    },
+    {
+      "id": "m9",
+      "from": "tserv",
+      "to": "sql",
+      "y": 543,
+      "label": "UPDATE Estado = Asistio o Ausente",
+      "variant": "emphasis"
+    },
+    {
+      "id": "m10",
+      "from": "tserv",
+      "to": "turnos",
+      "y": 585,
+      "label": "OK o excepción con el motivo",
+      "variant": "return"
+    },
+    {
+      "id": "m11",
+      "from": "turnos",
+      "to": "rec",
+      "y": 627,
+      "label": "grilla recargada \"Asistencia confirmada\"",
+      "variant": "return"
+    }
+  ]
+}

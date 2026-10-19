@@ -1,0 +1,207 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Capas del SGC y direccion de dependencias",
+    "output": "capas.html",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    {
+      "id": "personal",
+      "type": "external",
+      "label": "Personal",
+      "sublabel": "Admin, Recep., Medico",
+      "pos": [
+        30,
+        260
+      ],
+      "size": [
+        130,
+        64
+      ]
+    },
+    {
+      "id": "ui",
+      "type": "frontend",
+      "label": "SGC.UI",
+      "sublabel": "WinForms: pantallas",
+      "pos": [
+        240,
+        260
+      ],
+      "size": [
+        150,
+        64
+      ]
+    },
+    {
+      "id": "logica",
+      "type": "backend",
+      "label": "SGC.Logica",
+      "sublabel": "Services y reglas",
+      "pos": [
+        470,
+        260
+      ],
+      "size": [
+        150,
+        64
+      ]
+    },
+    {
+      "id": "datos",
+      "type": "backend",
+      "label": "SGC.Datos",
+      "sublabel": "SGCContext, Migraciones",
+      "pos": [
+        700,
+        260
+      ],
+      "size": [
+        150,
+        64
+      ]
+    },
+    {
+      "id": "sql",
+      "type": "database",
+      "label": "SQL Server",
+      "sublabel": "Base SGC: tablas y 10 SP",
+      "pos": [
+        930,
+        260
+      ],
+      "size": [
+        130,
+        64
+      ]
+    },
+    {
+      "id": "config",
+      "type": "external",
+      "label": "appsettings.Local.json",
+      "sublabel": "Cadena de conexion",
+      "pos": [
+        700,
+        40
+      ],
+      "size": [
+        150,
+        64
+      ]
+    },
+    {
+      "id": "entidades",
+      "type": "security",
+      "label": "SGC.Entidades",
+      "sublabel": "Entidades y enums",
+      "pos": [
+        470,
+        450
+      ],
+      "size": [
+        150,
+        64
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "usa-ui",
+      "from": "personal",
+      "to": "ui",
+      "label": "usa"
+    },
+    {
+      "id": "ui-logica",
+      "from": "ui",
+      "to": "logica",
+      "label": "referencia",
+      "variant": "emphasis"
+    },
+    {
+      "id": "logica-datos",
+      "from": "logica",
+      "to": "datos",
+      "label": "referencia",
+      "variant": "emphasis"
+    },
+    {
+      "id": "datos-sql",
+      "from": "datos",
+      "to": "sql",
+      "label": "EF Core"
+    },
+    {
+      "id": "config-datos",
+      "from": "config",
+      "to": "datos",
+      "label": "cadena de conexion",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelAt": [
+        775,
+        182
+      ]
+    },
+    {
+      "id": "ui-entidades",
+      "from": "ui",
+      "to": "entidades",
+      "label": "referencia",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "left"
+    },
+    {
+      "id": "logica-entidades",
+      "from": "logica",
+      "to": "entidades",
+      "label": "referencia",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelAt": [
+        545,
+        388
+      ]
+    },
+    {
+      "id": "datos-entidades",
+      "from": "datos",
+      "to": "entidades",
+      "label": "referencia",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "right"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Regla de dependencias",
+      "items": [
+        "Cada capa solo referencia a la de abajo",
+        "SGC.Entidades no referencia a ninguna"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Acceso a datos",
+      "items": [
+        "Cada operacion abre su propio SGCContext",
+        "El Service lo crea con SGCContextFactory.Crear()"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Arranque",
+      "items": [
+        "Program.cs aplica Migrate() y DbSeeder",
+        "Si SQL Server no responde, muestra error y sale"
+      ]
+    }
+  ]
+}

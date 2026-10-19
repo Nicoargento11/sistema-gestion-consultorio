@@ -1,0 +1,199 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Asignar un turno en FormTurnos",
+    "output": "flujo-asignar-turno.html",
+    "viewBox": [
+      1400,
+      996
+    ],
+    "column_fit": "spread",
+    "quality_profile": "showcase"
+  },
+  "participants": [
+    {
+      "id": "rec",
+      "type": "external",
+      "label": "Recepcionista"
+    },
+    {
+      "id": "turnos",
+      "type": "frontend",
+      "label": "FormTurnos"
+    },
+    {
+      "id": "agenda",
+      "type": "backend",
+      "label": "AgendaMedicoService"
+    },
+    {
+      "id": "horario",
+      "type": "backend",
+      "label": "HorarioService"
+    },
+    {
+      "id": "tserv",
+      "type": "backend",
+      "label": "TurnoService"
+    },
+    {
+      "id": "sql",
+      "type": "database",
+      "label": "SQL Server"
+    },
+    {
+      "id": "noti",
+      "type": "messagebus",
+      "label": "NotificacionService"
+    }
+  ],
+  "segments": [
+    {
+      "from": 157,
+      "to": 501,
+      "label": "Horarios libres"
+    },
+    {
+      "from": 515,
+      "to": 775,
+      "label": "Asignar"
+    },
+    {
+      "from": 789,
+      "to": 881,
+      "label": "Aviso"
+    }
+  ],
+  "messages": [
+    {
+      "id": "m1",
+      "from": "rec",
+      "to": "turnos",
+      "y": 185,
+      "label": "elige médico, fecha y duración",
+      "variant": "default"
+    },
+    {
+      "id": "m2",
+      "from": "turnos",
+      "to": "agenda",
+      "y": 227,
+      "label": "ObtenerDisponibilidad(médico, fecha)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "m3",
+      "from": "agenda",
+      "to": "sql",
+      "y": 269,
+      "label": "franjas + ausencias del día",
+      "variant": "default"
+    },
+    {
+      "id": "m4",
+      "from": "agenda",
+      "to": "turnos",
+      "y": 311,
+      "label": "DisponibilidadDia",
+      "variant": "return"
+    },
+    {
+      "id": "m5",
+      "from": "turnos",
+      "to": "horario",
+      "y": 353,
+      "label": "GenerarSlotsEnRango(franja, duración)",
+      "variant": "default"
+    },
+    {
+      "id": "m6",
+      "from": "turnos",
+      "to": "tserv",
+      "y": 395,
+      "label": "ObtenerPorMedicoYFecha(médico, fecha)",
+      "variant": "default"
+    },
+    {
+      "id": "m7",
+      "from": "tserv",
+      "to": "sql",
+      "y": 437,
+      "label": "EXEC sp_ObtenerTurnosPorMedicoYFecha",
+      "variant": "security"
+    },
+    {
+      "id": "m8",
+      "from": "turnos",
+      "to": "rec",
+      "y": 479,
+      "label": "botones: libre (verde) u ocupado (gris)",
+      "variant": "return"
+    },
+    {
+      "id": "m9",
+      "from": "rec",
+      "to": "turnos",
+      "y": 543,
+      "label": "elige horario y paciente, pulsa Asignar",
+      "variant": "default"
+    },
+    {
+      "id": "m10",
+      "from": "turnos",
+      "to": "tserv",
+      "y": 585,
+      "label": "AsignarTurno(paciente, médico, fecha, hora)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "m11",
+      "from": "tserv",
+      "to": "agenda",
+      "y": 627,
+      "label": "MedicoAtiende: el turno entra en una franja",
+      "variant": "default"
+    },
+    {
+      "id": "m12",
+      "from": "tserv",
+      "to": "sql",
+      "y": 669,
+      "label": "HaySuperposicion: turnos del médico ese día",
+      "variant": "default",
+      "note": "Consulta y despues inserta, sin transacción: ver 08-guia-para-modificar."
+    },
+    {
+      "id": "m13",
+      "from": "tserv",
+      "to": "sql",
+      "y": 711,
+      "label": "INSERT Turno Confirmado (SaveChanges)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "m14",
+      "from": "tserv",
+      "to": "turnos",
+      "y": 753,
+      "label": "OK o excepción con el motivo",
+      "variant": "return"
+    },
+    {
+      "id": "m15",
+      "from": "turnos",
+      "to": "noti",
+      "y": 817,
+      "label": "AvisarTurno(paciente, \"Confirmacion\")",
+      "variant": "dashed"
+    },
+    {
+      "id": "m16",
+      "from": "turnos",
+      "to": "rec",
+      "y": 859,
+      "label": "franja verde \"Turno agendado\"",
+      "variant": "return"
+    }
+  ]
+}

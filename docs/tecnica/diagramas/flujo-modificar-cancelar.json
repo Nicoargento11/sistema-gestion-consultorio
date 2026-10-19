@@ -1,0 +1,172 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Modificar y cancelar un turno",
+    "output": "flujo-modificar-cancelar.html",
+    "viewBox": [
+      1080,
+      890
+    ],
+    "column_fit": "spread",
+    "quality_profile": "showcase"
+  },
+  "participants": [
+    {
+      "id": "rec",
+      "type": "external",
+      "label": "Recepcionista"
+    },
+    {
+      "id": "turnos",
+      "type": "frontend",
+      "label": "FormTurnos"
+    },
+    {
+      "id": "agenda",
+      "type": "backend",
+      "label": "AgendaMedicoService"
+    },
+    {
+      "id": "tserv",
+      "type": "backend",
+      "label": "TurnoService"
+    },
+    {
+      "id": "sql",
+      "type": "database",
+      "label": "SQL Server"
+    },
+    {
+      "id": "noti",
+      "type": "messagebus",
+      "label": "NotificacionService"
+    }
+  ],
+  "segments": [
+    {
+      "from": 157,
+      "to": 543,
+      "label": "Reprogramar"
+    },
+    {
+      "from": 557,
+      "to": 775,
+      "label": "Cancelar"
+    }
+  ],
+  "messages": [
+    {
+      "id": "m1",
+      "from": "rec",
+      "to": "turnos",
+      "y": 185,
+      "label": "elige una fila de la grilla",
+      "variant": "default"
+    },
+    {
+      "id": "m2",
+      "from": "turnos",
+      "to": "agenda",
+      "y": 227,
+      "label": "ObtenerDisponibilidad (ignora el propio turno)",
+      "variant": "default"
+    },
+    {
+      "id": "m3",
+      "from": "rec",
+      "to": "turnos",
+      "y": 269,
+      "label": "elige otro horario y pulsa Modificar",
+      "variant": "default"
+    },
+    {
+      "id": "m4",
+      "from": "turnos",
+      "to": "tserv",
+      "y": 311,
+      "label": "ModificarTurno(id, fecha, hora, duración)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "m5",
+      "from": "tserv",
+      "to": "sql",
+      "y": 353,
+      "label": "SELECT turno (no puede estar cancelado)",
+      "variant": "default"
+    },
+    {
+      "id": "m6",
+      "from": "tserv",
+      "to": "agenda",
+      "y": 395,
+      "label": "MedicoAtiende (médico del turno)",
+      "variant": "default"
+    },
+    {
+      "id": "m7",
+      "from": "tserv",
+      "to": "sql",
+      "y": 437,
+      "label": "HaySuperposicion (excluye el propio)",
+      "variant": "default"
+    },
+    {
+      "id": "m8",
+      "from": "tserv",
+      "to": "sql",
+      "y": 479,
+      "label": "UPDATE Fecha, HoraInicio, Duracion",
+      "variant": "emphasis"
+    },
+    {
+      "id": "m9",
+      "from": "turnos",
+      "to": "noti",
+      "y": 521,
+      "label": "AvisarTurno(\"Reprogramacion\")",
+      "variant": "dashed"
+    },
+    {
+      "id": "m10",
+      "from": "rec",
+      "to": "turnos",
+      "y": 585,
+      "label": "pulsa Cancelar y confirma el mensaje",
+      "variant": "default"
+    },
+    {
+      "id": "m11",
+      "from": "turnos",
+      "to": "tserv",
+      "y": 627,
+      "label": "CancelarTurno(id)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "m12",
+      "from": "tserv",
+      "to": "sql",
+      "y": 669,
+      "label": "UPDATE Estado = Cancelado, Activo = 0",
+      "variant": "emphasis"
+    },
+    {
+      "id": "m13",
+      "from": "turnos",
+      "to": "noti",
+      "y": 711,
+      "label": "AvisarTurno(\"Cancelacion\")",
+      "variant": "dashed"
+    },
+    {
+      "id": "m14",
+      "from": "turnos",
+      "to": "rec",
+      "y": 753,
+      "label": "grilla recargada y franja verde",
+      "variant": "return"
+    }
+  ]
+}

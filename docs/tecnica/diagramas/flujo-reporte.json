@@ -1,0 +1,119 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Generar y exportar un reporte",
+    "output": "flujo-reporte.html",
+    "viewBox": [
+      1200,
+      638
+    ],
+    "column_fit": "spread",
+    "quality_profile": "showcase"
+  },
+  "participants": [
+    {
+      "id": "usr",
+      "type": "external",
+      "label": "Usuario"
+    },
+    {
+      "id": "form",
+      "type": "frontend",
+      "label": "FormReportes"
+    },
+    {
+      "id": "rep",
+      "type": "backend",
+      "label": "ReporteService"
+    },
+    {
+      "id": "sql",
+      "type": "database",
+      "label": "SQL Server"
+    },
+    {
+      "id": "csv",
+      "type": "external",
+      "label": "Archivo CSV"
+    }
+  ],
+  "segments": [
+    {
+      "from": 157,
+      "to": 417,
+      "label": "Generar"
+    },
+    {
+      "from": 431,
+      "to": 523,
+      "label": "Exportar"
+    }
+  ],
+  "messages": [
+    {
+      "id": "m1",
+      "from": "usr",
+      "to": "form",
+      "y": 185,
+      "label": "elige filtros y pulsa Generar",
+      "variant": "default"
+    },
+    {
+      "id": "m2",
+      "from": "form",
+      "to": "rep",
+      "y": 227,
+      "label": "ObtenerTurnosPorPeriodo(desde, hasta, ...)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "m3",
+      "from": "rep",
+      "to": "sql",
+      "y": 269,
+      "label": "EXEC sp_ReporteTurnosPorPeriodo",
+      "variant": "security"
+    },
+    {
+      "id": "m4",
+      "from": "sql",
+      "to": "rep",
+      "y": 311,
+      "label": "filas",
+      "variant": "return"
+    },
+    {
+      "id": "m5",
+      "from": "rep",
+      "to": "form",
+      "y": 353,
+      "label": "List<ReporteTurnoFila>",
+      "variant": "return"
+    },
+    {
+      "id": "m6",
+      "from": "form",
+      "to": "usr",
+      "y": 395,
+      "label": "grilla, resumen y gráfico",
+      "variant": "return"
+    },
+    {
+      "id": "m7",
+      "from": "usr",
+      "to": "form",
+      "y": 459,
+      "label": "pulsa Exportar a CSV",
+      "variant": "default"
+    },
+    {
+      "id": "m8",
+      "from": "form",
+      "to": "csv",
+      "y": 501,
+      "label": "EscribirCsv (UTF-8 con BOM, \";\")",
+      "variant": "emphasis"
+    }
+  ]
+}

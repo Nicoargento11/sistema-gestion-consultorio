@@ -1,0 +1,128 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Cargar una ausencia y cancelar turnos",
+    "output": "flujo-ausencia.html",
+    "viewBox": [
+      1200,
+      680
+    ],
+    "column_fit": "spread",
+    "quality_profile": "showcase"
+  },
+  "participants": [
+    {
+      "id": "adm",
+      "type": "external",
+      "label": "Administrador"
+    },
+    {
+      "id": "form",
+      "type": "frontend",
+      "label": "FormExcepcionesAgenda"
+    },
+    {
+      "id": "svc",
+      "type": "backend",
+      "label": "ExcepcionAgendaService"
+    },
+    {
+      "id": "sql",
+      "type": "database",
+      "label": "SQL Server"
+    },
+    {
+      "id": "noti",
+      "type": "messagebus",
+      "label": "NotificacionService"
+    }
+  ],
+  "segments": [
+    {
+      "from": 157,
+      "to": 333,
+      "label": "Guardar la ausencia"
+    },
+    {
+      "from": 347,
+      "to": 565,
+      "label": "Cancelar los turnos afectados"
+    }
+  ],
+  "messages": [
+    {
+      "id": "m1",
+      "from": "adm",
+      "to": "form",
+      "y": 185,
+      "label": "médico, fecha, tipo y motivo",
+      "variant": "default"
+    },
+    {
+      "id": "m2",
+      "from": "form",
+      "to": "svc",
+      "y": 227,
+      "label": "Agregar(excepcion)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "m3",
+      "from": "svc",
+      "to": "sql",
+      "y": 269,
+      "label": "Validar: el médico existe y esta activo",
+      "variant": "default"
+    },
+    {
+      "id": "m4",
+      "from": "svc",
+      "to": "sql",
+      "y": 311,
+      "label": "INSERT ExcepcionAgenda (1.er SaveChanges)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "m5",
+      "from": "svc",
+      "to": "sql",
+      "y": 375,
+      "label": "SELECT turnos Pendiente o Confirmado del día",
+      "variant": "default"
+    },
+    {
+      "id": "m6",
+      "from": "svc",
+      "to": "sql",
+      "y": 417,
+      "label": "UPDATE Estado = Cancelado (2.o SaveChanges)",
+      "variant": "emphasis",
+      "note": "Son dos SaveChanges: dos transacciones separadas."
+    },
+    {
+      "id": "m7",
+      "from": "svc",
+      "to": "noti",
+      "y": 459,
+      "label": "AvisarTurno por cada turno cancelado",
+      "variant": "dashed"
+    },
+    {
+      "id": "m8",
+      "from": "svc",
+      "to": "form",
+      "y": 501,
+      "label": "lista de turnos cancelados",
+      "variant": "return"
+    },
+    {
+      "id": "m9",
+      "from": "form",
+      "to": "adm",
+      "y": 543,
+      "label": "\"Se cancelaron N turno(s)\"",
+      "variant": "return"
+    }
+  ]
+}

@@ -1,0 +1,289 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Modelo de datos del SGC (cajas y relaciones)",
+    "output": "modelo-datos.html",
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "auto",
+      "entries": {
+        "database": {
+          "label": "Tabla principal"
+        },
+        "messagebus": {
+          "label": "Tabla intermedia N:N"
+        },
+        "security": {
+          "label": "Usuarios"
+        },
+        "cloud": {
+          "label": "Catalogo"
+        },
+        "backend": {
+          "label": "Agenda del medico"
+        }
+      }
+    }
+  },
+  "components": [
+    {
+      "id": "usuarios",
+      "type": "security",
+      "label": "Usuarios",
+      "sublabel": "Rol, NombreUsuario",
+      "pos": [
+        30,
+        170
+      ],
+      "size": [
+        140,
+        64
+      ]
+    },
+    {
+      "id": "usuariomedico",
+      "type": "messagebus",
+      "label": "UsuarioMedico",
+      "sublabel": "Recepcionista - Medico",
+      "pos": [
+        260,
+        170
+      ],
+      "size": [
+        140,
+        64
+      ]
+    },
+    {
+      "id": "medicos",
+      "type": "database",
+      "label": "Medicos",
+      "sublabel": "Dni, Matricula, Precio",
+      "pos": [
+        490,
+        170
+      ],
+      "size": [
+        140,
+        64
+      ]
+    },
+    {
+      "id": "agendas",
+      "type": "backend",
+      "label": "AgendasMedico",
+      "sublabel": "DiaSemana, HoraInicio/Fin",
+      "pos": [
+        490,
+        30
+      ],
+      "size": [
+        140,
+        64
+      ]
+    },
+    {
+      "id": "excepciones",
+      "type": "backend",
+      "label": "ExcepcionesAgenda",
+      "sublabel": "Fecha, Tipo, Motivo",
+      "pos": [
+        720,
+        30
+      ],
+      "size": [
+        140,
+        64
+      ]
+    },
+    {
+      "id": "turnos",
+      "type": "database",
+      "label": "Turnos",
+      "sublabel": "Fecha, Hora, Estado",
+      "pos": [
+        720,
+        170
+      ],
+      "size": [
+        140,
+        64
+      ]
+    },
+    {
+      "id": "actividades",
+      "type": "database",
+      "label": "ActividadesMedicas",
+      "sublabel": "Motivo, Receta",
+      "pos": [
+        950,
+        170
+      ],
+      "size": [
+        140,
+        64
+      ]
+    },
+    {
+      "id": "tipos",
+      "type": "cloud",
+      "label": "TiposActividad",
+      "sublabel": "NombreTipo",
+      "pos": [
+        950,
+        310
+      ],
+      "size": [
+        140,
+        64
+      ]
+    },
+    {
+      "id": "pacientes",
+      "type": "database",
+      "label": "Pacientes",
+      "sublabel": "Dni, Email, Telefono",
+      "pos": [
+        720,
+        310
+      ],
+      "size": [
+        140,
+        64
+      ]
+    },
+    {
+      "id": "medicoos",
+      "type": "messagebus",
+      "label": "MedicoObraSocial",
+      "sublabel": "Medico - Obra social",
+      "pos": [
+        490,
+        310
+      ],
+      "size": [
+        140,
+        64
+      ]
+    },
+    {
+      "id": "obras",
+      "type": "cloud",
+      "label": "ObrasSociales",
+      "sublabel": "Nombre, % cobertura",
+      "pos": [
+        490,
+        450
+      ],
+      "size": [
+        140,
+        64
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "u-um",
+      "from": "usuarios",
+      "to": "usuariomedico",
+      "label": "N"
+    },
+    {
+      "id": "um-m",
+      "from": "usuariomedico",
+      "to": "medicos",
+      "label": "N"
+    },
+    {
+      "id": "m-a",
+      "from": "medicos",
+      "to": "agendas",
+      "label": "1:N",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "labelAt": [
+        530,
+        132
+      ]
+    },
+    {
+      "id": "m-e",
+      "from": "medicos",
+      "to": "excepciones",
+      "label": "1:N",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "m-t",
+      "from": "medicos",
+      "to": "turnos",
+      "label": "1:N"
+    },
+    {
+      "id": "p-t",
+      "from": "pacientes",
+      "to": "turnos",
+      "label": "1:N",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "t-a",
+      "from": "turnos",
+      "to": "actividades",
+      "label": "1:0..1"
+    },
+    {
+      "id": "ti-a",
+      "from": "tipos",
+      "to": "actividades",
+      "label": "1:N",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "m-mo",
+      "from": "medicos",
+      "to": "medicoos",
+      "label": "N",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelAt": [
+        560,
+        248
+      ]
+    },
+    {
+      "id": "mo-o",
+      "from": "medicoos",
+      "to": "obras",
+      "label": "N",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelAt": [
+        560,
+        388
+      ]
+    },
+    {
+      "id": "o-p",
+      "from": "obras",
+      "to": "pacientes",
+      "label": "0..1:N",
+      "fromSide": "right",
+      "toSide": "bottom"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "amber",
+      "title": "Importante",
+      "items": [
+        "Usuarios.MedicoId tambien apunta a Medicos (solo rol Medico)",
+        "Todas las tablas tienen Id y Activo (baja logica)"
+      ]
+    }
+  ]
+}

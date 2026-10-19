@@ -1,0 +1,248 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Pantallas y servicios que usan",
+    "output": "pantallas-servicios.html",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    {
+      "id": "menu",
+      "type": "frontend",
+      "label": "FormMenuPrincipal",
+      "sublabel": "abre un hijo por rol",
+      "pos": [
+        30,
+        270
+      ],
+      "size": [
+        170,
+        72
+      ]
+    },
+    {
+      "id": "uirec",
+      "type": "frontend",
+      "label": "Recepcionista",
+      "sublabel": "Pacientes, Turnos",
+      "pos": [
+        290,
+        50
+      ],
+      "size": [
+        220,
+        72
+      ]
+    },
+    {
+      "id": "uiadm",
+      "type": "frontend",
+      "label": "Administrador",
+      "sublabel": "Médicos, Horarios, Usuarios...",
+      "pos": [
+        290,
+        180
+      ],
+      "size": [
+        220,
+        72
+      ]
+    },
+    {
+      "id": "uimed",
+      "type": "frontend",
+      "label": "Médico",
+      "sublabel": "Agenda, Actividad, Historial",
+      "pos": [
+        290,
+        340
+      ],
+      "size": [
+        220,
+        72
+      ]
+    },
+    {
+      "id": "uicom",
+      "type": "frontend",
+      "label": "Todos los roles",
+      "sublabel": "Inicio y Reportes",
+      "pos": [
+        290,
+        470
+      ],
+      "size": [
+        220,
+        72
+      ]
+    },
+    {
+      "id": "sabm",
+      "type": "backend",
+      "label": "ABM",
+      "sublabel": "Paciente, Médico, Usuario, ObraSocial",
+      "pos": [
+        640,
+        150
+      ],
+      "size": [
+        240,
+        72
+      ]
+    },
+    {
+      "id": "sturno",
+      "type": "backend",
+      "label": "Turnos",
+      "sublabel": "TurnoService, HorarioService",
+      "pos": [
+        640,
+        30
+      ],
+      "size": [
+        240,
+        72
+      ]
+    },
+    {
+      "id": "sagenda",
+      "type": "backend",
+      "label": "Agenda y ausencias",
+      "sublabel": "AgendaMedico, ExcepcionAgenda",
+      "pos": [
+        640,
+        270
+      ],
+      "size": [
+        240,
+        72
+      ]
+    },
+    {
+      "id": "satencion",
+      "type": "backend",
+      "label": "Atención médica",
+      "sublabel": "ActividadMedica, AgendaDiaria",
+      "pos": [
+        640,
+        390
+      ],
+      "size": [
+        240,
+        72
+      ]
+    },
+    {
+      "id": "srep",
+      "type": "backend",
+      "label": "Resumen y reportes",
+      "sublabel": "ResumenService, ReporteService",
+      "pos": [
+        640,
+        510
+      ],
+      "size": [
+        240,
+        72
+      ]
+    },
+    {
+      "id": "sql",
+      "type": "database",
+      "label": "SQL Server",
+      "sublabel": "tablas y procedimientos",
+      "pos": [
+        1010,
+        250
+      ],
+      "size": [
+        160,
+        120
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "c1",
+      "from": "menu",
+      "to": "uirec",
+      "label": "abre"
+    },
+    {
+      "id": "c2",
+      "from": "menu",
+      "to": "uiadm"
+    },
+    {
+      "id": "c3",
+      "from": "menu",
+      "to": "uimed"
+    },
+    {
+      "id": "c4",
+      "from": "menu",
+      "to": "uicom"
+    },
+    {
+      "id": "c5",
+      "from": "uirec",
+      "to": "sabm",
+      "label": "usa"
+    },
+    {
+      "id": "c6",
+      "from": "uirec",
+      "to": "sturno",
+      "label": "usa"
+    },
+    {
+      "id": "c7",
+      "from": "uiadm",
+      "to": "sagenda",
+      "label": "usa"
+    },
+    {
+      "id": "c8",
+      "from": "uimed",
+      "to": "satencion",
+      "label": "usa"
+    },
+    {
+      "id": "c9",
+      "from": "uicom",
+      "to": "srep",
+      "label": "usa"
+    },
+    {
+      "id": "c10",
+      "from": "sabm",
+      "to": "sql"
+    },
+    {
+      "id": "c11",
+      "from": "sturno",
+      "to": "sql"
+    },
+    {
+      "id": "c12",
+      "from": "sagenda",
+      "to": "sql"
+    },
+    {
+      "id": "c13",
+      "from": "satencion",
+      "to": "sql"
+    },
+    {
+      "id": "c14",
+      "from": "srep",
+      "to": "sql"
+    },
+    {
+      "id": "c15",
+      "from": "uiadm",
+      "to": "sabm"
+    }
+  ]
+}

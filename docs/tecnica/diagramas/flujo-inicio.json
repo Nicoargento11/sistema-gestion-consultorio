@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Pantalla de Inicio: resumen del día",
+    "output": "flujo-inicio.html",
+    "viewBox": [
+      1080,
+      680
+    ],
+    "column_fit": "spread",
+    "quality_profile": "showcase"
+  },
+  "participants": [
+    {
+      "id": "usr",
+      "type": "external",
+      "label": "Usuario"
+    },
+    {
+      "id": "menu",
+      "type": "frontend",
+      "label": "FormMenuPrincipal"
+    },
+    {
+      "id": "inicio",
+      "type": "frontend",
+      "label": "FormInicio"
+    },
+    {
+      "id": "res",
+      "type": "backend",
+      "label": "ResumenService"
+    },
+    {
+      "id": "sql",
+      "type": "database",
+      "label": "SQL Server"
+    },
+    {
+      "id": "noti",
+      "type": "messagebus",
+      "label": "NotificacionService"
+    }
+  ],
+  "segments": [
+    {
+      "from": 157,
+      "to": 375,
+      "label": "Contadores"
+    },
+    {
+      "from": 389,
+      "to": 565,
+      "label": "Listas y avisos"
+    }
+  ],
+  "messages": [
+    {
+      "id": "m1",
+      "from": "usr",
+      "to": "menu",
+      "y": 185,
+      "label": "inicia sesión o pulsa Inicio",
+      "variant": "default"
+    },
+    {
+      "id": "m2",
+      "from": "menu",
+      "to": "inicio",
+      "y": 227,
+      "label": "new FormInicio(usuario)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "m3",
+      "from": "inicio",
+      "to": "res",
+      "y": 269,
+      "label": "ObtenerResumen(hoy, medicoId)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "m4",
+      "from": "res",
+      "to": "sql",
+      "y": 311,
+      "label": "EXEC sp_ResumenDelDia @Fecha, @MedicoId",
+      "variant": "security"
+    },
+    {
+      "id": "m5",
+      "from": "res",
+      "to": "inicio",
+      "y": 353,
+      "label": "ResumenDelDiaFila (una fila)",
+      "variant": "return"
+    },
+    {
+      "id": "m6",
+      "from": "inicio",
+      "to": "res",
+      "y": 417,
+      "label": "ObtenerProximoPaciente o SinConfirmar",
+      "variant": "default"
+    },
+    {
+      "id": "m7",
+      "from": "res",
+      "to": "sql",
+      "y": 459,
+      "label": "SELECT turnos con Include",
+      "variant": "default"
+    },
+    {
+      "id": "m8",
+      "from": "inicio",
+      "to": "noti",
+      "y": 501,
+      "label": "ObtenerAvisos (en memoria)",
+      "variant": "dashed"
+    },
+    {
+      "id": "m9",
+      "from": "inicio",
+      "to": "usr",
+      "y": 543,
+      "label": "tarjetas, lista y avisos",
+      "variant": "return"
+    }
+  ]
+}
