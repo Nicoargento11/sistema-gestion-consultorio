@@ -1,73 +1,101 @@
-# Sistema de Gestion de Consultorio (SGC)
+# Sistema de Gestión de Consultorio (SGC)
 
-Trabajo integrador de Taller de Programacion II. Aplicacion de escritorio en C# / .NET 8 (WinForms) con arquitectura en capas.
+Trabajo integrador de Taller de Programación II. Aplicación de escritorio en C# / .NET 8 (WinForms) con arquitectura en capas, Entity Framework Core y SQL Server.
 
-## Como correr el proyecto
+> **¿Querés entender cómo funciona por dentro?** Empezá por [`docs/tecnica/00-indice.md`](docs/tecnica/00-indice.md): arquitectura, modelo de datos, reglas de negocio, flujos, procedimientos almacenados y guía para modificar el código.
 
-1. Abrir `SistemaGestionConsultorio.sln` en Visual Studio 2022 (con la carga de trabajo "Desarrollo de escritorio de .NET" instalada).
-2. Confirmar que **SGC.UI** sea el proyecto de inicio.
-3. `Ctrl+F5` para correr.
+## Cómo correr el proyecto
+
+1. Tener **SQL Server** corriendo (Express, Developer o una instancia con nombre). La app **crea la base y aplica las migraciones sola** al arrancar, y siembra los datos iniciales si está vacía.
+2. Copiar `appsettings.example.json` como `appsettings.Local.json` (mismo nivel, junto al `.sln`) y poner tu propia instancia en `ConnectionString`. Ese archivo **no se sube a git**: cada integrante tiene el suyo. Si no existe, la app prueba con `Server=.`.
+3. Abrir `SistemaGestionConsultorio.sln` en Visual Studio 2022 (carga de trabajo "Desarrollo de escritorio de .NET").
+4. Confirmar que **SGC.UI** sea el proyecto de inicio y correr con `Ctrl+F5`.
 
 ### Usuarios de prueba (login)
 
-| Usuario     | Contrasena      | Rol            |
-|-------------|-----------------|----------------|
-| admin       | admin123        | Administrador  |
-| recepcion   | recepcion123    | Recepcionista  |
-| medico      | medico123       | Medico         |
+| Usuario     | Contraseña      | Rol            | Qué ve                                                        |
+|-------------|-----------------|----------------|----------------------------------------------------------------|
+| admin       | admin123        | Administrador  | Médicos, Horarios, Usuarios, Obras sociales, Vacaciones y ausencias, Reportes |
+| recepcion   | recepcion123    | Recepcionista  | Pacientes, Turnos, Reportes (de sus médicos asignados; el de Obras sociales es global) |
+| medico      | medico123       | Médico         | Mi agenda, Registrar actividad, Historial clínico, Reportes (solo los suyos) |
 
-Todavia no hay base de datos conectada: los datos (usuarios, pacientes, medicos, turnos) viven en listas en memoria dentro de cada Service de `SGC.Logica`, y se pierden al cerrar la app. Es intencional para esta etapa (prioridad: pantallas funcionando).
+Todos ven además la pantalla de **Inicio** con el resumen del día según su rol.
+
+### Datos de demostración (opcional)
+
+Con la base vacía los reportes no dicen mucho. En `SGC.Datos/Scripts/` hay dos scripts que **no son migraciones** y se corren a mano:
+
+- `carga_masiva_demo.sql`: carga pacientes, ~900 turnos de varios meses (con asistencias, ausencias, cancelaciones y cobros), historial clínico y ausencias de agenda.
+- `descarga_masiva_demo.sql`: borra únicamente lo que cargó el anterior.
+
+```
+sqlcmd -S .\TU_INSTANCIA -E -C -d SGC -f 65001 -i SGC.Datos\Scripts\carga_masiva_demo.sql
+```
 
 ## Arquitectura
 
 ```
 SGC.UI          -> Windows Forms (pantallas)
 SGC.Logica      -> Reglas de negocio (Services)
-SGC.Datos       -> DbContext de EF Core (todavia sin conectar a SQL Server real)
+SGC.Datos       -> DbContext de EF Core, migraciones, procedimientos almacenados y datos iniciales
 SGC.Entidades   -> Clases del dominio (Paciente, Medico, Turno, etc.) - sin dependencias de nada
 ```
 
 Regla de dependencias: cada capa solo referencia a la de abajo. `SGC.Entidades` no referencia a nadie.
 
-## Estado actual (quien hizo que)
+- **Datos:** SQL Server vía EF Core. Cada operación abre su propio contexto con `SGCContextFactory.Crear()`.
+- **Procedimientos almacenados:** los reportes, el resumen del día y la agenda del médico se calculan en la base (`sp_*`). Se crean con migraciones (`CREATE OR ALTER`), por eso no hay que ejecutar nada a mano.
+- **Roles:** Administrador, Recepcionista y Médico. Los datos clínicos solo los ve el rol Médico.
 
-- **Login + Menu principal con navegacion por rol**: hecho.
-- **Modulo Recepcionista** (Pacientes ABM + Turnos): hecho.
-- **Modulo Administrador** (Medicos ABM + Horarios): pendiente.
-- **Modulo Medico** (Agenda, Registrar Actividad, Historial): pendiente.
+## Estado actual
 
-## Como agregar una pantalla nueva (ABM)
+| Módulo | Estado |
+|---|---|
+| Login + menú principal con navegación por rol | Hecho |
+| Recepcionista: Pacientes, Turnos (asignar, modificar, cancelar, confirmar asistencia) | Hecho |
+| Administrador: Médicos, Horarios, Usuarios, Obras sociales, Vacaciones y ausencias | Hecho |
+| Médico: Mi agenda, Registrar actividad, Historial clínico | Hecho |
+| Inicio (resumen del día) y Reportes con estadísticas, gráficos y exportación a CSV | Hecho |
 
-El patron ya esta armado y probado en Pacientes. Para copiarlo (ej: Medicos):
+Pendientes y defectos conocidos: ver `docs/tecnica/08-guia-para-modificar.md`.
 
-1. **Entidad**: ya deberia existir en `SGC.Entidades` (revisar antes de crear una nueva).
-2. **Service** en `SGC.Logica`: copiar la forma de `PacienteService.cs` (lista estatica en memoria + `Agregar`/`Modificar`/`EliminarLogico` con validaciones que tiran excepciones descriptivas). Si ya existe un Service de solo lectura para ese tipo (ej: `MedicoService` ya existe, usado por Turnos), **extenderlo**, no crear uno nuevo.
-3. **Formulario** en `SGC.UI`: copiar la estructura de `FormPacientes.Designer.cs` (layout: panel de formulario arriba + grilla abajo) y `FormPacientes.cs` (constructor -> `ConfigurarColumnas()` -> `CargarGrilla()`, mas los handlers de los botones con `try/catch`).
-4. Conectar el boton correspondiente en `FormMenuPrincipal.cs` (reemplazar el `AbrirPantallaPendiente(...)` de ese boton por `new FormNuevo().ShowDialog()`).
+## Cómo agregar una pantalla nueva
+
+Las pantallas del rol Administrador y Recepcionista comparten un diseño: **tarjeta numerada a la izquierda** (formulario), **barra de herramientas, contadores y grilla a la derecha** y una **franja de mensajes** abajo. Mirá `FormPacientes.cs` o `FormTurnos.cs` como modelo.
+
+1. **Entidad**: revisar si ya existe en `SGC.Entidades`. Si cambia el modelo, crear una migración (`dotnet ef migrations add`).
+2. **Service** en `SGC.Logica`: copiar la forma de `PacienteService.cs` (validaciones que lanzan excepciones descriptivas, baja lógica con `Activo`). Si ya existe un Service para ese tipo, **extenderlo**.
+3. **Formulario** en `SGC.UI`: reutilizar los componentes compartidos (`EstiloUi`, `FranjaMensaje`, `BarraContadores`, `GrillaUi`, `EscalaDpi`) en lugar de copiar estilos.
+4. Conectar el botón en `FormMenuPrincipal.cs`.
 
 ## Reglas importantes para evitar romper cosas (leer antes de tocar Designer.cs)
 
-### 1. NUNCA pongas metodos propios ni columnas de DataGridView dentro de `InitializeComponent()`
+### 1. NUNCA pongas métodos propios ni columnas de DataGridView dentro de `InitializeComponent()`
 
-El diseñador visual de Visual Studio regenera `*.Designer.cs` cada vez que abris un formulario en modo diseño, y **borra en silencio** cualquier cosa que no sea una simple asignacion de propiedades (`control.Propiedad = valor;`). Esto incluye:
-- Metodos propios llamados desde `InitializeComponent()`.
+El diseñador visual de Visual Studio regenera `*.Designer.cs` cada vez que abrís un formulario en modo diseño, y **borra en silencio** cualquier cosa que no sea una simple asignación de propiedades (`control.Propiedad = valor;`). Esto incluye:
+- Métodos propios llamados desde `InitializeComponent()`.
 - Columnas de `DataGridView` (`.Columns.Add(...)`), incluso declaradas como campos separados.
 
-**Regla**: toda columna de grilla, y cualquier logica que no sea "crear un control y setearle propiedades", va en el archivo `.cs` normal (no en `.Designer.cs`), tipicamente en un metodo `ConfigurarColumnas()` llamado desde el constructor. Mirar `FormPacientes.cs` o `FormTurnos.cs` como ejemplo.
+**Regla**: toda columna de grilla, y cualquier lógica que no sea "crear un control y setearle propiedades", va en el archivo `.cs` normal (no en `.Designer.cs`), típicamente en un método `ConfigurarColumnas()` llamado desde el constructor. El `.Designer.cs` solo tiene la estructura estática con controles estándar.
 
-### 2. Evitar tildes y "ñ" en strings del codigo
+### 2. Textos y comentarios
 
-Hubo problemas recurrentes de codificacion (los caracteres se corrompian al guardar). Hasta que se resuelva de raiz, escribir mensajes al usuario sin tildes ni ñ (ej: "Contrasena incorrecta" en vez de "Contraseña incorrecta"). No afecta el funcionamiento, es solo prolijidad del texto.
+- Los **textos que ve el usuario** van en español **con tildes y ñ** (RNF#05).
+- Los **comentarios del código** van en español **sin tildes**, para evitar problemas de codificación al guardar.
 
-### 3. Orden de Tab y Enter para guardar
+### 3. Tamaños y pantallas con escala (DPI)
 
-Cada pantalla nueva deberia tener:
-- `TabIndex` de los campos en orden logico (0, 1, 2... segun el orden visual real, no el orden en que se agregaron al codigo).
-- `AcceptButton = BtnGuardar;` (o el boton principal correspondiente) en el constructor, para que Enter dispare la accion principal sin tener que tocar el mouse.
+Con escala de pantalla del 125 % o 150 % las fuentes crecen y un tamaño fijo en píxeles recorta el texto. Usá `Dock`, `TableLayoutPanel`, `FlowLayoutPanel`, `AutoSize` y `EscalaDpi.Px(...)` en vez de coordenadas fijas.
 
-### 4. Patron de guardado en grillas con seleccion automatica
+### 4. Orden de Tab y Enter para guardar
 
-Al reasignar `DataSource` de una grilla (`CargarGrilla()`), WinForms selecciona sola la primera fila y dispara `SelectionChanged`. Si el formulario usa esa seleccion para decidir "alta vs edicion" (variable tipo `_idSeleccionado`), hay que resetearla explicitamente despues de un guardado/eliminado exitoso, sino el siguiente alta se confunde con una edicion. Ver `BtnGuardar_Click` en `FormPacientes.cs`.
+Cada pantalla nueva debería tener:
+- `TabIndex` de los campos en orden lógico (según el orden visual real, no el orden en que se agregaron al código).
+- `AcceptButton = BtnGuardar;` (o el botón principal correspondiente) en el constructor, para que Enter dispare la acción principal.
+
+### 5. Patrón de guardado en grillas con selección automática
+
+Al reasignar `DataSource` de una grilla (`CargarGrilla()`), WinForms selecciona sola la primera fila y dispara `SelectionChanged`. Si el formulario usa esa selección para decidir "alta vs edición" (variable tipo `_idSeleccionado`), hay que resetearla explícitamente después de un guardado/eliminado exitoso, y **desenganchar `SelectionChanged` antes de reasignar el `DataSource`**. Ver `FormPacientes.cs`.
 
 ## Git: como nos vamos a manejar
 
