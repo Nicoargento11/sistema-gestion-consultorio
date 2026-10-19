@@ -12,11 +12,16 @@ namespace SGC.UI;
 // arman filtros, grilla, resumen, grafico y exportacion a CSV.
 //
 // Pestanias por rol (se agregan al TabControl solo las permitidas):
-//   Administrador : Turnos, Recaudacion, Asistencia, Ocupacion de agenda.
-//   Medico        : Turnos, Asistencia, Ocupacion (siempre filtrado a su
-//                   propio MedicoId). Recaudacion NO se ofrece porque
-//                   sp_ReporteRecaudacion no admite filtrar por un medico.
-//   Recepcionista : solo Turnos, solo de los medicos que tiene asignados.
+//   Administrador : Turnos, Recaudacion, Asistencia, Ocupacion de agenda,
+//                   Pacientes por mes, Rendimiento de medicos, Obras sociales.
+//   Medico        : Turnos, Asistencia, Ocupacion y Pacientes por mes (siempre
+//                   filtrado a su propio MedicoId). Recaudacion NO se ofrece
+//                   porque sp_ReporteRecaudacion no admite filtrar por un medico.
+//   Recepcionista : Turnos y Pacientes por mes, solo de los medicos que tiene
+//                   asignados, y Obras sociales (reporte global de Luciano).
+// Las pestanias Pacientes por mes, Rendimiento de medicos y Obras sociales
+// son el modulo de reportes de Luciano Villordo (sus stored procedures, sus
+// graficos nativos y su adaptacion por rol); viven en FormReportes.Estadisticas.cs.
 // RNF#07: ningun reporte incluye datos clinicos.
 public partial class FormReportes : Form
 {
@@ -36,6 +41,9 @@ public partial class FormReportes : Form
     private VistaReporte? _vistaRecaudacion;
     private VistaReporte? _vistaAsistencia;
     private VistaReporte? _vistaOcupacion;
+    private VistaReporte? _vistaMensual;
+    private VistaReporte? _vistaMedicos;
+    private VistaReporte? _vistaObrasSociales;
 
     // true si el usuario no puede generar nada (Medico sin MedicoId o
     // Recepcionista sin medicos asignados): los botones Generar quedan
@@ -51,8 +59,16 @@ public partial class FormReportes : Form
     {
         public string Clave = "";
         public TabPage Pagina = null!;
-        public DateTimePicker Desde = null!;
-        public DateTimePicker Hasta = null!;
+        public DateTimePicker? Desde;
+        public DateTimePicker? Hasta;
+        // Solo en las vistas "por anio" (modulo de Luciano): anio, mes opcional,
+        // contadores y grafico dibujado a mano.
+        public NumericUpDown? Anio;
+        public ComboBox? CboMes;
+        public FlowLayoutPanel? FlujoContadores;
+        public BarraContadores? Contadores;
+        public PanelGrafico? PanelGrafico;
+        public bool Generada;
         public ComboBox? CboMedico;
         public ComboBox? CboOpcion;
         public FlowLayoutPanel Filtros = null!;
@@ -86,7 +102,7 @@ public partial class FormReportes : Form
         foreach (var vista in TodasLasVistas())
             vista.BtnGenerar.Enabled = !_sinAcceso;
 
-        TabReportes.SelectedIndexChanged += (s, e) => RevalidarPestaniaActual();
+        TabReportes.SelectedIndexChanged += (s, e) => { RevalidarPestaniaActual(); GenerarEstadisticasAlAbrir(); };
 
         // Los combos ya tienen sus items: el flujo de filtros recalcula su alto.
         foreach (var vista in TodasLasVistas())
@@ -120,9 +136,12 @@ public partial class FormReportes : Form
             AgregarColumnasOcupacion(_vistaOcupacion.Grilla);
             TabReportes.TabPages.Add(_vistaOcupacion.Pagina);
         }
+
+        ConstruirPestaniasEstadisticas();
     }
 
-    private VistaReporte CrearVista(string clave, string titulo, bool conMedico, string? etiquetaOpcion, bool conGrafico, bool limitaUnAnio)
+    private VistaReporte CrearVista(string clave, string titulo, bool conMedico, string? etiquetaOpcion, bool conGrafico, bool limitaUnAnio,
+        OpcionesVistaAnio? porAnio = null)
     {
         var vista = new VistaReporte
         {
@@ -148,10 +167,23 @@ public partial class FormReportes : Form
         };
         vista.Filtros = flujoFiltros;
 
-        vista.Desde = CrearSelectorFecha("Dtp" + clave + "Desde", primerDia);
-        flujoFiltros.Controls.Add(CrearGrupo("Desde", vista.Desde));
-        vista.Hasta = CrearSelectorFecha("Dtp" + clave + "Hasta", ultimoDia);
-        flujoFiltros.Controls.Add(CrearGrupo("Hasta", vista.Hasta));
+        if (porAnio == null)
+        {
+            vista.Desde = CrearSelectorFecha("Dtp" + clave + "Desde", primerDia);
+            flujoFiltros.Controls.Add(CrearGrupo("Desde", vista.Desde));
+            vista.Hasta = CrearSelectorFecha("Dtp" + clave + "Hasta", ultimoDia);
+            flujoFiltros.Controls.Add(CrearGrupo("Hasta", vista.Hasta));
+        }
+        else
+        {
+            vista.Anio = CrearSelectorAnio("Num" + clave + "Anio");
+            flujoFiltros.Controls.Add(CrearGrupo("Año", vista.Anio));
+            if (porAnio.ConMes)
+            {
+                vista.CboMes = CrearCombo("Cbo" + clave + "Mes");
+                flujoFiltros.Controls.Add(CrearGrupo("Mes", vista.CboMes));
+            }
+        }
 
         if (conMedico)
         {
@@ -166,7 +198,7 @@ public partial class FormReportes : Form
         }
 
         // Los botones se alinean con la fila de controles (debajo de las etiquetas).
-        int altoControl = Math.Max(vista.Desde.Height, vista.Hasta.Height);
+        int altoControl = vista.Desde != null ? Math.Max(vista.Desde.Height, vista.Hasta!.Height) : vista.Anio!.Height;
         int bajadaBotones = new Font("Segoe UI", 9F, FontStyle.Bold).Height + EscalaDpi.Px(this, 2);
 
         vista.BtnGenerar = CrearBoton("Generar", TipoBoton.Exito, altoControl, "Btn" + clave + "Generar", negrita: true);
@@ -226,7 +258,34 @@ public partial class FormReportes : Form
         // acomoda primero).
         vista.Pagina.Controls.Add(vista.Grilla);
 
-        if (conGrafico)
+        if (porAnio != null)
+        {
+            // Contadores del modulo de Luciano (sus tarjetas de resumen) como chips
+            // de color, entre los filtros y la tabla.
+            vista.FlujoContadores = new FlowLayoutPanel
+            {
+                Name = "FlpContadores" + clave,
+                Dock = DockStyle.Top,
+                WrapContents = true,
+                BackColor = ColorFondo,
+                Padding = new Padding(EscalaDpi.Px(this, 14), EscalaDpi.Px(this, 4), EscalaDpi.Px(this, 14), EscalaDpi.Px(this, 2))
+            };
+            vista.Contadores = new BarraContadores(vista.FlujoContadores);
+            vista.FlujoContadores.SizeChanged += (s, e) => EstiloUi.AjustarFlujos(vista.FlujoContadores);
+
+            if (porAnio.ConGrafico)
+            {
+                var separador = new Panel { Dock = DockStyle.Right, Width = EscalaDpi.Px(this, 8), BackColor = ColorFondo };
+                vista.PanelGrafico = new PanelGrafico { Name = "Grafico" + clave, Dock = DockStyle.Right, Width = EscalaDpi.Px(this, 480) };
+                vista.Pagina.Controls.Add(separador);
+                vista.Pagina.Controls.Add(vista.PanelGrafico);
+                vista.Pagina.SizeChanged += (s, e) =>
+                    vista.PanelGrafico.Width = Math.Max(EscalaDpi.Px(this, 340), (int)(vista.Pagina.ClientSize.Width * 0.46));
+            }
+            vista.Pagina.Controls.Add(pnlResumen);
+            vista.Pagina.Controls.Add(vista.FlujoContadores);
+        }
+        else if (conGrafico)
         {
             // El grafico va a la derecha de la tabla (no debajo): en ventanas
             // bajas la tabla conserva todo el alto disponible.
@@ -238,12 +297,15 @@ public partial class FormReportes : Form
                 vista.Grafico.Width = Math.Max(EscalaDpi.Px(this, 280), (int)(vista.Pagina.ClientSize.Width * 0.36));
         }
 
-        vista.Pagina.Controls.Add(pnlResumen);
+        if (porAnio == null) vista.Pagina.Controls.Add(pnlResumen);
         vista.Pagina.Controls.Add(flujoFiltros);
 
         // Eventos de la pestania.
-        vista.Desde.ValueChanged += (s, e) => RevalidarVista(vista);
-        vista.Hasta.ValueChanged += (s, e) => RevalidarVista(vista);
+        if (vista.Desde != null)
+        {
+            vista.Desde.ValueChanged += (s, e) => RevalidarVista(vista);
+            vista.Hasta!.ValueChanged += (s, e) => RevalidarVista(vista);
+        }
         vista.BtnGenerar.Click += (s, e) => Generar(vista);
         vista.BtnExportar.Click += (s, e) => ExportarCsv(vista);
 
@@ -563,6 +625,9 @@ public partial class FormReportes : Form
         if (_vistaRecaudacion != null) yield return _vistaRecaudacion;
         if (_vistaAsistencia != null) yield return _vistaAsistencia;
         if (_vistaOcupacion != null) yield return _vistaOcupacion;
+        if (_vistaMensual != null) yield return _vistaMensual;
+        if (_vistaMedicos != null) yield return _vistaMedicos;
+        if (_vistaObrasSociales != null) yield return _vistaObrasSociales;
     }
 
     // ---------------------------------------------------------------
@@ -571,8 +636,11 @@ public partial class FormReportes : Form
 
     private static string? ValidarFiltros(VistaReporte vista)
     {
+        // Las vistas por anio siempre tienen un filtro valido (el numerico lo acota).
+        if (vista.Desde == null) return null;
+
         var desde = vista.Desde.Value.Date;
-        var hasta = vista.Hasta.Value.Date;
+        var hasta = vista.Hasta!.Value.Date;
 
         if (desde > hasta)
             return "La fecha desde no puede ser posterior a la fecha hasta.";
@@ -616,8 +684,7 @@ public partial class FormReportes : Form
             return;
         }
 
-        var desde = DateOnly.FromDateTime(vista.Desde.Value);
-        var hasta = DateOnly.FromDateTime(vista.Hasta.Value);
+        var (desde, hasta) = PeriodoDe(vista);
 
         var cursorAnterior = Cursor;
         try
@@ -626,13 +693,15 @@ public partial class FormReportes : Form
             vista.BtnGenerar.Enabled = false;
 
             int filas;
-            if (vista == _vistaTurnos) filas = GenerarTurnos(vista, desde, hasta);
+            if (vista.Anio != null) filas = GenerarEstadisticas(vista);
+            else if (vista == _vistaTurnos) filas = GenerarTurnos(vista, desde, hasta);
             else if (vista == _vistaRecaudacion) filas = GenerarRecaudacion(vista, desde, hasta);
             else if (vista == _vistaAsistencia) filas = GenerarAsistencia(vista, desde, hasta);
             else filas = GenerarOcupacion(vista, desde, hasta);
 
             vista.PeriodoDesde = desde;
             vista.PeriodoHasta = hasta;
+            vista.Generada = true;
             vista.BtnExportar.Enabled = filas > 0;
 
             if (filas == 0)
@@ -823,7 +892,7 @@ public partial class FormReportes : Form
         }
     }
 
-    private static void LimpiarResultado(VistaReporte vista)
+    private void LimpiarResultado(VistaReporte vista)
     {
         vista.Grilla.DataSource = null;
         vista.LblResumen.Text = "";
@@ -835,6 +904,8 @@ public partial class FormReportes : Form
             vista.Grafico.Series["Serie"].Points.Clear();
             vista.Grafico.Titles[0].Text = "";
         }
+
+        LimpiarEstadisticas(vista);
     }
 
     // ---------------------------------------------------------------

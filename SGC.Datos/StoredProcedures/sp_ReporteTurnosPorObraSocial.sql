@@ -1,4 +1,4 @@
-CREATE PROCEDURE sp_ReporteTurnosPorObraSocial
+CREATE OR ALTER PROCEDURE sp_ReporteTurnosPorObraSocial
     @Anio INT
 AS
 BEGIN

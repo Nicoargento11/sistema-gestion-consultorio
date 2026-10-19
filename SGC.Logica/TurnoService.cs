@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using SGC.Datos;
 using SGC.Entidades;
-using SGC.Entidades.Reportes;
 
 namespace SGC.Logica;
 
@@ -39,25 +38,29 @@ public class TurnoService
         var pFecha = new Microsoft.Data.SqlClient.SqlParameter("@Fecha", (object?)fecha?.ToString("yyyy-MM-dd") ?? DBNull.Value);
         var pIncluirCancelados = new Microsoft.Data.SqlClient.SqlParameter("@IncluirCancelados", incluirCancelados ? 1 : 0);
 
-        // Un EXEC no es componible: EF no permite agregar Include/OrderBy encima de
-        // FromSqlRaw("EXEC ..."). El procedimiento resuelve el filtro y devuelve los
-        // turnos; aca solo se leen sus ids y los datos relacionados se cargan en una
-        // segunda consulta (componible) por esos ids.
-        var ids = contexto.Database
-            .SqlQueryRaw<TurnoIdFila>("EXEC sp_ObtenerTurnosPorMedicoYFecha @MedicoId, @Fecha, @IncluirCancelados",
-                                      pMedicoId, pFecha, pIncluirCancelados)
-            .ToList()
-            .Select(f => f.Id)
-            .ToList();
-
-        return contexto.Turnos
-            .Where(t => ids.Contains(t.Id))
-            .Include(t => t.Paciente).ThenInclude(p => p!.ObraSocial)
-            .Include(t => t.Medico).ThenInclude(m => m!.ObrasSocialesAceptadas)
-            .Include(t => t.ActividadMedica)
+        // En SQL Server, un EXEC a un Stored Procedure no es 'composable' (no permite JOIN / Include directo en el servidor).
+        // Traemos los turnos devueltos por el SP a memoria (AsEnumerable) e hidratamos las relaciones.
+        var turnos = contexto.Turnos
+            .FromSqlRaw("EXEC sp_ObtenerTurnosPorMedicoYFecha @MedicoId, @Fecha, @IncluirCancelados",
+                        pMedicoId, pFecha, pIncluirCancelados)
+            .AsEnumerable()
             .OrderBy(t => t.Fecha)
             .ThenBy(t => t.HoraInicio)
             .ToList();
+
+        // Cargar navegaciones explicitamente para los turnos obtenidos
+        if (turnos.Count > 0)
+        {
+            var turnosIds = turnos.Select(t => t.Id).ToList();
+            contexto.Turnos
+                .Where(t => turnosIds.Contains(t.Id))
+                .Include(t => t.Paciente).ThenInclude(p => p!.ObraSocial)
+                .Include(t => t.Medico).ThenInclude(m => m!.ObrasSocialesAceptadas)
+                .Include(t => t.ActividadMedica)
+                .Load();
+        }
+
+        return turnos;
     }
 
     public Turno? ObtenerPorId(int id)

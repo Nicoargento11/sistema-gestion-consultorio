@@ -1,4 +1,4 @@
-CREATE PROCEDURE sp_ReportePacientesPorMes
+CREATE OR ALTER PROCEDURE sp_ReportePacientesPorMes
     @Anio INT,
     @MedicoId INT = NULL
 AS
