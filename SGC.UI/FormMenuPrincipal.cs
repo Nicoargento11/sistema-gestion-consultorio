@@ -41,6 +41,9 @@ public partial class FormMenuPrincipal : Form
         btnAgenda.Visible = _usuarioActivo.Rol == RolUsuario.Medico;
         btnActividad.Visible = _usuarioActivo.Rol == RolUsuario.Medico;
         btnHistorial.Visible = _usuarioActivo.Rol == RolUsuario.Medico;
+
+        // Reportes: visible para los tres roles; FormReportes limita el alcance segun el rol.
+        btnReportes.Visible = true;
     }
 
     private void AsignarEventosNavegacion()
@@ -56,6 +59,8 @@ public partial class FormMenuPrincipal : Form
         btnAgenda.Click += (s, e) => { ResaltarBoton((Button)s!); AbrirFormularioHijo(new FormAgendaMedico(_usuarioActivo, AbrirFormularioHijo)); };
         btnActividad.Click += (s, e) => { ResaltarBoton((Button)s!); AbrirFormularioHijo(new FormRegistrarActividad(null, _usuarioActivo, AbrirFormularioHijo)); };
         btnHistorial.Click += (s, e) => { ResaltarBoton((Button)s!); AbrirFormularioHijo(new FormHistorialClinico(_usuarioActivo, null, AbrirFormularioHijo)); };
+
+        btnReportes.Click += (s, e) => { ResaltarBoton((Button)s!); AbrirFormularioHijo(new FormReportes(_usuarioActivo)); };
 
         btnCerrarSesion.Click += BtnCerrarSesion_Click;
     }
