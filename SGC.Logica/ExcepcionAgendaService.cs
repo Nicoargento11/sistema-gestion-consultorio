@@ -50,7 +50,8 @@ public class ExcepcionAgendaService
                 TurnosAfectados = turnos[(e.MedicoId, e.Fecha)].Count(t =>
                     e.Tipo == TipoExcepcionAgenda.DiaCompleto
                     || (e.HoraInicio != null && e.HoraFin != null
-                        && t.HoraInicio < e.HoraFin && e.HoraInicio < t.HoraInicio.AddMinutes(t.DuracionMinutos)))
+                        && Horas.Superpone(Horas.Minutos(t.HoraInicio), Horas.Minutos(t.HoraInicio) + t.DuracionMinutos,
+                                           Horas.Minutos(e.HoraInicio.Value), Horas.Minutos(e.HoraFin.Value))))
             })
             // Vigentes y proximas primero (la mas cercana arriba), luego las pasadas (la mas reciente arriba).
             .OrderBy(f => f.Estado == EstadoExcepcion.Pasada ? 1 : 0)
@@ -125,7 +126,9 @@ public class ExcepcionAgendaService
         if (excepcion.HoraInicio == null || excepcion.HoraFin == null)
             return false;
 
-        return turno.HoraInicio < excepcion.HoraFin && excepcion.HoraInicio < turno.HoraFin;
+        int inicioTurno = Horas.Minutos(turno.HoraInicio);
+        return Horas.Superpone(inicioTurno, inicioTurno + turno.DuracionMinutos,
+            Horas.Minutos(excepcion.HoraInicio.Value), Horas.Minutos(excepcion.HoraFin.Value));
     }
 
     public void Modificar(ExcepcionAgenda excepcion)

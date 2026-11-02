@@ -111,7 +111,7 @@ public class TurnoService
 
     public void AsignarTurno(Paciente paciente, Medico medico, DateOnly fecha, TimeOnly horaInicio, int duracionMinutos = 30)
     {
-        if (duracionMinutos <= 0) duracionMinutos = 30;
+        ValidarDuracion(horaInicio, duracionMinutos);
         TimeOnly horaFin = horaInicio.AddMinutes(duracionMinutos);
 
         if (fecha < DateOnly.FromDateTime(DateTime.Today))
@@ -134,6 +134,8 @@ public class TurnoService
             throw new InvalidOperationException(
                 $"El Dr./Dra. {medico.Apellido} ya tiene un turno asignado el {fecha:dd/MM/yyyy} que se superpone con {horaInicio:HH:mm} - {horaFin:HH:mm}.");
 
+        ExigirPacienteLibre(contexto, paciente.Id, fecha, horaInicio, duracionMinutos, excluirTurnoId: null);
+
         var turno = new Turno
         {
             PacienteId = paciente.Id,
@@ -151,7 +153,7 @@ public class TurnoService
 
     public void ModificarTurno(int turnoId, DateOnly nuevaFecha, TimeOnly nuevaHoraInicio, int nuevaDuracionMinutos = 30)
     {
-        if (nuevaDuracionMinutos <= 0) nuevaDuracionMinutos = 30;
+        ValidarDuracion(nuevaHoraInicio, nuevaDuracionMinutos);
         TimeOnly nuevaHoraFin = nuevaHoraInicio.AddMinutes(nuevaDuracionMinutos);
 
         if (nuevaFecha < DateOnly.FromDateTime(DateTime.Today))
@@ -179,10 +181,42 @@ public class TurnoService
             throw new InvalidOperationException(
                 $"El Dr./Dra. {turno.Medico?.Apellido} ya tiene otro turno asignado el {nuevaFecha:dd/MM/yyyy} que se superpone con {nuevaHoraInicio:HH:mm} - {nuevaHoraFin:HH:mm}.");
 
+        ExigirPacienteLibre(contexto, turno.PacienteId, nuevaFecha, nuevaHoraInicio, nuevaDuracionMinutos, excluirTurnoId: turnoId);
+
         turno.Fecha = nuevaFecha;
         turno.HoraInicio = nuevaHoraInicio;
         turno.DuracionMinutos = nuevaDuracionMinutos;
         contexto.SaveChanges();
+    }
+
+    // Duracion entre 5 y 240 minutos y turno que termina dentro del mismo dia
+    // (la cuenta es en minutos: con TimeOnly un turno de 23:30 + 45 min
+    // quedaria "terminando" a las 00:15 y pasaria las validaciones).
+    private static void ValidarDuracion(TimeOnly horaInicio, int duracionMinutos)
+    {
+        if (duracionMinutos < 5 || duracionMinutos > 240)
+            throw new ArgumentException("La duración del turno debe estar entre 5 y 240 minutos.");
+
+        if (Horas.Minutos(horaInicio) + duracionMinutos > 24 * 60)
+            throw new ArgumentException("El turno no puede terminar después de las 24:00 (pasaría al día siguiente).");
+    }
+
+    // Un paciente no puede estar en dos turnos a la vez, aunque sean con
+    // medicos distintos.
+    private static void ExigirPacienteLibre(SGCContext contexto, int pacienteId, DateOnly fecha, TimeOnly horaInicio, int duracionMinutos, int? excluirTurnoId)
+    {
+        int inicio = Horas.Minutos(horaInicio), fin = inicio + duracionMinutos;
+
+        var choque = contexto.Turnos
+            .Include(t => t.Medico)
+            .Where(t => t.Activo && t.Estado != EstadoTurno.Cancelado
+                        && t.PacienteId == pacienteId && t.Fecha == fecha && t.Id != (excluirTurnoId ?? 0))
+            .AsEnumerable()
+            .FirstOrDefault(t => Horas.Superpone(inicio, fin, Horas.Minutos(t.HoraInicio), Horas.Minutos(t.HoraInicio) + t.DuracionMinutos));
+
+        if (choque != null)
+            throw new InvalidOperationException(
+                $"El paciente ya tiene un turno el {fecha:dd/MM/yyyy} de {choque.HoraInicio:HH:mm} a {choque.HoraFin:HH:mm} con el Dr./Dra. {choque.Medico?.Apellido} que se superpone con este horario.");
     }
 
     private static void ExigirActivos(SGCContext contexto, int pacienteId, int medicoId)
@@ -266,11 +300,12 @@ public class TurnoService
     // resuelve el solapamiento de rangos en memoria.
     private static bool HaySuperposicion(SGCContext contexto, int medicoId, DateOnly fecha, TimeOnly horaInicio, int duracionMinutos, int? excluirTurnoId)
     {
-        TimeOnly horaFin = horaInicio.AddMinutes(duracionMinutos);
+        // En minutos para que un turno que cruza la medianoche no se compare mal.
+        int inicio = Horas.Minutos(horaInicio), fin = inicio + duracionMinutos;
 
         return contexto.Turnos
             .Where(t => t.Activo && t.MedicoId == medicoId && t.Fecha == fecha && t.Id != (excluirTurnoId ?? 0))
             .AsEnumerable()
-            .Any(t => t.HoraInicio < horaFin && t.HoraFin > horaInicio);
+            .Any(t => Horas.Superpone(inicio, fin, Horas.Minutos(t.HoraInicio), Horas.Minutos(t.HoraInicio) + t.DuracionMinutos));
     }
 }

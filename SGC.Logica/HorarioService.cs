@@ -88,13 +88,13 @@ public class HorarioService
         if (rangoFin <= rangoInicio)
             return resultado;
 
-        // Vamos avanzando desde rangoInicio, agregando slots que entren completos
-        TimeOnly actual = rangoInicio;
-        while (actual.AddMinutes(duracionSlotMin) <= rangoFin)
+        // Se avanza en minutos (no con TimeOnly.AddMinutes, que da la vuelta
+        // pasada la medianoche y podia no terminar nunca): el bucle corta en
+        // cuanto el slot siguiente ya no entra en el rango.
+        int fin = Horas.Minutos(rangoFin);
+        for (int inicio = Horas.Minutos(rangoInicio); inicio + duracionSlotMin <= fin; inicio += saltoMin)
         {
-            TimeOnly finSlot = actual.AddMinutes(duracionSlotMin);
-            resultado.Add(ObtenerOCrear(actual, finSlot));
-            actual = actual.AddMinutes(saltoMin);
+            resultado.Add(ObtenerOCrear(Horas.ADesdeMinutos(inicio), Horas.ADesdeMinutos(inicio + duracionSlotMin)));
         }
 
         return resultado;

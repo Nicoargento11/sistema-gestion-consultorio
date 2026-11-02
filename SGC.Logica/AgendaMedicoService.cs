@@ -91,12 +91,17 @@ public class AgendaMedicoService
     public bool MedicoAtiende(int medicoId, DayOfWeek dia, TimeOnly horaInicioTurno, int duracionMinutos)
     {
         if (duracionMinutos <= 0) duracionMinutos = 30;
-        TimeOnly horaFinTurno = horaInicioTurno.AddMinutes(duracionMinutos);
+
+        // En minutos: horaInicio + duracion con TimeOnly da la vuelta pasada
+        // la medianoche (23:30 + 45 min = 00:15) y pasaria el chequeo.
+        int inicio = Horas.Minutos(horaInicioTurno);
+        int fin = inicio + duracionMinutos;
 
         using var contexto = SGCContextFactory.Crear();
-        return contexto.AgendasMedico.Any(a =>
-            a.Activo && a.MedicoId == medicoId && a.DiaSemana == dia &&
-            horaInicioTurno >= a.HoraInicio && horaFinTurno <= a.HoraFin);
+        return contexto.AgendasMedico
+            .Where(a => a.Activo && a.MedicoId == medicoId && a.DiaSemana == dia)
+            .AsEnumerable()
+            .Any(a => inicio >= Horas.Minutos(a.HoraInicio) && fin <= Horas.Minutos(a.HoraFin));
     }
 
     public void Agregar(AgendaMedico agenda)
