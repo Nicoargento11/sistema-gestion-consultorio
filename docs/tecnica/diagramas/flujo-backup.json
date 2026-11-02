@@ -1,0 +1,159 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Copia de seguridad y restauración",
+    "output": "flujo-backup.html",
+    "viewBox": [
+      1200,
+      892
+    ],
+    "column_fit": "spread",
+    "quality_profile": "showcase"
+  },
+  "participants": [
+    {
+      "id": "usr",
+      "type": "external",
+      "label": "Administrador"
+    },
+    {
+      "id": "form",
+      "type": "frontend",
+      "label": "FormBackup"
+    },
+    {
+      "id": "svc",
+      "type": "backend",
+      "label": "BackupService"
+    },
+    {
+      "id": "sql",
+      "type": "database",
+      "label": "SQL Server"
+    },
+    {
+      "id": "bak",
+      "type": "external",
+      "label": "Archivo .bak"
+    }
+  ],
+  "segments": [
+    {
+      "from": 157,
+      "to": 411,
+      "label": "Crear copia"
+    },
+    {
+      "from": 425,
+      "to": 727,
+      "label": "Restaurar"
+    }
+  ],
+  "messages": [
+    {
+      "id": "m1",
+      "from": "usr",
+      "to": "form",
+      "y": 185,
+      "label": "elige carpeta y pulsa Crear",
+      "variant": "default"
+    },
+    {
+      "id": "m2",
+      "from": "form",
+      "to": "svc",
+      "y": 227,
+      "label": "RealizarBackup(carpeta)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "m3",
+      "from": "svc",
+      "to": "sql",
+      "y": 269,
+      "label": "BACKUP DATABASE ... WITH INIT, CHECKSUM",
+      "variant": "security"
+    },
+    {
+      "id": "m4",
+      "from": "sql",
+      "to": "bak",
+      "y": 311,
+      "label": "escribe el .bak (cuenta de servicio)",
+      "variant": "dashed"
+    },
+    {
+      "id": "m5",
+      "from": "svc",
+      "to": "sql",
+      "y": 353,
+      "label": "RESTORE VERIFYONLY ... CHECKSUM",
+      "variant": "security"
+    },
+    {
+      "id": "m6",
+      "from": "svc",
+      "to": "form",
+      "y": 395,
+      "label": "ResultadoBackup (verificado, tamaño)",
+      "variant": "return"
+    },
+    {
+      "id": "m7",
+      "from": "usr",
+      "to": "form",
+      "y": 453,
+      "label": "elige el .bak y confirma",
+      "variant": "default"
+    },
+    {
+      "id": "m8",
+      "from": "form",
+      "to": "svc",
+      "y": 495,
+      "label": "Restaurar(ruta)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "m9",
+      "from": "svc",
+      "to": "sql",
+      "y": 537,
+      "label": "VERIFYONLY; SINGLE_USER (en master)",
+      "variant": "security"
+    },
+    {
+      "id": "m10",
+      "from": "svc",
+      "to": "sql",
+      "y": 579,
+      "label": "RESTORE DATABASE ... WITH REPLACE",
+      "variant": "security"
+    },
+    {
+      "id": "m11",
+      "from": "svc",
+      "to": "sql",
+      "y": 621,
+      "label": "SET MULTI_USER (siempre, en finally)",
+      "variant": "security"
+    },
+    {
+      "id": "m12",
+      "from": "svc",
+      "to": "form",
+      "y": 663,
+      "label": "listo o error traducido",
+      "variant": "return"
+    },
+    {
+      "id": "m13",
+      "from": "form",
+      "to": "usr",
+      "y": 705,
+      "label": "avisa y vuelve al login",
+      "variant": "return"
+    }
+  ]
+}

@@ -39,7 +39,7 @@
       "id": "uiadm",
       "type": "frontend",
       "label": "Administrador",
-      "sublabel": "Médicos, Horarios, Usuarios...",
+      "sublabel": "Médicos, Horarios, Usuarios, Backup",
       "pos": [
         290,
         180
@@ -56,7 +56,7 @@
       "sublabel": "Agenda, Actividad, Historial",
       "pos": [
         290,
-        340
+        440
       ],
       "size": [
         220,
@@ -66,11 +66,11 @@
     {
       "id": "uicom",
       "type": "frontend",
-      "label": "Todos los roles",
-      "sublabel": "Inicio y Reportes",
+      "label": "Inicio y Reportes",
+      "sublabel": "Inicio: todos; Reportes: Recep. y Médico",
       "pos": [
         290,
-        470
+        600
       ],
       "size": [
         220,
@@ -126,7 +126,7 @@
       "sublabel": "ActividadMedica, AgendaDiaria",
       "pos": [
         640,
-        390
+        510
       ],
       "size": [
         240,
@@ -140,7 +140,7 @@
       "sublabel": "ResumenService, ReporteService",
       "pos": [
         640,
-        510
+        630
       ],
       "size": [
         240,
@@ -159,6 +159,20 @@
       "size": [
         160,
         120
+      ]
+    },
+    {
+      "id": "ssis",
+      "type": "backend",
+      "label": "Sistema y backup",
+      "sublabel": "SistemaService, BackupService",
+      "pos": [
+        640,
+        390
+      ],
+      "size": [
+        240,
+        72
       ]
     }
   ],
@@ -200,7 +214,8 @@
       "id": "c7",
       "from": "uiadm",
       "to": "sagenda",
-      "label": "usa"
+      "label": "usa",
+      "labelSegment": 2
     },
     {
       "id": "c8",
@@ -243,6 +258,16 @@
       "id": "c15",
       "from": "uiadm",
       "to": "sabm"
+    },
+    {
+      "id": "c16",
+      "from": "uiadm",
+      "to": "ssis"
+    },
+    {
+      "id": "c17",
+      "from": "ssis",
+      "to": "sql"
     }
   ]
 }
