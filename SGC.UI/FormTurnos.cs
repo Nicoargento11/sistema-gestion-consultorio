@@ -267,6 +267,7 @@ public partial class FormTurnos : Form
         foreach (var slot in slots)
         {
             bool ocupado = fechaPasada
+                || TurnoService.EsHorarioPasado(fecha, slot.HoraInicio)
                 || turnos.Any(t => t.HoraInicio < slot.HoraFin && t.HoraFin > slot.HoraInicio)
                 || disponibilidad.HayAusenciaEn(slot.HoraInicio, slot.HoraFin);
 
@@ -524,9 +525,11 @@ public partial class FormTurnos : Form
 
         LblSeleccion.Text = $"Turno seleccionado: {turno.PacienteNombre} · {turno.Fecha:dd/MM/yyyy} {turno.HoraInicio:HH:mm} · {PaletaEstados.Texto(turno.Estado)}";
 
-        bool cancelado = turno.Estado == EstadoTurno.Cancelado;
-        BtnModificar.Enabled = !cancelado;
-        BtnCancelar.Enabled = !cancelado;
+        // Solo un turno Confirmado se puede modificar o cancelar: uno atendido
+        // o ausente ya tiene cobro / datos clinicos asociados.
+        bool editable = turno.Estado == EstadoTurno.Confirmado;
+        BtnModificar.Enabled = editable;
+        BtnCancelar.Enabled = editable;
 
         bool llegoLaFecha = turno.Fecha <= DateOnly.FromDateTime(DateTime.Today);
         bool puedeConfirmar = turno.Estado == EstadoTurno.Confirmado && llegoLaFecha;
@@ -538,7 +541,7 @@ public partial class FormTurnos : Form
             ayuda = turno.Estado switch
             {
                 EstadoTurno.Cancelado => "Este turno está cancelado.",
-                EstadoTurno.Asistio or EstadoTurno.Ausente => "La asistencia ya fue registrada.",
+                EstadoTurno.Asistio or EstadoTurno.Ausente => "La asistencia ya fue registrada: el turno no se puede modificar ni cancelar.",
                 _ => "Se confirma a partir de la fecha del turno."
             };
         }

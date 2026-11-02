@@ -115,6 +115,9 @@ public class TurnoService
         if (fecha < DateOnly.FromDateTime(DateTime.Today))
             throw new ArgumentException("No se puede asignar un turno en una fecha pasada.");
 
+        if (EsHorarioPasado(fecha, horaInicio))
+            throw new ArgumentException("No se puede asignar un turno en un horario que ya pasó.");
+
         if (!_agendaMedicoService.MedicoAtiende(medico.Id, fecha.DayOfWeek, horaInicio, duracionMinutos))
             throw new InvalidOperationException(
                 $"El profesional no atiende el {AgendaMedico.NombreDia(fecha.DayOfWeek)} en el horario {horaInicio:HH:mm} - {horaFin:HH:mm}.");
@@ -148,12 +151,17 @@ public class TurnoService
         if (nuevaFecha < DateOnly.FromDateTime(DateTime.Today))
             throw new ArgumentException("No se puede modificar un turno a una fecha pasada.");
 
+        if (EsHorarioPasado(nuevaFecha, nuevaHoraInicio))
+            throw new ArgumentException("No se puede mover un turno a un horario que ya pasó.");
+
         using var contexto = SGCContextFactory.Crear();
         var turno = contexto.Turnos.Include(t => t.Medico).FirstOrDefault(t => t.Id == turnoId)
             ?? throw new InvalidOperationException("El turno que intenta modificar no existe.");
 
-        if (turno.Estado == EstadoTurno.Cancelado)
-            throw new InvalidOperationException("No se puede modificar un turno cancelado.");
+        if (turno.Estado != EstadoTurno.Confirmado)
+            throw new InvalidOperationException(turno.Estado == EstadoTurno.Cancelado
+                ? "No se puede modificar un turno cancelado."
+                : "No se puede modificar un turno que ya fue atendido o marcado como ausente.");
 
         if (!_agendaMedicoService.MedicoAtiende(turno.MedicoId, nuevaFecha.DayOfWeek, nuevaHoraInicio, nuevaDuracionMinutos))
             throw new InvalidOperationException(
@@ -167,6 +175,13 @@ public class TurnoService
         turno.HoraInicio = nuevaHoraInicio;
         turno.DuracionMinutos = nuevaDuracionMinutos;
         contexto.SaveChanges();
+    }
+
+    // true si la fecha es hoy y la hora de inicio ya paso (fechas anteriores
+    // se validan aparte). Tambien lo usa la UI para marcar horarios no disponibles.
+    public static bool EsHorarioPasado(DateOnly fecha, TimeOnly horaInicio)
+    {
+        return fecha.ToDateTime(horaInicio) < DateTime.Now;
     }
 
     public bool HorarioOcupado(int medicoId, DateOnly fecha, TimeOnly horaInicio, int duracionMinutos = 30)
@@ -217,6 +232,9 @@ public class TurnoService
 
         if (turno.Estado == EstadoTurno.Cancelado)
             throw new InvalidOperationException("Ese turno ya estaba cancelado.");
+
+        if (turno.Estado != EstadoTurno.Confirmado)
+            throw new InvalidOperationException("No se puede cancelar un turno que ya fue atendido o marcado como ausente.");
 
         turno.Estado = EstadoTurno.Cancelado;
         turno.Activo = false;
