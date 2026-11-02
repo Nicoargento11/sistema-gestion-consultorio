@@ -52,14 +52,22 @@ public partial class FormRegistrarActividad : Form
 
     private void DeterminarMedicoActivo()
     {
-        if (_usuarioActivo?.MedicoId != null)
+        try
         {
-            _medicoActual = _medicoService.ObtenerPorId(_usuarioActivo.MedicoId.Value);
-        }
+            if (_usuarioActivo?.MedicoId != null)
+            {
+                _medicoActual = _medicoService.ObtenerPorId(_usuarioActivo.MedicoId.Value);
+            }
 
-        if (_medicoActual == null)
+            if (_medicoActual == null)
+            {
+                _medicoActual = _medicoService.ObtenerTodos().FirstOrDefault();
+            }
+        }
+        catch (Exception ex)
         {
-            _medicoActual = _medicoService.ObtenerTodos().FirstOrDefault();
+            MostrarError("No se pudo cargar el médico: " + ex.Message);
+            return;
         }
 
         if (_medicoActual != null)
@@ -70,7 +78,15 @@ public partial class FormRegistrarActividad : Form
 
     private void CargarTiposActividad()
     {
-        CboTipoActividad.DataSource = _actividadService.ObtenerTiposActividad();
+        try
+        {
+            CboTipoActividad.DataSource = _actividadService.ObtenerTiposActividad();
+        }
+        catch (Exception ex)
+        {
+            MostrarError("No se pudieron cargar los tipos de actividad: " + ex.Message);
+            return;
+        }
         CboTipoActividad.DisplayMember = "NombreTipo";
         CboTipoActividad.ValueMember = "Id";
     }
@@ -80,7 +96,22 @@ public partial class FormRegistrarActividad : Form
         if (_medicoActual == null) return;
 
         var fechaSeleccionada = DateOnly.FromDateTime(DtpFecha.Value);
-        var turnos = _turnoService.ObtenerPorMedicoYFecha(_medicoActual.Id, fechaSeleccionada, false)
+        List<Turno> turnos;
+        try
+        {
+            // Solo turnos que admiten actividad (mismo criterio que el servicio):
+            // sin ausentes, cancelados ni fechas futuras.
+            turnos = _turnoService.ObtenerPorMedicoYFecha(_medicoActual.Id, fechaSeleccionada, false)
+                .Where(ActividadMedicaService.TurnoAdmiteActividad)
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            MostrarError("No se pudieron cargar los turnos: " + ex.Message);
+            return;
+        }
+
+        turnos = turnos
             .OrderBy(t => t.ActividadMedica?.Activo == true)
             // CORRECCION: Turno ya NO usa la entidad "Horario" del catalogo.
             // Ahora ordenamos por la propiedad PROPIA Turno.HoraInicio.
@@ -108,7 +139,7 @@ public partial class FormRegistrarActividad : Form
         else
         {
             _turnoSeleccionado = null;
-            lblInfoPaciente.Text = "No hay turnos activos registrados para la fecha seleccionada.";
+            lblInfoPaciente.Text = "No hay turnos disponibles para registrar actividad en la fecha seleccionada.";
             LimpiarFormulario();
             BtnGuardar.Enabled = false;
         }
@@ -123,13 +154,31 @@ public partial class FormRegistrarActividad : Form
             return;
         }
 
-        _turnoSeleccionado = _turnoService.ObtenerPorId(turnoId);
+        try
+        {
+            _turnoSeleccionado = _turnoService.ObtenerPorId(turnoId);
+        }
+        catch (Exception ex)
+        {
+            _turnoSeleccionado = null;
+            MostrarError("No se pudo cargar el turno: " + ex.Message);
+            return;
+        }
 
         if (_turnoSeleccionado != null)
         {
             lblInfoPaciente.Text = $"Paciente: {_turnoSeleccionado.PacienteNombre} | DNI: {_turnoSeleccionado.PacienteDni} | Horario: {_turnoSeleccionado.HorarioRango} | Fecha: {_turnoSeleccionado.Fecha:dd/MM/yyyy}";
 
-            var actividad = _actividadService.ObtenerPorTurnoId(_turnoSeleccionado.Id) ?? _turnoSeleccionado.ActividadMedica;
+            ActividadMedica? actividad;
+            try
+            {
+                actividad = _actividadService.ObtenerPorTurnoId(_turnoSeleccionado.Id) ?? _turnoSeleccionado.ActividadMedica;
+            }
+            catch (Exception ex)
+            {
+                MostrarError("No se pudo cargar la atención del turno: " + ex.Message);
+                return;
+            }
 
             if (actividad != null && actividad.Activo)
             {
@@ -160,6 +209,12 @@ public partial class FormRegistrarActividad : Form
 
             BtnGuardar.Enabled = true;
         }
+    }
+
+    private void MostrarError(string texto)
+    {
+        LblMensaje.ForeColor = Color.Red;
+        LblMensaje.Text = texto;
     }
 
     private void LimpiarFormulario()
@@ -200,15 +255,17 @@ public partial class FormRegistrarActividad : Form
                 tipoId,
                 TxtMotivo.Text,
                 TxtDiagnostico.Text,
-                TxtReceta.Text);
-
-            LblMensaje.ForeColor = Color.Green;
-            LblMensaje.Text = "Atencion medica guardada exitosamente.";
+                TxtReceta.Text,
+                _medicoActual?.Id);
 
             DialogResult = DialogResult.OK;
             int idActual = _turnoSeleccionado.Id;
             CargarComboTurnos();
             CboTurnos.SelectedValue = idActual;
+
+            // El mensaje va despues de recargar: el cambio de seleccion del combo lo pisa.
+            LblMensaje.ForeColor = Color.Green;
+            LblMensaje.Text = "Atención médica guardada exitosamente.";
         }
         catch (Exception ex)
         {
@@ -245,13 +302,13 @@ public partial class FormRegistrarActividad : Form
         try
         {
             _actividadService.EliminarLogico(actividad.Id);
-            LblMensaje.ForeColor = Color.Green;
-            LblMensaje.Text = "Registro clinico eliminado correctamente (Baja logica).";
-
             DialogResult = DialogResult.OK;
             int idActual = _turnoSeleccionado.Id;
             CargarComboTurnos();
             CboTurnos.SelectedValue = idActual;
+
+            LblMensaje.ForeColor = Color.Green;
+            LblMensaje.Text = "Registro clínico eliminado correctamente.";
         }
         catch (Exception ex)
         {

@@ -82,26 +82,56 @@ public class ActividadMedicaService
         return query.OrderByDescending(a => a.Turno!.Fecha).ThenByDescending(a => a.Turno!.HoraInicio).ToList();
     }
 
-    public void RegistrarOModificarActividad(Turno turno, int tipoActividadId, string motivo, string procedimiento, string receta)
+    // Un turno admite actividad si esta Confirmado o con Asistio (el medico
+    // puede atender antes o despues de que recepcion confirme la asistencia),
+    // esta activo y no es de una fecha futura. Compartida con la UI para que
+    // el combo de turnos use exactamente la misma regla.
+    public static bool TurnoAdmiteActividad(Turno turno)
+    {
+        return turno.Activo
+               && (turno.Estado == EstadoTurno.Confirmado || turno.Estado == EstadoTurno.Asistio)
+               && turno.Fecha <= DateOnly.FromDateTime(DateTime.Today);
+    }
+
+    // medicoId (opcional): si viene, el turno debe pertenecer a ese medico.
+    public void RegistrarOModificarActividad(Turno turno, int tipoActividadId, string motivo, string procedimiento, string receta, int? medicoId = null)
     {
         if (turno == null)
-            throw new ArgumentNullException(nameof(turno), "Debe especificar un turno valido.");
-
-        if (turno.Estado == EstadoTurno.Cancelado)
-            throw new InvalidOperationException("No se puede registrar actividad medica en un turno cancelado.");
+            throw new ArgumentNullException(nameof(turno), "Debe especificar un turno válido.");
 
         if (string.IsNullOrWhiteSpace(motivo))
             throw new ArgumentException("El motivo de la consulta es obligatorio.");
 
         using var contexto = SGCContextFactory.Crear();
 
+        // No se confia en el objeto del llamador (puede estar desactualizado):
+        // se vuelve a leer el turno para validar su estado real.
+        var turnoActual = contexto.Turnos.FirstOrDefault(t => t.Id == turno.Id)
+            ?? throw new InvalidOperationException("El turno seleccionado no existe.");
+
+        if (medicoId.HasValue && turnoActual.MedicoId != medicoId.Value)
+            throw new InvalidOperationException("El turno seleccionado no pertenece a este médico.");
+
+        if (!turnoActual.Activo || turnoActual.Estado == EstadoTurno.Cancelado)
+            throw new InvalidOperationException("No se puede registrar actividad médica en un turno cancelado.");
+
+        if (turnoActual.Estado == EstadoTurno.Ausente)
+            throw new InvalidOperationException("No se puede registrar actividad médica en un turno en el que el paciente estuvo ausente.");
+
+        if (turnoActual.Fecha > DateOnly.FromDateTime(DateTime.Today))
+            throw new InvalidOperationException("No se puede registrar actividad médica en un turno de una fecha futura.");
+
         var tipo = contexto.TiposActividad.FirstOrDefault(t => t.Id == tipoActividadId)
             ?? throw new InvalidOperationException("El tipo de actividad seleccionado no es valido.");
 
-        var existente = contexto.ActividadesMedicas.FirstOrDefault(a => a.Activo && a.TurnoId == turno.Id);
+        // Se busca sin filtrar por Activo: el indice unico por TurnoId incluye
+        // las eliminadas, asi que una actividad dada de baja se reactiva y se
+        // pisa en lugar de insertar una segunda fila.
+        var existente = contexto.ActividadesMedicas.FirstOrDefault(a => a.TurnoId == turnoActual.Id);
 
         if (existente != null)
         {
+            existente.Activo = true;
             existente.TipoActividadId = tipoActividadId;
             existente.MotivoConsulta = motivo.Trim();
             existente.Procedimiento = procedimiento?.Trim() ?? string.Empty;
@@ -111,7 +141,7 @@ public class ActividadMedicaService
         {
             contexto.ActividadesMedicas.Add(new ActividadMedica
             {
-                TurnoId = turno.Id,
+                TurnoId = turnoActual.Id,
                 TipoActividadId = tipoActividadId,
                 MotivoConsulta = motivo.Trim(),
                 Procedimiento = procedimiento?.Trim() ?? string.Empty,

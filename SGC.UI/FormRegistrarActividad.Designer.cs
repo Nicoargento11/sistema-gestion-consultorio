@@ -309,6 +309,7 @@ partial class FormRegistrarActividad
         TxtReceta.Font = new Font("Segoe UI", 9.5F);
         TxtReceta.Location = new Point(38, 344);
         TxtReceta.Margin = new Padding(4, 4, 4, 4);
+        TxtReceta.AcceptsReturn = true;
         TxtReceta.Multiline = true;
         TxtReceta.Name = "TxtReceta";
         TxtReceta.PlaceholderText = "Ej: ibuprofeno 400 mg cada 8 hs por 3 dias";
@@ -334,6 +335,7 @@ partial class FormRegistrarActividad
         TxtDiagnostico.Font = new Font("Segoe UI", 9.5F);
         TxtDiagnostico.Location = new Point(38, 206);
         TxtDiagnostico.Margin = new Padding(4, 4, 4, 4);
+        TxtDiagnostico.AcceptsReturn = true;
         TxtDiagnostico.Multiline = true;
         TxtDiagnostico.Name = "TxtDiagnostico";
         TxtDiagnostico.PlaceholderText = "Ej: faringitis. Indicaciones y estudios...";
@@ -359,6 +361,7 @@ partial class FormRegistrarActividad
         TxtMotivo.Font = new Font("Segoe UI", 9.5F);
         TxtMotivo.Location = new Point(38, 81);
         TxtMotivo.Margin = new Padding(4, 4, 4, 4);
+        TxtMotivo.AcceptsReturn = true;
         TxtMotivo.Multiline = true;
         TxtMotivo.Name = "TxtMotivo";
         TxtMotivo.PlaceholderText = "Ej: dolor de garganta de 3 dias, fiebre...";
