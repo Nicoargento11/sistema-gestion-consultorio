@@ -81,7 +81,8 @@ public class TurnoService
     public static bool MedicoAceptaObraSocialDelPaciente(Turno turno)
     {
         var obraSocial = turno.Paciente?.ObraSocial;
-        return obraSocial != null &&
+        // Una obra social dada de baja no aplica descuento: paga particular.
+        return obraSocial != null && obraSocial.Activo &&
                (turno.Medico?.ObrasSocialesAceptadas.Any(o => o.Id == obraSocial.Id) ?? false);
     }
 
@@ -94,7 +95,8 @@ public class TurnoService
     public static decimal CalcularMontoConObraSocial(Turno turno)
     {
         decimal precioBase = CalcularMontoParticular(turno);
-        decimal cobertura = turno.Paciente?.ObraSocial?.PorcentajeCobertura ?? 0;
+        var obraSocial = turno.Paciente?.ObraSocial;
+        decimal cobertura = obraSocial != null && obraSocial.Activo ? obraSocial.PorcentajeCobertura : 0;
         return Math.Max(precioBase - (precioBase * cobertura / 100m), 0);
     }
 
@@ -123,6 +125,10 @@ public class TurnoService
                 $"El profesional no atiende el {AgendaMedico.NombreDia(fecha.DayOfWeek)} en el horario {horaInicio:HH:mm} - {horaFin:HH:mm}.");
 
         using var contexto = SGCContextFactory.Crear();
+
+        // Se vuelve a leer de la base: los objetos que llegan de la UI pueden
+        // estar desactualizados (alguien pudo dar de baja al paciente o medico).
+        ExigirActivos(contexto, paciente.Id, medico.Id);
 
         if (HaySuperposicion(contexto, medico.Id, fecha, horaInicio, duracionMinutos, excluirTurnoId: null))
             throw new InvalidOperationException(
@@ -163,6 +169,8 @@ public class TurnoService
                 ? "No se puede modificar un turno cancelado."
                 : "No se puede modificar un turno que ya fue atendido o marcado como ausente.");
 
+        ExigirActivos(contexto, turno.PacienteId, turno.MedicoId);
+
         if (!_agendaMedicoService.MedicoAtiende(turno.MedicoId, nuevaFecha.DayOfWeek, nuevaHoraInicio, nuevaDuracionMinutos))
             throw new InvalidOperationException(
                 $"El profesional no atiende el {AgendaMedico.NombreDia(nuevaFecha.DayOfWeek)} en el horario {nuevaHoraInicio:HH:mm} - {nuevaHoraFin:HH:mm}.");
@@ -175,6 +183,17 @@ public class TurnoService
         turno.HoraInicio = nuevaHoraInicio;
         turno.DuracionMinutos = nuevaDuracionMinutos;
         contexto.SaveChanges();
+    }
+
+    private static void ExigirActivos(SGCContext contexto, int pacienteId, int medicoId)
+    {
+        var paciente = contexto.Pacientes.FirstOrDefault(p => p.Id == pacienteId);
+        if (paciente is null || !paciente.Activo)
+            throw new InvalidOperationException("El paciente está dado de baja: no se pueden asignar ni modificar sus turnos.");
+
+        var medico = contexto.Medicos.FirstOrDefault(m => m.Id == medicoId);
+        if (medico is null || !medico.Activo)
+            throw new InvalidOperationException("El médico está dado de baja: no se pueden asignar ni modificar sus turnos.");
     }
 
     // true si la fecha es hoy y la hora de inicio ya paso (fechas anteriores

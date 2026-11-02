@@ -116,6 +116,11 @@ public class PacienteService
         var paciente = contexto.Pacientes.FirstOrDefault(p => p.Id == id)
             ?? throw new InvalidOperationException("El paciente que intenta eliminar no existe.");
 
+        int turnosFuturos = TurnosFuturos.Confirmados(contexto).Count(t => t.PacienteId == id);
+        if (turnosFuturos > 0)
+            throw new InvalidOperationException(
+                $"No se puede dar de baja al paciente: tiene {turnosFuturos} turno(s) confirmado(s) pendiente(s). Cancele esos turnos primero.");
+
         paciente.Activo = false;
         contexto.SaveChanges();
     }

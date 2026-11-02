@@ -124,7 +124,17 @@ public class MedicoService
         var medico = contexto.Medicos.FirstOrDefault(m => m.Id == id)
             ?? throw new InvalidOperationException("El medico que intenta eliminar no existe.");
 
+        int turnosFuturos = TurnosFuturos.Confirmados(contexto).Count(t => t.MedicoId == id);
+        if (turnosFuturos > 0)
+            throw new InvalidOperationException(
+                $"No se puede dar de baja al médico: tiene {turnosFuturos} turno(s) confirmado(s) pendiente(s). Cancele o reasigne esos turnos primero.");
+
         medico.Activo = false;
+
+        // Su usuario de acceso (Rol Medico) queda inactivo en la misma operacion.
+        foreach (var usuario in contexto.Usuarios.Where(u => u.Activo && u.Rol == RolUsuario.Medico && u.MedicoId == id))
+            usuario.Activo = false;
+
         contexto.SaveChanges();
     }
 

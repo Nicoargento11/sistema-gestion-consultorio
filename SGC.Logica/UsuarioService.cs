@@ -11,7 +11,7 @@ public class UsuarioService
         using var contexto = SGCContextFactory.Crear();
         IQueryable<Usuario> query = contexto.Usuarios
             .Include(u => u.Medico)
-            .Include(u => u.MedicosAsignados);
+            .Include(u => u.MedicosAsignados.Where(m => m.Activo));
 
         var usuarios = (incluirInactivos ? query : query.Where(u => u.Activo)).ToList();
         usuarios.ForEach(SincronizarIds);
@@ -23,7 +23,7 @@ public class UsuarioService
         using var contexto = SGCContextFactory.Crear();
         var usuario = contexto.Usuarios
             .Include(u => u.Medico)
-            .Include(u => u.MedicosAsignados)
+            .Include(u => u.MedicosAsignados.Where(m => m.Activo))
             .FirstOrDefault(u => u.Id == id);
 
         if (usuario != null) SincronizarIds(usuario);
@@ -39,7 +39,7 @@ public class UsuarioService
         // nombre de usuario y despues se verifica el hash en memoria.
         var usuario = contexto.Usuarios
             .Include(u => u.Medico)
-            .Include(u => u.MedicosAsignados)
+            .Include(u => u.MedicosAsignados.Where(m => m.Activo))
             .FirstOrDefault(u => u.NombreUsuario == nombreUsuario && u.Activo);
 
         if (usuario == null || !PasswordHasher.Verificar(contrasena, usuario.Contrasena))
@@ -78,7 +78,7 @@ public class UsuarioService
         Validar(usuario, contexto, esNuevo: false);
 
         var existente = contexto.Usuarios
-            .Include(u => u.MedicosAsignados)
+            .Include(u => u.MedicosAsignados.Where(m => m.Activo))
             .FirstOrDefault(u => u.Id == usuario.Id)
             ?? throw new InvalidOperationException("El usuario que intenta modificar no existe.");
 
@@ -96,7 +96,7 @@ public class UsuarioService
         existente.Rol = usuario.Rol;
         existente.MedicoId = usuario.Rol == RolUsuario.Medico ? usuario.MedicoId : null;
         existente.MedicosAsignados = usuario.Rol == RolUsuario.Recepcionista
-            ? contexto.Medicos.Where(m => usuario.MedicosAsignadosIds.Contains(m.Id)).ToList()
+            ? contexto.Medicos.Where(m => m.Activo && usuario.MedicosAsignadosIds.Contains(m.Id)).ToList()
             : new List<Medico>();
 
         contexto.SaveChanges();
@@ -156,7 +156,7 @@ public class UsuarioService
             usuario.MedicoId = null;
 
         usuario.MedicosAsignados = usuario.Rol == RolUsuario.Recepcionista
-            ? contexto.Medicos.Where(m => usuario.MedicosAsignadosIds.Contains(m.Id)).ToList()
+            ? contexto.Medicos.Where(m => m.Activo && usuario.MedicosAsignadosIds.Contains(m.Id)).ToList()
             : new List<Medico>();
     }
 

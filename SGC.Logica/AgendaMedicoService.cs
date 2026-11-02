@@ -10,7 +10,7 @@ public class AgendaMedicoService
     {
         using var contexto = SGCContextFactory.Crear();
         return contexto.AgendasMedico
-            .Where(a => a.Activo)
+            .Where(a => a.Activo && a.Medico!.Activo)
             .Include(a => a.Medico)
             .ToList();
     }
@@ -122,6 +122,12 @@ public class AgendaMedicoService
 
         ValidarSuperposicion(agenda, idAExcluir: existente.Id, contexto);
 
+        // La franja vieja desaparece; la nueva solo la reemplaza si es del
+        // mismo medico y dia.
+        var reemplazo = agenda.MedicoId == existente.MedicoId && agenda.DiaSemana == existente.DiaSemana
+            ? agenda : null;
+        ExigirSinTurnosHuerfanos(contexto, existente, reemplazo);
+
         existente.MedicoId = agenda.MedicoId;
         existente.Medico = medico;
         existente.DiaSemana = agenda.DiaSemana;
@@ -136,8 +142,38 @@ public class AgendaMedicoService
         var agenda = contexto.AgendasMedico.FirstOrDefault(a => a.Id == id)
             ?? throw new InvalidOperationException("El registro de agenda que intenta eliminar no existe.");
 
+        ExigirSinTurnosHuerfanos(contexto, agenda, reemplazo: null);
+
         agenda.Activo = false;
         contexto.SaveChanges();
+    }
+
+    // Rechaza el cambio si dejaria turnos confirmados futuros del medico, que
+    // hoy caen dentro de la franja vieja, fuera de todas las otras franjas
+    // activas del mismo medico y dia (mas el reemplazo, si lo hay).
+    private static void ExigirSinTurnosHuerfanos(SGCContext contexto, AgendaMedico vieja, AgendaMedico? reemplazo)
+    {
+        var restantes = contexto.AgendasMedico
+            .Where(a => a.Activo && a.MedicoId == vieja.MedicoId && a.DiaSemana == vieja.DiaSemana && a.Id != vieja.Id)
+            .ToList();
+        if (reemplazo != null) restantes.Add(reemplazo);
+
+        int viejaIni = Horas.Minutos(vieja.HoraInicio), viejaFin = Horas.Minutos(vieja.HoraFin);
+
+        int afectados = TurnosFuturos.Confirmados(contexto)
+            .Where(t => t.MedicoId == vieja.MedicoId)
+            .AsEnumerable()
+            .Where(t => t.Fecha.DayOfWeek == vieja.DiaSemana)
+            .Count(t =>
+            {
+                int ini = Horas.Minutos(t.HoraInicio), fin = ini + t.DuracionMinutos;
+                bool dentroDeLaVieja = ini >= viejaIni && fin <= viejaFin;
+                return dentroDeLaVieja && !restantes.Any(a => ini >= Horas.Minutos(a.HoraInicio) && fin <= Horas.Minutos(a.HoraFin));
+            });
+
+        if (afectados > 0)
+            throw new InvalidOperationException(
+                $"No se puede modificar o eliminar esta franja: dejaría sin horario de atención a {afectados} turno(s) confirmado(s) futuro(s). Cancele o reasigne esos turnos primero.");
     }
 
     private void ValidarSuperposicion(AgendaMedico agenda, int? idAExcluir, SGCContext contexto)
