@@ -73,17 +73,24 @@ public class AgendaDiariaService
             .ToDictionary(g => g.Key, g => g.Min(a => a.Fecha.ToDateTime(a.HoraInicio)));
     }
 
-    // Proximo paciente a atender: primer turno del dia que sigue Confirmado
-    // y sin atencion registrada. Si el dia consultado es hoy solo
+    // Pendiente de atencion = Confirmado o con asistencia ya registrada
+    // (Asistio) y sin atencion medica cargada.
+    public static bool EsPendienteDeAtencion(TurnoAgendaItem item)
+    {
+        return item.Turno.Activo
+               && (item.Turno.Estado == EstadoTurno.Confirmado || item.Turno.Estado == EstadoTurno.Asistio)
+               && !item.Atendido;
+    }
+
+    // Proximo paciente a atender: primer turno del dia pendiente de atencion
+    // (Confirmado o Asistio, sin atencion registrada). Si el dia consultado es hoy solo
     // cuentan los turnos con HoraInicio >= ahora; en cualquier otro dia, el
     // primero del dia. Recibe hoy/ahora por parametro para poder probarlo.
     public static TurnoAgendaItem? ElegirProximo(IEnumerable<TurnoAgendaItem> agenda, DateOnly fecha, DateOnly hoy, TimeOnly ahora)
     {
         return agenda
             .Where(i => i.Turno.Fecha == fecha
-                        && i.Turno.Activo
-                        && i.Turno.Estado == EstadoTurno.Confirmado
-                        && !i.Atendido
+                        && EsPendienteDeAtencion(i)
                         && (fecha != hoy || i.Turno.HoraInicio >= ahora))
             .OrderBy(i => i.Turno.HoraInicio)
             .FirstOrDefault();

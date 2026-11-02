@@ -203,10 +203,10 @@ public partial class FormAgendaMedico : Form
         BtnFiltroCancelados.FlatAppearance.BorderSize = _filtroActual == FiltroTurno.Cancelados ? 3 : 1;
     }
 
-    // Pendiente de atencion = turno Confirmado que todavia no se atendio.
-    // Asistio / Ausente (ya resueltos en recepcion) y Cancelado no cuentan.
+    // Pendiente de atencion = turno Confirmado o con asistencia ya registrada
+    // (Asistio) que todavia no tiene atencion cargada. Ausente y Cancelado no cuentan.
     private static bool EsPendienteDeAtencion(TurnoAgendaItem t)
-        => t.Estado == EstadoTurno.Confirmado && !t.Atendido;
+        => AgendaDiariaService.EsPendienteDeAtencion(t);
 
     private static string Plural(int cantidad, string singular, string plural)
         => $"{cantidad} {(cantidad == 1 ? singular : plural)}";
@@ -386,10 +386,11 @@ public partial class FormAgendaMedico : Form
 
         _turnoSeleccionado = item.Turno;
         bool cancelado = _turnoSeleccionado.Estado == EstadoTurno.Cancelado;
+        bool ausente = _turnoSeleccionado.Estado == EstadoTurno.Ausente;
         bool yaAtendido = _turnoSeleccionado.ActividadMedica?.Activo == true;
         bool fechaFutura = _turnoSeleccionado.Fecha > DateOnly.FromDateTime(DateTime.Today);
 
-        BtnAtender.Enabled = !cancelado && !fechaFutura;
+        BtnAtender.Enabled = !cancelado && !ausente && !fechaFutura;
         BtnAtender.Text = yaAtendido ? "Ver / Modificar Atención" : "Atender Paciente";
         BtnHistorialRapido.Enabled = _turnoSeleccionado.Paciente != null;
 
@@ -397,6 +398,11 @@ public partial class FormAgendaMedico : Form
         {
             LblMensaje.ForeColor = Color.Red;
             LblMensaje.Text = $"Turno cancelado para {_turnoSeleccionado.PacienteNombre}.";
+        }
+        else if (ausente)
+        {
+            LblMensaje.ForeColor = Color.Red;
+            LblMensaje.Text = $"El paciente {_turnoSeleccionado.PacienteNombre} figura como ausente: no se puede cargar la atención.";
         }
         else if (fechaFutura)
         {
