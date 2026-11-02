@@ -88,7 +88,7 @@ public class PacienteService
         paciente.Id = 0;
         paciente.Activo = true;
         contexto.Pacientes.Add(paciente);
-        contexto.SaveChanges();
+        Persistencia.Guardar(contexto);
     }
 
     public void Modificar(Paciente paciente)
@@ -107,7 +107,7 @@ public class PacienteService
         existente.FechaNacimiento = paciente.FechaNacimiento;
         existente.ObraSocialId = paciente.ObraSocialId;
 
-        contexto.SaveChanges();
+        Persistencia.Guardar(contexto);
     }
 
     public void EliminarLogico(int id)
@@ -127,11 +127,16 @@ public class PacienteService
 
     private void Validar(Paciente paciente, SGCContext contexto)
     {
-        if (string.IsNullOrWhiteSpace(paciente.Nombre) || !paciente.Nombre.All(c => char.IsLetter(c) || c == ' '))
-            throw new ArgumentException("El nombre solo puede contener letras.");
+        paciente.Nombre = Texto.Normalizar(paciente.Nombre);
+        paciente.Apellido = Texto.Normalizar(paciente.Apellido);
+        paciente.Dni = (paciente.Dni ?? string.Empty).Trim();
+        paciente.Email = (paciente.Email ?? string.Empty).Trim();
 
-        if (string.IsNullOrWhiteSpace(paciente.Apellido) || !paciente.Apellido.All(c => char.IsLetter(c) || c == ' '))
-            throw new ArgumentException("El apellido solo puede contener letras.");
+        if (!Texto.EsNombreValido(paciente.Nombre) || paciente.Nombre.Length > 80)
+            throw new ArgumentException("El nombre solo puede contener letras, espacios, apóstrofes y guiones (máximo 80 caracteres).");
+
+        if (!Texto.EsNombreValido(paciente.Apellido) || paciente.Apellido.Length > 80)
+            throw new ArgumentException("El apellido solo puede contener letras, espacios, apóstrofes y guiones (máximo 80 caracteres).");
 
         if (string.IsNullOrWhiteSpace(paciente.Dni) || !paciente.Dni.All(char.IsDigit) ||
             paciente.Dni.Length < 7 || paciente.Dni.Length > 8)
@@ -142,12 +147,15 @@ public class PacienteService
         if (paciente.Dni.All(c => c == '0'))
             throw new ArgumentException("El DNI ingresado no es válido.");
 
-        if (string.IsNullOrWhiteSpace(paciente.Email) || !paciente.Email.Contains('@') || !paciente.Email.Contains('.'))
+        if (!Texto.EsEmailValido(paciente.Email))
             throw new ArgumentException("Debe ingresar un email con formato válido (ej: nombre@dominio.com).");
 
-        if (string.IsNullOrWhiteSpace(paciente.Telefono) || !paciente.Telefono.All(char.IsDigit) ||
-            paciente.Telefono.Length < 6 || paciente.Telefono.Length > 15)
-            throw new ArgumentException("El teléfono debe tener entre 6 y 15 dígitos numéricos, sin espacios ni guiones.");
+        // La base solo guarda digitos: se aceptan + espacios - ( ) al escribir
+        // y se quitan al guardar.
+        var telefono = Texto.TelefonoADigitos((paciente.Telefono ?? string.Empty).Trim());
+        if (telefono is null)
+            throw new ArgumentException("El teléfono debe tener entre 6 y 15 dígitos (puede incluir +, espacios, guiones y paréntesis).");
+        paciente.Telefono = telefono;
 
         if (paciente.FechaNacimiento == default)
             throw new ArgumentException("Debe ingresar la fecha de nacimiento.");
@@ -158,8 +166,12 @@ public class PacienteService
         if (paciente.FechaNacimiento < DateOnly.FromDateTime(DateTime.Today).AddYears(-120))
             throw new ArgumentException("La fecha de nacimiento no es válida.");
 
-        if (contexto.Pacientes.Any(p => p.Activo && p.Dni == paciente.Dni && p.Id != paciente.Id))
-            throw new InvalidOperationException($"Ya existe un paciente activo con el DNI {paciente.Dni}.");
+        // El indice unico de la base incluye a los pacientes dados de baja.
+        var mismoDni = contexto.Pacientes.FirstOrDefault(p => p.Dni == paciente.Dni && p.Id != paciente.Id);
+        if (mismoDni != null)
+            throw new InvalidOperationException(mismoDni.Activo
+                ? $"Ya existe un paciente con el DNI {paciente.Dni}."
+                : $"Ya existe un paciente con el DNI {paciente.Dni} (está dado de baja).");
 
         // ObraSocialId es opcional: null se interpreta como "Particular".
         if (paciente.ObraSocialId is int obraSocialId)

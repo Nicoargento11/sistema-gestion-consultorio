@@ -69,7 +69,7 @@ public class UsuarioService
         ResolverAsignaciones(usuario, contexto);
 
         contexto.Usuarios.Add(usuario);
-        contexto.SaveChanges();
+        Persistencia.Guardar(contexto);
     }
 
     public void Modificar(Usuario usuario)
@@ -99,7 +99,7 @@ public class UsuarioService
             ? contexto.Medicos.Where(m => m.Activo && usuario.MedicosAsignadosIds.Contains(m.Id)).ToList()
             : new List<Medico>();
 
-        contexto.SaveChanges();
+        Persistencia.Guardar(contexto);
     }
 
     public void EliminarLogico(int id)
@@ -138,7 +138,7 @@ public class UsuarioService
             throw new InvalidOperationException("Ese medico ya tiene otro usuario activo asignado.");
 
         usuario.Activo = true;
-        contexto.SaveChanges();
+        Persistencia.Guardar(contexto);
     }
 
     // Regla: siempre debe quedar al menos un Administrador activo, si no
@@ -177,8 +177,12 @@ public class UsuarioService
         if (!string.IsNullOrWhiteSpace(usuario.Contrasena) && usuario.Contrasena.Length < 6)
             throw new ArgumentException("La contrasena debe tener al menos 6 caracteres.");
 
-        if (contexto.Usuarios.Any(u => u.Activo && u.NombreUsuario == usuario.NombreUsuario && u.Id != usuario.Id))
-            throw new InvalidOperationException($"Ya existe un usuario activo con el nombre {usuario.NombreUsuario}.");
+        // El indice unico de la base incluye a los usuarios dados de baja.
+        var mismoNombre = contexto.Usuarios.FirstOrDefault(u => u.NombreUsuario == usuario.NombreUsuario && u.Id != usuario.Id);
+        if (mismoNombre != null)
+            throw new InvalidOperationException(mismoNombre.Activo
+                ? $"Ya existe un usuario con el nombre {usuario.NombreUsuario}."
+                : $"Ya existe un usuario con el nombre {usuario.NombreUsuario} (está dado de baja). Elija otro nombre o reactive ese usuario.");
 
         if (usuario.Rol == RolUsuario.Medico)
         {
@@ -189,8 +193,12 @@ public class UsuarioService
             if (medico is null || !medico.Activo)
                 throw new ArgumentException("El medico seleccionado no es valido.");
 
-            if (contexto.Usuarios.Any(u => u.Activo && u.Id != usuario.Id && u.Rol == RolUsuario.Medico && u.MedicoId == usuario.MedicoId))
-                throw new InvalidOperationException("Ese medico ya tiene un usuario asignado.");
+            // El indice unico de la base (UQ_Usuario_MedicoUnico) no filtra por Activo.
+            var usuarioDelMedico = contexto.Usuarios.FirstOrDefault(u => u.Id != usuario.Id && u.Rol == RolUsuario.Medico && u.MedicoId == usuario.MedicoId);
+            if (usuarioDelMedico != null)
+                throw new InvalidOperationException(usuarioDelMedico.Activo
+                    ? "Ese médico ya tiene un usuario asignado."
+                    : "Ese médico ya tiene un usuario (está dado de baja). Reactive ese usuario en lugar de crear uno nuevo.");
         }
 
         if (usuario.Rol == RolUsuario.Recepcionista && usuario.MedicosAsignadosIds.Count == 0)

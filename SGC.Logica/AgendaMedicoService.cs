@@ -105,11 +105,23 @@ public class AgendaMedicoService
         var medico = ValidarDatosBasicos(agenda, contexto);
         ValidarSuperposicion(agenda, idAExcluir: null, contexto);
 
+        // El indice unico incluye franjas dadas de baja: si hay una identica,
+        // se vuelve a activar en lugar de insertar un duplicado.
+        var inactiva = contexto.AgendasMedico.FirstOrDefault(a => !a.Activo
+            && a.MedicoId == agenda.MedicoId && a.DiaSemana == agenda.DiaSemana
+            && a.HoraInicio == agenda.HoraInicio && a.HoraFin == agenda.HoraFin);
+        if (inactiva != null)
+        {
+            inactiva.Activo = true;
+            Persistencia.Guardar(contexto);
+            return;
+        }
+
         agenda.Id = 0;
         agenda.Activo = true;
         agenda.Medico = medico;
         contexto.AgendasMedico.Add(agenda);
-        contexto.SaveChanges();
+        Persistencia.Guardar(contexto);
     }
 
     public void Modificar(AgendaMedico agenda)
@@ -122,6 +134,12 @@ public class AgendaMedicoService
 
         ValidarSuperposicion(agenda, idAExcluir: existente.Id, contexto);
 
+        if (contexto.AgendasMedico.Any(a => !a.Activo && a.Id != existente.Id
+                && a.MedicoId == agenda.MedicoId && a.DiaSemana == agenda.DiaSemana
+                && a.HoraInicio == agenda.HoraInicio && a.HoraFin == agenda.HoraFin))
+            throw new InvalidOperationException(
+                "Ya existe una franja idéntica para ese médico y día que fue dada de baja. Elimine esta franja y agregue la nueva para reactivarla.");
+
         // La franja vieja desaparece; la nueva solo la reemplaza si es del
         // mismo medico y dia.
         var reemplazo = agenda.MedicoId == existente.MedicoId && agenda.DiaSemana == existente.DiaSemana
@@ -133,7 +151,7 @@ public class AgendaMedicoService
         existente.DiaSemana = agenda.DiaSemana;
         existente.HoraInicio = agenda.HoraInicio;
         existente.HoraFin = agenda.HoraFin;
-        contexto.SaveChanges();
+        Persistencia.Guardar(contexto);
     }
 
     public void EliminarLogico(int id)

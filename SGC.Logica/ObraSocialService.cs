@@ -66,7 +66,7 @@ public class ObraSocialService
         obraSocial.Id = 0;
         obraSocial.Activo = true;
         contexto.ObrasSociales.Add(obraSocial);
-        contexto.SaveChanges();
+        Persistencia.Guardar(contexto);
     }
 
     public void Modificar(ObraSocial obraSocial)
@@ -79,7 +79,7 @@ public class ObraSocialService
 
         existente.Nombre = obraSocial.Nombre;
         existente.PorcentajeCobertura = obraSocial.PorcentajeCobertura;
-        contexto.SaveChanges();
+        Persistencia.Guardar(contexto);
     }
 
     public void EliminarLogico(int id)
@@ -94,13 +94,22 @@ public class ObraSocialService
 
     private void Validar(ObraSocial obraSocial, SGCContext contexto)
     {
-        if (string.IsNullOrWhiteSpace(obraSocial.Nombre))
+        obraSocial.Nombre = Texto.Normalizar(obraSocial.Nombre);
+
+        if (obraSocial.Nombre.Length == 0)
             throw new ArgumentException("El nombre de la obra social es obligatorio.");
+
+        if (obraSocial.Nombre.Length > 100)
+            throw new ArgumentException("El nombre de la obra social no puede superar los 100 caracteres.");
 
         if (obraSocial.PorcentajeCobertura < 0 || obraSocial.PorcentajeCobertura > 100)
             throw new ArgumentException("El porcentaje de cobertura debe estar entre 0 y 100.");
 
-        if (contexto.ObrasSociales.Any(o => o.Activo && o.Nombre == obraSocial.Nombre && o.Id != obraSocial.Id))
-            throw new InvalidOperationException($"Ya existe otra obra social activa llamada {obraSocial.Nombre}.");
+        // El indice unico de la base incluye a las obras sociales dadas de baja.
+        var mismoNombre = contexto.ObrasSociales.FirstOrDefault(o => o.Nombre == obraSocial.Nombre && o.Id != obraSocial.Id);
+        if (mismoNombre != null)
+            throw new InvalidOperationException(mismoNombre.Activo
+                ? $"Ya existe otra obra social llamada {obraSocial.Nombre}."
+                : $"Ya existe una obra social llamada {obraSocial.Nombre} (está dada de baja).");
     }
 }
