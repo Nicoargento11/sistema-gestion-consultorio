@@ -10,8 +10,10 @@ namespace SGC.UI;
 // Toda la interfaz se arma por codigo (no hay InitializeComponent) para que el
 // disenador de Visual Studio no pueda borrarla.
 //
-//   Administrador : turnos de hoy por estado, semana, ausentes y recaudacion
-//                   del mes, medicos con agenda y avisos.
+//   Administrador : turnos de hoy por estado, semana, ausentes, medicos con
+//                   agenda y estado del sistema (usuarios por rol, medicos sin
+//                   horarios o sin recepcionista, obras sociales activas, ultima
+//                   copia de seguridad) y avisos. No muestra dinero.
 //   Medico        : sus turnos de hoy, proximo paciente y sus avisos.
 //   Recepcionista : turnos de hoy de sus medicos asignados, turnos sin
 //                   confirmar y avisos.
@@ -36,6 +38,7 @@ public class FormInicio : Form
     private readonly ResumenService _resumenService = new();
     private readonly NotificacionService _notificacionService = new();
     private readonly MedicoService _medicoService = new();
+    private readonly SistemaService _sistemaService = new();
 
     private readonly Panel _raiz = new();
     private readonly FlowLayoutPanel _contenido = new();
@@ -120,12 +123,34 @@ public class FormInicio : Form
         var tarjetas = CrearFilaTarjetas();
         tarjetas.Controls.Add(CrearTarjeta(resumen.TurnosSemana.ToString(CulturaAr), "Turnos de la semana", ColorAzul, IconoCalendario));
         tarjetas.Controls.Add(CrearTarjeta(resumen.AusentesMes.ToString(CulturaAr), "Ausentes del mes", PaletaEstados.Acento(EstadoTurno.Ausente), IconoAlerta));
-        tarjetas.Controls.Add(CrearTarjeta(resumen.RecaudacionMes.ToString("C2", CulturaAr), "Recaudación del mes", PaletaEstados.Acento(EstadoTurno.Asistio), IconoDinero));
         tarjetas.Controls.Add(CrearTarjeta(resumen.MedicosConAgendaHoy.ToString(CulturaAr), EsHoy ? "Médicos con agenda hoy" : "Médicos con agenda ese día", ColorTexto, IconoPersonas));
         _contenido.Controls.Add(tarjetas);
 
+        AgregarEstadoDelSistema();
+
         AgregarAvisos(_notificacionService.ObtenerAvisos(), "Avisos");
     }
+
+    // Tarjetas de salud del sistema (solo Administrador). Las que indican algo
+    // por corregir (medicos sin horarios o sin recepcionista) se pintan de
+    // advertencia cuando el contador es mayor a cero.
+    private void AgregarEstadoDelSistema()
+    {
+        var salud = _sistemaService.ObtenerSalud();
+
+        AgregarSeccion("Estado del sistema");
+        var tarjetas = CrearFilaTarjetas();
+
+        string detalleUsuarios = $"{salud.AdministradoresActivos} admin., {salud.RecepcionistasActivos} recep., {salud.MedicosUsuariosActivos} médicos";
+        tarjetas.Controls.Add(CrearTarjeta(salud.UsuariosActivos.ToString(CulturaAr), "Usuarios activos", ColorAzul, IconoPersonas, 0, detalleUsuarios));
+        tarjetas.Controls.Add(CrearTarjeta(salud.MedicosSinHorarios.ToString(CulturaAr), "Médicos sin horarios", ColorSegunAviso(salud.MedicosSinHorarios), IconoReloj));
+        tarjetas.Controls.Add(CrearTarjeta(salud.MedicosSinRecepcionista.ToString(CulturaAr), "Médicos sin recepcionista", ColorSegunAviso(salud.MedicosSinRecepcionista), IconoPersona));
+        tarjetas.Controls.Add(CrearTarjeta(salud.ObrasSocialesActivas.ToString(CulturaAr), "Obras sociales activas", ColorTexto, IconoConfirmado));
+        _contenido.Controls.Add(tarjetas);
+    }
+
+    private static Color ColorSegunAviso(int cantidad) =>
+        cantidad > 0 ? EstiloUi.Advertencia : PaletaEstados.Acento(EstadoTurno.Asistio);
 
     private void CargarMedico()
     {
@@ -244,7 +269,7 @@ public class FormInicio : Form
 
     private string DescripcionRol() => _usuario.Rol switch
     {
-        RolUsuario.Administrador => "Resumen general del consultorio",
+        RolUsuario.Administrador => "Administración del sistema",
         RolUsuario.Medico => "Resumen de su agenda",
         RolUsuario.Recepcionista => "Resumen de los médicos asignados",
         _ => ""
@@ -390,7 +415,6 @@ public class FormInicio : Form
     private const string IconoAlerta = "";
     private const string IconoCancelar = "";
     private const string IconoCalendario = "";
-    private const string IconoDinero = "$";
     private const string IconoPersonas = "";
 
     private static readonly string FamiliaIconos = ElegirFamiliaIconos();
@@ -446,8 +470,7 @@ public class FormInicio : Form
         var zonaIcono = new Rectangle(margen, 0, diametro, alto);
         // La fuente se usa en Paint (despues de salir de este metodo): se libera
         // junto con la tarjeta, no antes.
-        var fuenteIcono = new Font(FamiliaIconos, 20F,
-            icono == IconoDinero ? FontStyle.Bold : FontStyle.Regular);
+        var fuenteIcono = new Font(FamiliaIconos, 20F, FontStyle.Regular);
         tarjeta.Disposed += (s, e) => fuenteIcono.Dispose();
 
         tarjeta.Paint += (s, e) =>
