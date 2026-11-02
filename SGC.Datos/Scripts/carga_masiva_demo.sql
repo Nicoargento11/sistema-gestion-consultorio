@@ -4,7 +4,7 @@
 --
 -- Que genera (relativo a la fecha de hoy):
 --   * 24 pacientes demo (Email *@demo.sgc), con y sin obra social.
---   * Turnos de los medicos 1, 2 y 3 sobre sus franjas de AgendasMedico, desde 147 dias
+--   * Turnos de los 3 primeros medicos activos (por Id) sobre sus franjas de AgendasMedico, desde 147 dias
 --     atras hasta 25 dias adelante, con mas ocupacion en los meses recientes.
 --       - Pasados: Asistio (~68%), Ausente (~14%), Cancelado (~18%). Ayer queda algo
 --         Confirmado para probar "Confirmar asistencia".
@@ -14,6 +14,9 @@
 --   * Actividad medica (historial clinico) para ~75% de los Asistio.
 --   * 4 excepciones de agenda (ausencias) marcadas con "(demo)" en el motivo.
 -- No pisa turnos existentes ni cae en dias/horas con ausencia.
+-- No depende de Ids fijos: los "medicos 1, 2 y 3" son los 3 primeros medicos activos
+-- por Id, y las obras sociales 1..4 de los pacientes son las primeras 4 activas por Id
+-- (si hay menos, esos pacientes quedan sin obra social).
 
 SET NOCOUNT ON;
 SET XACT_ABORT ON;
@@ -24,6 +27,24 @@ BEGIN
     RETURN;
 END
 
+-- Medicos y obras sociales de referencia, resueltos por posicion (rn) y no por Id fijo.
+SELECT TOP (3) Id, ROW_NUMBER() OVER (ORDER BY Id) AS rn
+INTO #Med
+FROM Medicos
+WHERE Activo = 1
+ORDER BY Id;
+
+IF NOT EXISTS (SELECT 1 FROM #Med)
+BEGIN
+    PRINT 'No hay medicos activos: no se puede generar la carga demo.';
+    RETURN;
+END
+
+SELECT Id, ROW_NUMBER() OVER (ORDER BY Id) AS rn
+INTO #Os
+FROM ObrasSociales
+WHERE Activo = 1;
+
 DECLARE @Hoy DATE = CAST(GETDATE() AS DATE);
 DECLARE @Ini DATE = DATEADD(DAY, -147, @Hoy);
 DECLARE @Fin DATE = DATEADD(DAY, 25, @Hoy);
@@ -32,11 +53,16 @@ DECLARE @Rango INT = DATEDIFF(DAY, @Ini, @Fin);
 BEGIN TRAN;
 
 -- 1) Ausencias de agenda (se insertan primero: los turnos las respetan).
-INSERT INTO ExcepcionesAgenda (MedicoId, Fecha, Tipo, HoraInicio, HoraFin, Motivo, Activo) VALUES
-    (1, DATEADD(DAY, -60, @Hoy), 0, NULL, NULL, N'Congreso médico (demo)', 1),
-    (2, DATEADD(DAY, -40, @Hoy), 0, NULL, NULL, N'Licencia por capacitación (demo)', 1),
-    (1, DATEADD(DAY,   9, @Hoy), 1, '09:00', '11:00', N'Trámite personal (demo)', 1),
-    (3, DATEADD(DAY,  14, @Hoy), 0, NULL, NULL, N'Vacaciones (demo)', 1);
+-- Cada fila usa la posicion del medico (1..3); si ese medico no existe, se omite.
+INSERT INTO ExcepcionesAgenda (MedicoId, Fecha, Tipo, HoraInicio, HoraFin, Motivo, Activo)
+SELECT m.Id, DATEADD(DAY, v.dias, @Hoy), v.tipo, v.hIni, v.hFin, v.motivo, 1
+FROM (VALUES
+    (1, -60, 0, CAST(NULL AS TIME), CAST(NULL AS TIME), N'Congreso médico (demo)'),
+    (2, -40, 0, CAST(NULL AS TIME), CAST(NULL AS TIME), N'Licencia por capacitación (demo)'),
+    (1,   9, 1, CAST('09:00' AS TIME), CAST('11:00' AS TIME), N'Trámite personal (demo)'),
+    (3,  14, 0, CAST(NULL AS TIME), CAST(NULL AS TIME), N'Vacaciones (demo)')
+) v (med, dias, tipo, hIni, hFin, motivo)
+JOIN #Med m ON m.rn = v.med;
 
 -- 2) Pacientes demo.
 ;WITH P (n, nombre, apellido, os) AS (
@@ -63,15 +89,18 @@ SELECT CAST(25000000 + n * 977777 AS NVARCHAR(30)),
        N'3794' + RIGHT('000000' + CAST(100000 + n * 37123 AS NVARCHAR(10)), 6),
        DATEADD(DAY, -(7000 + n * 613), @Hoy),
        1,
-       os
-FROM P;
+       o.Id
+FROM P
+LEFT JOIN #Os o ON o.rn = P.os;
 
 SELECT Id, ROW_NUMBER() OVER (ORDER BY Id) AS rn, ObraSocialId
 INTO #Pac
 FROM Pacientes
 WHERE Email LIKE '%@demo.sgc';
 
--- 3) Slots candidatos: franjas activas de los medicos 1, 2 y 3, de a 30 minutos.
+-- 3) Slots candidatos: franjas activas de los 3 medicos de referencia, de a 30 minutos.
+-- El limite se compara en MINUTOS (DATEDIFF): sumar sobre un TIME da la vuelta a
+-- medianoche (14:00 + 10 h = 00:00 <= 18:00) y generaba turnos fuera de la agenda.
 SELECT a.MedicoId,
        d.Fecha,
        DATEADD(MINUTE, s.k * 30, a.HoraInicio) AS HoraInicio
@@ -82,9 +111,9 @@ CROSS JOIN (SELECT DATEADD(DAY, number, @Ini) AS Fecha
             WHERE type = 'P' AND number <= DATEDIFF(DAY, @Ini, @Fin)) d
 CROSS JOIN (SELECT number AS k FROM master..spt_values WHERE type = 'P' AND number < 20) s
 WHERE a.Activo = 1
-  AND a.MedicoId IN (1, 2, 3)
+  AND a.MedicoId IN (SELECT Id FROM #Med)
   AND a.DiaSemana = ((DATEDIFF(DAY, '19000107', d.Fecha) % 7) + 7) % 7
-  AND DATEADD(MINUTE, (s.k + 1) * 30, a.HoraInicio) <= a.HoraFin;
+  AND (s.k + 1) * 30 <= DATEDIFF(MINUTE, a.HoraInicio, a.HoraFin);
 
 -- Fuera los slots con ausencia vigente o que pisan un turno activo existente.
 DELETE sl
@@ -169,4 +198,4 @@ UNION ALL SELECT 'Turnos demo', COUNT(*) FROM Turnos WHERE PacienteId IN (SELECT
 UNION ALL SELECT 'Actividades medicas demo', COUNT(*) FROM ActividadesMedicas WHERE TurnoId IN (SELECT Id FROM Turnos WHERE PacienteId IN (SELECT Id FROM #Pac))
 UNION ALL SELECT 'Ausencias demo', COUNT(*) FROM ExcepcionesAgenda WHERE Motivo LIKE N'%(demo)%';
 
-DROP TABLE #Pac, #Slots, #Elegidos;
+DROP TABLE #Pac, #Slots, #Elegidos, #Med, #Os;
