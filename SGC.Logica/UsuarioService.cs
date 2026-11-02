@@ -111,7 +111,7 @@ public class UsuarioService
 
         // Un administrador activo no puede dejar de serlo si es el ultimo.
         if (existente.Activo && existente.Rol == RolUsuario.Administrador && usuario.Rol != RolUsuario.Administrador)
-            ExigirOtroAdministradorActivo(contexto, existente.Id, "cambiarle el rol a");
+            ExigirOtroAdministradorActivo(contexto, existente.Id, "cambiar el rol del");
 
         existente.NombreUsuario = usuario.NombreUsuario;
 
@@ -139,7 +139,7 @@ public class UsuarioService
             throw new InvalidOperationException("Ese usuario ya estaba eliminado.");
 
         if (usuario.Rol == RolUsuario.Administrador)
-            ExigirOtroAdministradorActivo(contexto, usuario.Id, "eliminar a");
+            ExigirOtroAdministradorActivo(contexto, usuario.Id, "eliminar al");
 
         usuario.Activo = false;
         contexto.SaveChanges();
@@ -174,7 +174,7 @@ public class UsuarioService
     {
         bool hayOtro = contexto.Usuarios.Any(u => u.Activo && u.Rol == RolUsuario.Administrador && u.Id != usuarioId);
         if (!hayOtro)
-            throw new InvalidOperationException($"No se puede {accion} el único administrador activo. Cree o reactive otro administrador primero.");
+            throw new InvalidOperationException($"No se puede {accion} único administrador activo. Cree o reactive otro administrador primero.");
     }
 
     private void ResolverAsignaciones(Usuario usuario, SGCContext contexto)

@@ -127,7 +127,7 @@ public class ExcepcionAgendaService
         foreach (var turno in turnosCancelados.Where(t => t.Paciente != null))
         {
             notificacionService.AvisarTurno(turno.Paciente!, "Cancelación",
-                $"Se cancelo su turno del {turno.Fecha:dd/MM/yyyy} con el Dr./Dra. {excepcion.Medico?.Apellido} por ausencia del profesional.");
+                $"Se canceló su turno del {turno.Fecha:dd/MM/yyyy} con el Dr./Dra. {excepcion.Medico?.Apellido} por ausencia del profesional.");
         }
     }
 
