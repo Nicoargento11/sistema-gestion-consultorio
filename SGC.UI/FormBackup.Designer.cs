@@ -354,7 +354,7 @@ partial class FormBackup
         lblRestaurarAdvertencia.Margin = new Padding(0, 0, 0, 8);
         lblRestaurarAdvertencia.Name = "lblRestaurarAdvertencia";
         lblRestaurarAdvertencia.TabIndex = 1;
-        lblRestaurarAdvertencia.Text = "Restaurar reemplaza todos los datos actuales por los de la copia y cierra todas las conexiones a la base. Elegí el archivo .bak (ruta vista desde el servidor) o usá la fila seleccionada del historial.";
+        lblRestaurarAdvertencia.Text = "Restaurar reemplaza todos los datos actuales por los de la copia y cierra todas las conexiones a la base. Elija el archivo .bak (ruta vista desde el servidor) o use la fila seleccionada del historial.";
 
         //
         // txtArchivo

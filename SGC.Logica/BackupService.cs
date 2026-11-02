@@ -34,6 +34,30 @@ public class FilaHistorialBackup
     public decimal TamanoMb => Math.Round(TamanoBytes / 1024m / 1024m, 2);
 }
 
+// Datos del encabezado de un .bak (RESTORE HEADERONLY), para confirmar con el
+// usuario antes de restaurar.
+public class InfoBackup
+{
+    public string Ruta { get; set; } = string.Empty;
+    public string BaseOrigen { get; set; } = string.Empty;
+    public string Servidor { get; set; } = string.Empty;
+    public DateTime? FechaFin { get; set; }
+    public DateTime? FechaInicio { get; set; }
+
+    // BackupType de HEADERONLY: 1 = base de datos completa.
+    public int Tipo { get; set; }
+}
+
+public class ResultadoRestauracion
+{
+    public InfoBackup Info { get; set; } = new();
+
+    // null si las migraciones se aplicaron bien; si no, el motivo del fallo.
+    // La base ya quedo restaurada en cualquier caso.
+    public string? Migracion { get; set; }
+    public bool MigracionOk => Migracion == null;
+}
+
 public class HistorialBackup
 {
     public List<FilaHistorialBackup> Filas { get; set; } = new();
@@ -111,7 +135,7 @@ public class BackupService
     public ResultadoBackup RealizarBackup(string carpetaDestino)
     {
         if (string.IsNullOrWhiteSpace(carpetaDestino))
-            throw new ArgumentException("Indicá la carpeta de destino de la copia de seguridad.");
+            throw new ArgumentException("Indique la carpeta de destino de la copia de seguridad.");
 
         string ruta = carpetaDestino.Trim().TrimEnd('\\', '/') + "\\" + NombreArchivo();
         string baseDatos = NombreBase;
@@ -234,15 +258,89 @@ public class BackupService
 
     // ------------------------------------------------------------- restaurar
 
-    // Reemplaza la base actual por el contenido del .bak. Cierra todas las
-    // conexiones (SINGLE_USER ... ROLLBACK IMMEDIATE) y SIEMPRE vuelve a
-    // MULTI_USER, aun si la restauracion falla.
-    public void Restaurar(string rutaBak)
+    // Lee el encabezado del .bak (RESTORE HEADERONLY, no toca ninguna base) y
+    // devuelve los datos de su primera copia, que es la que restaura
+    // RESTORE DATABASE ... FROM DISK. Lanza InvalidOperationException si el
+    // archivo no se puede leer, no es una copia completa de base de datos o es
+    // de otra base distinta de la actual.
+    public InfoBackup ObtenerInfoBackup(string rutaBak)
     {
         if (string.IsNullOrWhiteSpace(rutaBak))
-            throw new ArgumentException("Indicá el archivo de copia de seguridad (.bak) a restaurar.");
+            throw new ArgumentException("Indique el archivo de copia de seguridad (.bak) a restaurar.");
 
         rutaBak = rutaBak.Trim();
+        string baseActual = NombreBase;
+        var conexionMaster = new SqlConnectionStringBuilder(_connectionString) { InitialCatalog = "master" }.ConnectionString;
+
+        InfoBackup info;
+        try
+        {
+            using var conexion = new SqlConnection(conexionMaster);
+            conexion.Open();
+            using var comando = new SqlCommand("RESTORE HEADERONLY FROM DISK = @ruta", conexion) { CommandTimeout = 0 };
+            comando.Parameters.Add(new SqlParameter("@ruta", System.Data.SqlDbType.NVarChar, 512) { Value = rutaBak });
+
+            using var lector = comando.ExecuteReader();
+            if (!lector.Read())
+                throw new InvalidOperationException("El archivo no contiene ninguna copia de seguridad.");
+
+            info = new InfoBackup
+            {
+                Ruta = rutaBak,
+                BaseOrigen = LeerTexto(lector, "DatabaseName"),
+                Servidor = LeerTexto(lector, "ServerName"),
+                FechaFin = LeerFecha(lector, "BackupFinishDate"),
+                FechaInicio = LeerFecha(lector, "BackupStartDate"),
+                Tipo = LeerEntero(lector, "BackupType")
+            };
+        }
+        catch (SqlException ex)
+        {
+            throw new InvalidOperationException(TraducirError(ex, "leer la copia de seguridad", rutaBak), ex);
+        }
+
+        // 1 = copia completa de base de datos; las demas (diferencial, de log...)
+        // no se pueden restaurar solas con REPLACE.
+        if (info.Tipo != 1)
+            throw new InvalidOperationException(
+                "El archivo no es una copia de seguridad completa de una base de datos, por eso no se puede restaurar. No se modificó nada.");
+
+        if (!string.Equals(info.BaseOrigen, baseActual, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException(
+                $"El archivo es una copia de la base \"{info.BaseOrigen}\", no de \"{baseActual}\". No se restauró nada.");
+
+        return info;
+    }
+
+    private static string LeerTexto(SqlDataReader lector, string columna)
+    {
+        int i = lector.GetOrdinal(columna);
+        return lector.IsDBNull(i) ? string.Empty : lector.GetString(i);
+    }
+
+    private static int LeerEntero(SqlDataReader lector, string columna)
+    {
+        int i = lector.GetOrdinal(columna);
+        return lector.IsDBNull(i) ? 0 : Convert.ToInt32(lector.GetValue(i));
+    }
+
+    private static DateTime? LeerFecha(SqlDataReader lector, string columna)
+    {
+        int i = lector.GetOrdinal(columna);
+        return lector.IsDBNull(i) ? null : lector.GetDateTime(i);
+    }
+
+    // Reemplaza la base actual por el contenido del .bak. Primero valida que el
+    // archivo sea una copia de ESTA base (HEADERONLY), despues cierra todas las
+    // conexiones (SINGLE_USER ... ROLLBACK IMMEDIATE) y SIEMPRE vuelve a
+    // MULTI_USER, aun si la restauracion falla. Al terminar aplica las
+    // migraciones pendientes: la copia puede ser de una version anterior.
+    public ResultadoRestauracion Restaurar(string rutaBak)
+    {
+        // Valida el archivo antes de tocar la base.
+        var info = ObtenerInfoBackup(rutaBak);
+
+        rutaBak = info.Ruta;
         string baseDatos = NombreBase;
         var conexionMaster = new SqlConnectionStringBuilder(_connectionString) { InitialCatalog = "master" }.ConnectionString;
 
@@ -287,6 +385,29 @@ public class BackupService
         {
             SqlConnection.ClearAllPools();
         }
+
+        return new ResultadoRestauracion { Info = info, Migracion = MigrarBase() };
+    }
+
+    // Aplica las migraciones pendientes a la base recien restaurada. Nunca
+    // lanza: si falla, la restauracion igual se hizo y el resultado lo informa.
+    private string? MigrarBase()
+    {
+        try
+        {
+            var opciones = new DbContextOptionsBuilder<SGCContext>().UseSqlServer(_connectionString).Options;
+            using var contexto = new SGCContext(opciones);
+            contexto.Database.Migrate();
+            return null;
+        }
+        catch (Exception ex)
+        {
+            return ex.Message;
+        }
+        finally
+        {
+            SqlConnection.ClearAllPools();
+        }
     }
 
     // ---------------------------------------------------------------- helpers
@@ -308,7 +429,7 @@ public class BackupService
             // No se puede abrir el dispositivo de backup (ruta inexistente o sin permiso del SO).
             3201 or 3203 or 3013 =>
                 $"SQL Server no pudo acceder a \"{ruta}\". La ruta la usa la cuenta de servicio de SQL Server (no la aplicación): " +
-                "verificá que la carpeta exista en el servidor y que esa cuenta tenga permiso de escritura (para restaurar, de lectura). " +
+                "verifique que la carpeta exista en el servidor y que esa cuenta tenga permiso de escritura (para restaurar, de lectura). " +
                 $"Detalle: {ex.Message}",
             // Permisos de base de datos del usuario de conexion.
             262 or 229 or 4834 or 3110 =>

@@ -92,7 +92,7 @@ public partial class FormBackup : Form
 
             txtCarpeta.Text = carpeta;
             if (string.IsNullOrEmpty(carpeta))
-                _franja.Mostrar("No se pudo detectar la carpeta de copias predeterminada del servidor. Indicá una carpeta que exista en el servidor.", TipoMensaje.Advertencia);
+                _franja.Mostrar("No se pudo detectar la carpeta de copias predeterminada del servidor. Indique una carpeta que exista en el servidor.", TipoMensaje.Advertencia);
 
             await CargarHistorialAsync();
         }
@@ -149,7 +149,7 @@ public partial class FormBackup : Form
         string carpeta = txtCarpeta.Text.Trim();
         if (carpeta.Length == 0)
         {
-            _franja.Mostrar("Indicá la carpeta de destino de la copia.", TipoMensaje.Advertencia);
+            _franja.Mostrar("Indique la carpeta de destino de la copia.", TipoMensaje.Advertencia);
             txtCarpeta.Focus();
             return;
         }
@@ -169,7 +169,7 @@ public partial class FormBackup : Form
             if (resultado.Verificado)
                 _franja.Mostrar($"Copia creada y verificada: {resultado.Ruta} ({duracion}{tamano}).", TipoMensaje.Ok);
             else
-                _franja.Mostrar($"La copia se creó en {resultado.Ruta}, pero la verificación falló: {resultado.DetalleVerificacion} No confíes en este archivo.", TipoMensaje.Error);
+                _franja.Mostrar($"La copia se creó en {resultado.Ruta}, pero la verificación falló: {resultado.DetalleVerificacion} No confíe en este archivo.", TipoMensaje.Error);
 
             await CargarHistorialAsync();
         }
@@ -202,7 +202,7 @@ public partial class FormBackup : Form
         if (dgvHistorial.CurrentRow?.DataBoundItem is FilaHistorialBackup fila && dgvHistorial.CurrentRow.Selected)
             txtArchivo.Text = fila.Ruta;
         else
-            _franja.Mostrar("Seleccioná primero una copia del historial.", TipoMensaje.Advertencia);
+            _franja.Mostrar("Seleccione primero una copia del historial.", TipoMensaje.Advertencia);
     }
 
     private async Task RestaurarAsync()
@@ -210,26 +210,51 @@ public partial class FormBackup : Form
         string archivo = txtArchivo.Text.Trim();
         if (archivo.Length == 0)
         {
-            _franja.Mostrar("Elegí el archivo .bak a restaurar.", TipoMensaje.Advertencia);
+            _franja.Mostrar("Elija el archivo .bak a restaurar.", TipoMensaje.Advertencia);
             txtArchivo.Focus();
             return;
         }
 
+        // 1) Leer el encabezado del .bak y rechazar los de otra base antes de preguntar.
+        SetOcupado(true);
+        _franja.Mostrar("Leyendo la copia de seguridad...", TipoMensaje.Advertencia);
+        InfoBackup info;
+        try
+        {
+            info = await Task.Run(() => _backupService.ObtenerInfoBackup(archivo));
+        }
+        catch (Exception ex)
+        {
+            if (!IsDisposed)
+            {
+                _franja.Mostrar(ex.Message, TipoMensaje.Error);
+                SetOcupado(false);
+            }
+            return;
+        }
+        if (IsDisposed) return;
+        SetOcupado(false);
+        _franja.Limpiar();
+
+        // 2) Confirmar mostrando de donde viene la copia (el boton por defecto es No).
+        string fecha = info.FechaFin?.ToString("dd/MM/yyyy HH:mm", CulturaAr) ?? "desconocida";
         var respuesta = MessageBox.Show(this,
-            "Vas a RESTAURAR la base de datos desde:\n\n" + archivo + "\n\n" +
+            "Se va a RESTAURAR la base de datos desde:\n\n" + info.Ruta + "\n\n" +
+            $"Base de origen: {info.BaseOrigen}\n" +
+            $"Fecha de la copia: {fecha}\n" +
+            $"Servidor de origen: {(info.Servidor.Length > 0 ? info.Servidor : "desconocido")}\n\n" +
             "Todos los datos actuales serán REEMPLAZADOS por los de la copia y se cerrarán todas las conexiones a la base. " +
-            "Los cambios hechos después de esa copia se perderán y la operación no se puede deshacer.\n\n" +
-            "¿Querés continuar?",
+            "Los cambios hechos después de esa fecha se perderán y la operación no se puede deshacer.\n\n" +
+            "¿Desea continuar?",
             "Restaurar copia de seguridad", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2);
         if (respuesta != DialogResult.Yes) return;
 
         SetOcupado(true);
-        _franja.Mostrar("Restaurando la base de datos. No cierres la aplicación...", TipoMensaje.Advertencia);
-        bool restaurada = false;
+        _franja.Mostrar("Restaurando la base de datos. No cierre la aplicación...", TipoMensaje.Advertencia);
+        ResultadoRestauracion? resultado = null;
         try
         {
-            await Task.Run(() => _backupService.Restaurar(archivo));
-            restaurada = true;
+            resultado = await Task.Run(() => _backupService.Restaurar(archivo));
         }
         catch (Exception ex)
         {
@@ -240,28 +265,43 @@ public partial class FormBackup : Form
             if (!IsDisposed) SetOcupado(false);
         }
 
-        if (!restaurada || IsDisposed) return;
+        if (resultado == null || IsDisposed) return;
+
+        // La copia puede ser de una version anterior del programa: si las
+        // migraciones fallan no se vuelve al login con una base desactualizada.
+        if (!resultado.MigracionOk)
+        {
+            _franja.Mostrar(
+                "La base se restauró, pero no se pudo actualizar a la versión actual del programa: " + resultado.Migracion +
+                " Cierre la aplicación y consulte con soporte antes de seguir usándola.", TipoMensaje.Error);
+            return;
+        }
 
         // La base cambio por completo (usuarios, medicos, turnos): se vuelve al
         // login, igual que "Cerrar sesion", para empezar con datos nuevos.
         MessageBox.Show(this,
             "La base de datos se restauró correctamente.\n\nSe cerrará la sesión para volver a ingresar con los datos restaurados. " +
-            "Si notás algo raro, reiniciá la aplicación.",
+            "Si nota algo extraño, reinicie la aplicación.",
             "Restauración completada", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-        var menu = Parent?.FindForm();
-        var login = new FormLogin();
-        login.Show();
-        menu?.Close();
+        if (MenuPrincipal is { } menu)
+            menu.CerrarSesion();
+        else
+            Application.Restart();
     }
 
     // ------------------------------------------------------------ utilidad
 
+    private FormMenuPrincipal? MenuPrincipal => Parent?.FindForm() as FormMenuPrincipal;
+
     // Mientras corre una operacion nada mas se puede tocar: evita dobles clics.
+    // Tambien se bloquea el menu lateral y el cierre de la ventana principal: salir
+    // en medio de un backup o un restore dejaria la base a medias.
     private void SetOcupado(bool ocupado)
     {
         foreach (Control c in new Control[] { btnCrear, btnExaminar, btnElegirArchivo, btnUsarSeleccionada, btnRestaurar, txtCarpeta, txtArchivo, dgvHistorial })
             c.Enabled = !ocupado;
         UseWaitCursor = ocupado;
+        MenuPrincipal?.BloquearPorOperacion(ocupado);
     }
 }

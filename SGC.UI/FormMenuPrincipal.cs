@@ -81,7 +81,7 @@ public partial class FormMenuPrincipal : Form
 
         btnInicio.Click += (s, e) => { ResaltarBoton((Button)s!); AbrirFormularioHijo(new FormInicio(_usuarioActivo)); };
 
-        btnCerrarSesion.Click += BtnCerrarSesion_Click;
+        btnCerrarSesion.Click += (s, e) => CerrarSesion();
     }
 
     // Todos los roles arrancan en Inicio (resumen del dia); desde ahi se
@@ -351,7 +351,8 @@ public partial class FormMenuPrincipal : Form
     // terminar la aplicacion.
     private bool _cerrandoSesion;
 
-    private void BtnCerrarSesion_Click(object? sender, EventArgs e)
+    // Tambien la usa FormBackup al terminar una restauracion.
+    public void CerrarSesion()
     {
         _cerrandoSesion = true;
         NotificacionService.LimpiarAvisos();
@@ -369,6 +370,30 @@ public partial class FormMenuPrincipal : Form
         }
 
         Close();
+    }
+
+    // true mientras FormBackup crea o restaura una copia: no se puede navegar ni cerrar.
+    private bool _operacionEnCurso;
+
+    public void BloquearPorOperacion(bool enCurso)
+    {
+        _operacionEnCurso = enCurso;
+        flowMenu.Enabled = !enCurso;
+        pnlPie.Enabled = !enCurso;
+    }
+
+    protected override void OnFormClosing(FormClosingEventArgs e)
+    {
+        if (_operacionEnCurso)
+        {
+            e.Cancel = true;
+            MessageBox.Show(this,
+                "Hay una copia de seguridad en curso (crear o restaurar). Espere a que termine antes de cerrar la aplicación.",
+                "Operación en curso", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
+        base.OnFormClosing(e);
     }
 
     // Cerrar la ventana con la X termina la aplicacion; el login oculto la
