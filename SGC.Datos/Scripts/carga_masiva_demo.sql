@@ -8,7 +8,7 @@
 --     atras hasta 25 dias adelante, con mas ocupacion en los meses recientes.
 --       - Pasados: Asistio (~68%), Ausente (~14%), Cancelado (~18%). Ayer queda algo
 --         Confirmado para probar "Confirmar asistencia".
---       - Futuros: Confirmado, algunos Pendiente y algunos Cancelado.
+--       - Futuros: Confirmado y algunos Cancelado.
 --   * Monto y medio de pago de los Asistio segun la regla de cobro real: obra social
 --     si el medico la acepta (precio - cobertura), si no Particular.
 --   * Actividad medica (historial clinico) para ~75% de los Asistio.
@@ -138,7 +138,7 @@ CROSS APPLY (SELECT CASE
                       THEN CASE WHEN e.hEst < 40 THEN 1 WHEN e.hEst < 75 THEN 3 WHEN e.hEst < 90 THEN 4 ELSE 2 END
                  WHEN e.Fecha = @Hoy
                       THEN CASE WHEN e.hEst < 92 THEN 1 ELSE 2 END
-                 ELSE CASE WHEN e.hEst < 86 THEN 1 WHEN e.hEst < 94 THEN 0 ELSE 2 END
+                 ELSE CASE WHEN e.hEst < 94 THEN 1 ELSE 2 END
              END AS Estado) x;
 
 -- 6) Historial clinico para ~75% de los turnos atendidos.
