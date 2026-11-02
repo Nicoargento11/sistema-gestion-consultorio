@@ -559,7 +559,7 @@ public partial class FormUsuarios : Form
         }
         catch (Exception ex)
         {
-            MostrarMensaje($"Error: {ex.Message}", TipoMensaje.Error);
+            MostrarMensaje(ex.Message, TipoMensaje.Error);
             return;
         }
 
@@ -594,7 +594,7 @@ public partial class FormUsuarios : Form
         }
         catch (Exception ex)
         {
-            MostrarMensaje($"Error: {ex.Message}", TipoMensaje.Error);
+            MostrarMensaje(ex.Message, TipoMensaje.Error);
             return;
         }
 
@@ -623,7 +623,7 @@ public partial class FormUsuarios : Form
         }
         catch (Exception ex)
         {
-            MostrarMensaje($"Error: {ex.Message}", TipoMensaje.Error);
+            MostrarMensaje(ex.Message, TipoMensaje.Error);
             return;
         }
 

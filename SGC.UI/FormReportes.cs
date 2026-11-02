@@ -85,6 +85,8 @@ public partial class FormReportes : Form
         public List<string[]> FilasExportacion = new();
         public DateOnly PeriodoDesde;
         public DateOnly PeriodoHasta;
+        // Medico y filtros principales del resultado generado, para el nombre del CSV.
+        public string FiltrosArchivo = "";
     }
 
     public FormReportes(Usuario usuarioActivo)
@@ -307,9 +309,12 @@ public partial class FormReportes : Form
         // Eventos de la pestania.
         if (vista.Desde != null)
         {
-            vista.Desde.ValueChanged += (s, e) => RevalidarVista(vista);
-            vista.Hasta!.ValueChanged += (s, e) => RevalidarVista(vista);
+            vista.Desde.ValueChanged += (s, e) => { RevalidarVista(vista); MarcarDesactualizado(vista); };
+            vista.Hasta!.ValueChanged += (s, e) => { RevalidarVista(vista); MarcarDesactualizado(vista); };
         }
+        // Un cambio de medico u opcion (estado, agrupar por) deja viejo el resultado mostrado.
+        if (vista.CboMedico != null) vista.CboMedico.SelectedIndexChanged += (s, e) => AlCambiarFiltro(vista);
+        if (vista.CboOpcion != null) vista.CboOpcion.SelectedIndexChanged += (s, e) => AlCambiarFiltro(vista);
         vista.BtnGenerar.Click += (s, e) => Generar(vista);
         vista.BtnExportar.Click += (s, e) => ExportarCsv(vista);
 
@@ -661,6 +666,25 @@ public partial class FormReportes : Form
         if (vista != null) RevalidarVista(vista);
     }
 
+    // Las pestanias por anio se recalculan solas; las demas limpian el resultado.
+    private void AlCambiarFiltro(VistaReporte vista)
+    {
+        if (vista.Anio != null) RegenerarSiCorresponde(vista);
+        else MarcarDesactualizado(vista);
+    }
+
+    // El resultado en pantalla ya no corresponde a los filtros: se limpian grilla,
+    // resumen y grafico, se deshabilita la exportacion y se avisa que hay que generar.
+    private void MarcarDesactualizado(VistaReporte vista)
+    {
+        if (!vista.Generada) return;
+
+        LimpiarResultado(vista);
+        vista.Generada = false;
+        if (ValidarFiltros(vista) == null && !_sinAcceso)
+            MostrarAviso("Los filtros cambiaron. Pulse Generar para actualizar.");
+    }
+
     // ---------------------------------------------------------------
     // Generacion
     // ---------------------------------------------------------------
@@ -696,6 +720,7 @@ public partial class FormReportes : Form
 
             vista.PeriodoDesde = desde;
             vista.PeriodoHasta = hasta;
+            vista.FiltrosArchivo = EtiquetaFiltrosArchivo(vista);
             vista.Generada = true;
             vista.BtnExportar.Enabled = filas > 0;
 
@@ -943,7 +968,7 @@ public partial class FormReportes : Form
             DefaultExt = "csv",
             AddExtension = true,
             OverwritePrompt = true,
-            FileName = $"reporte_{vista.Clave.ToLowerInvariant()}_{vista.PeriodoDesde:yyyyMMdd}_{vista.PeriodoHasta:yyyyMMdd}.csv"
+            FileName = $"reporte_{vista.Clave.ToLowerInvariant()}{vista.FiltrosArchivo}_{vista.PeriodoDesde:yyyyMMdd}_{vista.PeriodoHasta:yyyyMMdd}.csv"
         };
 
         if (dialogo.ShowDialog(this) != DialogResult.OK) return;
@@ -967,6 +992,33 @@ public partial class FormReportes : Form
         }
     }
 
+    // Parte del nombre del archivo con el medico y la opcion elegida (estado, agrupar
+    // por), por ejemplo "_todos_mis_medicos_confirmado". Vacio si no hay ninguno.
+    private string EtiquetaFiltrosArchivo(VistaReporte vista)
+    {
+        var partes = new List<string>();
+        if (vista.CboMedico?.SelectedItem is OpcionMedico medico)
+            partes.Add(medico.Nombre);
+        if (vista.CboOpcion?.SelectedItem != null)
+            partes.Add(vista.CboOpcion.GetItemText(vista.CboOpcion.SelectedItem) ?? "");
+
+        return string.Concat(partes.Select(p => "_" + NombreSeguro(p)));
+    }
+
+    // Minusculas, sin tildes ni caracteres no validos en nombres de archivo.
+    private static string NombreSeguro(string texto)
+    {
+        var sinTildes = new StringBuilder();
+        foreach (char c in texto.Normalize(NormalizationForm.FormD))
+        {
+            if (CharUnicodeInfo.GetUnicodeCategory(c) == UnicodeCategory.NonSpacingMark) continue;
+            sinTildes.Append(char.IsLetterOrDigit(c) ? char.ToLowerInvariant(c) : '_');
+        }
+
+        string resultado = System.Text.RegularExpressions.Regex.Replace(sinTildes.ToString(), "_+", "_").Trim('_');
+        return resultado.Length > 40 ? resultado[..40].TrimEnd('_') : resultado;
+    }
+
     // UTF-8 con BOM (para que Excel muestre bien los acentos) y separador
     // punto y coma, que es el que usa Excel con configuracion es-AR.
     internal static void EscribirCsv(string ruta, string[] encabezados, List<string[]> filas)
@@ -983,8 +1035,10 @@ public partial class FormReportes : Form
     {
         valor ??= "";
 
-        // Evita que Excel interprete un texto como formula (CSV injection).
-        if (valor.Length > 0 && (valor[0] == '=' || valor[0] == '+' || valor[0] == '@'))
+        // Evita que Excel interprete un texto como formula (CSV injection). Un numero
+        // negativo (por ejemplo "-12,50") no es una formula y se deja como esta.
+        if (valor.Length > 0 && (valor[0] == '=' || valor[0] == '+' || valor[0] == '@' ||
+            (valor[0] == '-' && !decimal.TryParse(valor, NumberStyles.Number, CulturaAr, out _))))
             valor = "'" + valor;
 
         bool requiereComillas = valor.Contains(';') || valor.Contains('"') || valor.Contains('\n') || valor.Contains('\r');

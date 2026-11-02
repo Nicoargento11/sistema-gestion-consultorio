@@ -41,6 +41,11 @@ public partial class FormObrasSociales : Form
         _mensajes = new FranjaMensaje(pnlEstado, LblMensaje) { ReacomodarContenedor = true };
         _contadores = new BarraContadores(FlpContadores);
 
+        AcceptButton = BtnGuardar;
+        // Enter dentro del buscador no debe guardar la tarjeta.
+        TxtBuscar.Enter += (s, e) => AcceptButton = null;
+        TxtBuscar.Leave += (s, e) => AcceptButton = BtnGuardar;
+
         BtnNuevo.Click += BtnNuevo_Click;
         BtnGuardar.Click += BtnGuardar_Click;
         BtnEliminar.Click += BtnEliminar_Click;
@@ -349,7 +354,7 @@ public partial class FormObrasSociales : Form
         }
         catch (Exception ex)
         {
-            MostrarMensaje($"Error: {ex.Message}", TipoMensaje.Error);
+            MostrarMensaje(ex.Message, TipoMensaje.Error);
             return;
         }
 
@@ -368,11 +373,17 @@ public partial class FormObrasSociales : Form
         }
         var obraSocialSeleccionada = fila.ObraSocial;
 
+        string detalle = $"Pacientes afiliados: {fila.PacientesAfiliados}\nMédicos que la aceptan: {fila.MedicosQueAceptan}";
+        string advertencia = fila.PacientesAfiliados > 0
+            ? "\n\nLos pacientes afiliados pasarán a pagar como particulares."
+            : "";
+
         var respuesta = MessageBox.Show(
-            $"¿Está seguro que desea eliminar la obra social {obraSocialSeleccionada.Nombre}?",
+            $"¿Está seguro que desea eliminar la obra social {obraSocialSeleccionada.Nombre}?\n\n{detalle}{advertencia}",
             "Confirmar eliminación",
             MessageBoxButtons.YesNo,
-            MessageBoxIcon.Warning);
+            MessageBoxIcon.Warning,
+            MessageBoxDefaultButton.Button2);
 
         if (respuesta != DialogResult.Yes) return;
 
@@ -382,7 +393,7 @@ public partial class FormObrasSociales : Form
         }
         catch (Exception ex)
         {
-            MostrarMensaje($"Error: {ex.Message}", TipoMensaje.Error);
+            MostrarMensaje(ex.Message, TipoMensaje.Error);
             return;
         }
 

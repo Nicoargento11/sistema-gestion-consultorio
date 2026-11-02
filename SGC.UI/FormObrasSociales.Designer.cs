@@ -184,6 +184,7 @@ partial class FormObrasSociales
         //
         TxtNombre.Dock = DockStyle.Fill;
         TxtNombre.Font = new Font("Segoe UI", 10F);
+        TxtNombre.MaxLength = 100;
         TxtNombre.Margin = new Padding(0, 0, 0, 4);
         TxtNombre.TabIndex = 0;
         TxtNombre.Name = "TxtNombre";
