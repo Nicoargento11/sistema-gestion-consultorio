@@ -31,7 +31,7 @@ internal sealed class PanelGrafico : Panel
 
 // Modulo de reportes de Luciano Villordo integrado a la pantalla unificada:
 //   Pacientes por mes     -> sp_ReportePacientesPorMes      (grafico de barras por mes)
-//   Rendimiento de medicos -> sp_ReporteRendimientoMedicos  (solo Administrador)
+//   Rendimiento de medicos -> sp_ReporteRendimientoMedicos  (solo Recepcionista, de sus medicos)
 //   Turnos por obra social -> sp_ReporteTurnosPorObraSocial (grafico de barras horizontales)
 // Se conservan sus procedimientos, sus metodos de ReporteService, sus clases
 // (ReporteMensualItem, ...) y su adaptacion por rol; solo se adapta el aspecto.
@@ -54,11 +54,13 @@ public partial class FormReportes
     // Construccion
     // ---------------------------------------------------------------
 
-    // Adaptacion por rol de Luciano: el Medico solo ve "Pacientes por mes" (de
-    // si mismo); la Recepcionista ve ademas "Obras sociales"; el rendimiento de
-    // los medicos es solo del Administrador.
+    // Adaptacion por rol: el Medico ve "Pacientes por mes" y "Obras sociales"
+    // de si mismo; la Recepcionista ve ademas "Rendimiento de medicos", todo de
+    // sus medicos asignados. El Administrador no tiene reportes.
     private void ConstruirPestaniasEstadisticas()
     {
+        if (_usuarioActivo.Rol == RolUsuario.Administrador) return;
+
         _vistaMensual = CrearVista("PacientesPorMes", "Pacientes por mes", conMedico: true, etiquetaOpcion: null,
             conGrafico: false, limitaUnAnio: false, porAnio: new OpcionesVistaAnio(ConMes: false, ConGrafico: true));
         AgregarColumnasMensual(_vistaMensual.Grilla);
@@ -69,14 +71,13 @@ public partial class FormReportes
         m.Agregar("Ausentes", PaletaEstados.Fondo(EstadoTurno.Ausente), Color.FromArgb(180, 50, 38));
         m.Agregar("Cancelados", PaletaEstados.Fondo(EstadoTurno.Cancelado), Color.FromArgb(90, 98, 112));
         m.Agregar("Pendientes", PaletaEstados.Fondo(EstadoTurno.Pendiente), PaletaEstados.Acento(EstadoTurno.Pendiente));
-        if (_usuarioActivo.Rol == RolUsuario.Administrador)
-            m.Agregar("Facturacion", Color.FromArgb(240, 230, 247), Color.FromArgb(110, 50, 140));
+        m.Agregar("Facturacion", Color.FromArgb(240, 230, 247), Color.FromArgb(110, 50, 140));
         PonerContadoresVacios(_vistaMensual, "Total", "Atendidos", "Ausentes", "Cancelados", "Pendientes", "Facturacion");
         TabReportes.TabPages.Add(_vistaMensual.Pagina);
 
-        if (_usuarioActivo.Rol == RolUsuario.Administrador)
+        if (_usuarioActivo.Rol == RolUsuario.Recepcionista)
         {
-            _vistaMedicos = CrearVista("RendimientoMedicos", "Rendimiento de médicos", conMedico: false, etiquetaOpcion: null,
+            _vistaMedicos = CrearVista("RendimientoMedicos", "Rendimiento de médicos", conMedico: true, etiquetaOpcion: null,
                 conGrafico: false, limitaUnAnio: false, porAnio: new OpcionesVistaAnio(ConMes: true, ConGrafico: false));
             AgregarColumnasMedicos(_vistaMedicos.Grilla);
             CargarMeses(_vistaMedicos.CboMes!);
@@ -90,20 +91,16 @@ public partial class FormReportes
             TabReportes.TabPages.Add(_vistaMedicos.Pagina);
         }
 
-        if (_usuarioActivo.Rol != RolUsuario.Medico)
-        {
-            _vistaObrasSociales = CrearVista("ObrasSociales", "Obras sociales", conMedico: false, etiquetaOpcion: null,
-                conGrafico: false, limitaUnAnio: false, porAnio: new OpcionesVistaAnio(ConMes: false, ConGrafico: true));
-            AgregarColumnasObrasSociales(_vistaObrasSociales.Grilla);
-            _vistaObrasSociales.PanelGrafico!.Dibujar = DibujarGraficoBarrasObrasSociales;
-            var o = _vistaObrasSociales.Contadores!;
-            o.Agregar("ObrasSociales", EstiloUi.Texto, Color.White);
-            o.Agregar("Turnos", PaletaEstados.Fondo(EstadoTurno.Confirmado), PaletaEstados.Acento(EstadoTurno.Confirmado));
-            if (_usuarioActivo.Rol == RolUsuario.Administrador)
-                o.Agregar("Facturacion", Color.FromArgb(240, 230, 247), Color.FromArgb(110, 50, 140));
-            PonerContadoresVacios(_vistaObrasSociales, "ObrasSociales", "Turnos", "Facturacion");
-            TabReportes.TabPages.Add(_vistaObrasSociales.Pagina);
-        }
+        _vistaObrasSociales = CrearVista("ObrasSociales", "Obras sociales", conMedico: true, etiquetaOpcion: null,
+            conGrafico: false, limitaUnAnio: false, porAnio: new OpcionesVistaAnio(ConMes: false, ConGrafico: true));
+        AgregarColumnasObrasSociales(_vistaObrasSociales.Grilla);
+        _vistaObrasSociales.PanelGrafico!.Dibujar = DibujarGraficoBarrasObrasSociales;
+        var o = _vistaObrasSociales.Contadores!;
+        o.Agregar("ObrasSociales", EstiloUi.Texto, Color.White);
+        o.Agregar("Turnos", PaletaEstados.Fondo(EstadoTurno.Confirmado), PaletaEstados.Acento(EstadoTurno.Confirmado));
+        o.Agregar("Facturacion", Color.FromArgb(240, 230, 247), Color.FromArgb(110, 50, 140));
+        PonerContadoresVacios(_vistaObrasSociales, "ObrasSociales", "Turnos", "Facturacion");
+        TabReportes.TabPages.Add(_vistaObrasSociales.Pagina);
 
         // Como en el modulo original, el reporte se recalcula al cambiar el anio
         // o el mes (una vez generado por primera vez).
@@ -248,12 +245,10 @@ public partial class FormReportes
         c.Poner("Ausentes", $"Ausentes: {_datosMensuales.Sum(d => d.Ausentes)}");
         c.Poner("Cancelados", $"Cancelados: {_datosMensuales.Sum(d => d.Cancelados)}");
         c.Poner("Pendientes", $"Pendientes o confirmados: {_datosMensuales.Sum(d => d.PendientesOConfirmados)}");
-        if (_usuarioActivo.Rol == RolUsuario.Administrador)
-        {
-            // KPI "Facturacion anual" del modulo original (solo Administrador).
-            decimal facturado = _reporteService.ObtenerTurnosPorObraSocial(anio).Sum(d => d.TotalRecaudado);
-            c.Poner("Facturacion", $"Facturación anual: {facturado.ToString("C0", CulturaAr)}");
-        }
+        // KPI "Facturacion anual" del modulo original, acotado a los mismos medicos
+        // que el resto de la pestania.
+        decimal facturado = ObtenerObrasSocialesAcotado(anio, medicoId).Sum(d => d.TotalRecaudado);
+        c.Poner("Facturacion", $"Facturación anual: {facturado.ToString("C0", CulturaAr)}");
         EstiloUi.AjustarFlujos(vista.FlujoContadores!);
 
         vista.LblResumen.Text = _datosMensuales.Count == 0 ? "" : $"Año {anio}: {_datosMensuales.Count} {(_datosMensuales.Count == 1 ? "mes" : "meses")} con turnos";
@@ -273,16 +268,32 @@ public partial class FormReportes
         return _datosMensuales.Count;
     }
 
+    // Turnos por obra social de un medico, o de todos los asignados a la
+    // Recepcionista (se suman las obras sociales iguales).
+    private List<ReporteObraSocialItem> ObtenerObrasSocialesAcotado(int anio, int? medicoId)
+    {
+        return MedicosAConsultar(medicoId)
+            .SelectMany(id => _reporteService.ObtenerTurnosPorObraSocial(anio, id))
+            .GroupBy(d => d.ObraSocial)
+            .Select(g => new ReporteObraSocialItem
+            {
+                ObraSocial = g.Key,
+                CantidadTurnos = g.Sum(d => d.CantidadTurnos),
+                TotalRecaudado = g.Sum(d => d.TotalRecaudado)
+            })
+            .OrderByDescending(d => d.CantidadTurnos)
+            .ToList();
+    }
+
     private int GenerarObrasSociales(VistaReporte vista, int anio)
     {
-        _datosObrasSociales = _reporteService.ObtenerTurnosPorObraSocial(anio);
+        _datosObrasSociales = ObtenerObrasSocialesAcotado(anio, MedicoSeleccionado(vista));
         MostrarDatos(vista, _datosObrasSociales);
 
         var c = vista.Contadores!;
         c.Poner("ObrasSociales", $"Obras sociales: {_datosObrasSociales.Count}");
         c.Poner("Turnos", $"Turnos: {_datosObrasSociales.Sum(d => d.CantidadTurnos)}");
-        if (_usuarioActivo.Rol == RolUsuario.Administrador)
-            c.Poner("Facturacion", $"Facturación anual: {_datosObrasSociales.Sum(d => d.TotalRecaudado).ToString("C0", CulturaAr)}");
+        c.Poner("Facturacion", $"Facturación anual: {_datosObrasSociales.Sum(d => d.TotalRecaudado).ToString("C0", CulturaAr)}");
         EstiloUi.AjustarFlujos(vista.FlujoContadores!);
 
         vista.LblResumen.Text = _datosObrasSociales.Count == 0 ? "" : $"Año {anio}: turnos activos agrupados por la obra social del paciente";
@@ -302,7 +313,10 @@ public partial class FormReportes
     private int GenerarRendimientoMedicos(VistaReporte vista, int anio)
     {
         int? mes = vista.CboMes!.SelectedIndex > 0 ? vista.CboMes.SelectedIndex : null;
-        _datosMedicos = _reporteService.ObtenerRendimientoMedicos(anio, mes);
+        _datosMedicos = MedicosAConsultar(MedicoSeleccionado(vista))
+            .SelectMany(id => _reporteService.ObtenerRendimientoMedicos(anio, mes, id))
+            .OrderByDescending(d => d.TurnosAtendidos).ThenByDescending(d => d.TotalTurnos)
+            .ToList();
         MostrarDatos(vista, _datosMedicos);
 
         var c = vista.Contadores!;

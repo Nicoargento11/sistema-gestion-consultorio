@@ -55,8 +55,9 @@ public partial class FormMenuPrincipal : Form
         btnActividad.Visible = _usuarioActivo.Rol == RolUsuario.Medico;
         btnHistorial.Visible = _usuarioActivo.Rol == RolUsuario.Medico;
 
-        // Reportes: visible para los tres roles; FormReportes limita el alcance segun el rol.
-        btnReportes.Visible = true;
+        // Reportes: Recepcionista (de sus medicos asignados) y Medico (los propios);
+        // el Administrador administra el sistema y no tiene reportes.
+        btnReportes.Visible = _usuarioActivo.Rol != RolUsuario.Administrador;
     }
 
     private void AsignarEventosNavegacion()

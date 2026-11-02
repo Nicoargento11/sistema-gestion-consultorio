@@ -12,13 +12,16 @@ namespace SGC.UI;
 // arman filtros, grilla, resumen, grafico y exportacion a CSV.
 //
 // Pestanias por rol (se agregan al TabControl solo las permitidas):
-//   Administrador : Turnos, Recaudacion, Asistencia, Ocupacion de agenda,
-//                   Pacientes por mes, Rendimiento de medicos, Obras sociales.
-//   Medico        : Turnos, Asistencia, Ocupacion y Pacientes por mes (siempre
-//                   filtrado a su propio MedicoId). Recaudacion NO se ofrece
-//                   porque sp_ReporteRecaudacion no admite filtrar por un medico.
-//   Recepcionista : Turnos y Pacientes por mes, solo de los medicos que tiene
-//                   asignados, y Obras sociales (reporte global de Luciano).
+//   Administrador : ninguna. Administra el sistema y no tiene reportes (el
+//                   menu oculta el boton); si igual llegara a abrir esta
+//                   pantalla se muestra el aviso de falta de acceso.
+//   Recepcionista : Turnos, Asistencia, Ocupacion de agenda, Pacientes por
+//                   mes, Obras sociales, Recaudacion y Rendimiento de medicos,
+//                   todo limitado a los medicos que tiene asignados ("Todos mis
+//                   medicos" consulta cada uno y suma/une los resultados).
+//   Medico        : Turnos, Asistencia, Ocupacion, Pacientes por mes, Obras
+//                   sociales y Recaudacion (por medio de pago u obra social),
+//                   siempre filtrado a su propio MedicoId. No ve Rendimiento.
 // Las pestanias Pacientes por mes, Rendimiento de medicos y Obras sociales
 // son el modulo de reportes de Luciano Villordo (sus stored procedures, sus
 // graficos nativos y su adaptacion por rol); viven en FormReportes.Estadisticas.cs.
@@ -45,9 +48,9 @@ public partial class FormReportes : Form
     private VistaReporte? _vistaMedicos;
     private VistaReporte? _vistaObrasSociales;
 
-    // true si el usuario no puede generar nada (Medico sin MedicoId o
-    // Recepcionista sin medicos asignados): los botones Generar quedan
-    // deshabilitados.
+    // true si el usuario no puede generar nada (Administrador, Medico sin
+    // MedicoId o Recepcionista sin medicos asignados): los botones Generar
+    // quedan deshabilitados.
     private bool _sinAcceso;
 
     private sealed record OpcionMedico(int? Id, string Nombre);
@@ -119,23 +122,22 @@ public partial class FormReportes : Form
         AgregarColumnasTurnos(_vistaTurnos.Grilla);
         TabReportes.TabPages.Add(_vistaTurnos.Pagina);
 
+        // El Administrador no tiene reportes: solo queda la pestania base (sin
+        // acceso, ver ConstruirOpcionesMedico) por si llegara a abrir la pantalla.
         if (_usuarioActivo.Rol == RolUsuario.Administrador)
-        {
-            _vistaRecaudacion = CrearVista("Recaudacion", "Recaudación", conMedico: false, etiquetaOpcion: "Agrupar por", conGrafico: true, limitaUnAnio: false);
-            AgregarColumnasRecaudacion(_vistaRecaudacion.Grilla);
-            TabReportes.TabPages.Add(_vistaRecaudacion.Pagina);
-        }
+            return;
 
-        if (_usuarioActivo.Rol != RolUsuario.Recepcionista)
-        {
-            _vistaAsistencia = CrearVista("Asistencia", "Asistencia", conMedico: true, etiquetaOpcion: null, conGrafico: false, limitaUnAnio: false);
-            AgregarColumnasAsistencia(_vistaAsistencia.Grilla);
-            TabReportes.TabPages.Add(_vistaAsistencia.Pagina);
+        _vistaRecaudacion = CrearVista("Recaudacion", "Recaudación", conMedico: true, etiquetaOpcion: "Agrupar por", conGrafico: true, limitaUnAnio: false);
+        AgregarColumnasRecaudacion(_vistaRecaudacion.Grilla);
+        TabReportes.TabPages.Add(_vistaRecaudacion.Pagina);
 
-            _vistaOcupacion = CrearVista("Ocupacion", "Ocupación de agenda", conMedico: true, etiquetaOpcion: null, conGrafico: true, limitaUnAnio: true);
-            AgregarColumnasOcupacion(_vistaOcupacion.Grilla);
-            TabReportes.TabPages.Add(_vistaOcupacion.Pagina);
-        }
+        _vistaAsistencia = CrearVista("Asistencia", "Asistencia", conMedico: true, etiquetaOpcion: null, conGrafico: false, limitaUnAnio: false);
+        AgregarColumnasAsistencia(_vistaAsistencia.Grilla);
+        TabReportes.TabPages.Add(_vistaAsistencia.Pagina);
+
+        _vistaOcupacion = CrearVista("Ocupacion", "Ocupación de agenda", conMedico: true, etiquetaOpcion: null, conGrafico: true, limitaUnAnio: true);
+        AgregarColumnasOcupacion(_vistaOcupacion.Grilla);
+        TabReportes.TabPages.Add(_vistaOcupacion.Pagina);
 
         ConstruirPestaniasEstadisticas();
     }
@@ -540,12 +542,12 @@ public partial class FormReportes : Form
 
         if (_vistaRecaudacion?.CboOpcion != null)
         {
-            var agrupaciones = new List<OpcionAgrupacion>
-            {
-                new(AgrupacionRecaudacion.Medico, "Médico"),
-                new(AgrupacionRecaudacion.MedioPago, "Medio de pago"),
-                new(AgrupacionRecaudacion.ObraSocial, "Obra social")
-            };
+            var agrupaciones = new List<OpcionAgrupacion>();
+            // Agrupar por medico solo tiene sentido si se ven varios medicos.
+            if (_usuarioActivo.Rol != RolUsuario.Medico)
+                agrupaciones.Add(new(AgrupacionRecaudacion.Medico, "Médico"));
+            agrupaciones.Add(new(AgrupacionRecaudacion.MedioPago, "Medio de pago"));
+            agrupaciones.Add(new(AgrupacionRecaudacion.ObraSocial, "Obra social"));
             _vistaRecaudacion.CboOpcion.DataSource = agrupaciones;
             _vistaRecaudacion.CboOpcion.DisplayMember = nameof(OpcionAgrupacion.Texto);
             _vistaRecaudacion.CboOpcion.ValueMember = nameof(OpcionAgrupacion.Valor);
@@ -603,18 +605,10 @@ public partial class FormReportes : Form
 
             default:
             {
-                var lista = new List<OpcionMedico> { new(null, "Todos") };
-                try
-                {
-                    lista.AddRange(_medicoService.ObtenerTodos()
-                        .OrderBy(m => m.Apellido).ThenBy(m => m.Nombre)
-                        .Select(m => new OpcionMedico(m.Id, m.NombreCompleto)));
-                }
-                catch (Exception ex)
-                {
-                    MostrarError("No se pudo cargar la lista de médicos. Verifique la conexión con la base de datos. Detalle: " + ex.Message);
-                }
-                return lista;
+                // Administrador: no tiene reportes (el menu oculta el boton).
+                _sinAcceso = true;
+                MostrarError("Su rol no tiene acceso a los reportes.");
+                return new List<OpcionMedico> { new(null, "(sin acceso)") };
             }
         }
     }
@@ -734,6 +728,16 @@ public partial class FormReportes : Form
         return (vista.CboMedico?.SelectedItem as OpcionMedico)?.Id;
     }
 
+    // Ids de medico a consultar. La Recepcionista con "Todos mis medicos"
+    // (medicoId null) consulta cada medico asignado por separado, porque los
+    // procedimientos reciben un solo medico; en los demas casos es uno solo.
+    private List<int?> MedicosAConsultar(int? medicoId)
+    {
+        if (_usuarioActivo.Rol == RolUsuario.Recepcionista && medicoId == null)
+            return _usuarioActivo.MedicosAsignados.Select(m => (int?)m.Id).ToList();
+        return new List<int?> { medicoId };
+    }
+
     private int GenerarTurnos(VistaReporte vista, DateOnly desde, DateOnly hasta)
     {
         var estado = (vista.CboOpcion!.SelectedItem as OpcionEstado)?.Valor;
@@ -784,7 +788,12 @@ public partial class FormReportes : Form
     private int GenerarRecaudacion(VistaReporte vista, DateOnly desde, DateOnly hasta)
     {
         var agrupacion = (vista.CboOpcion!.SelectedItem as OpcionAgrupacion) ?? throw new ArgumentException("Seleccione un criterio de agrupación.");
-        var datos = _reporteService.ObtenerRecaudacion(desde, hasta, agrupacion.Valor);
+        var datos = MedicosAConsultar(MedicoSeleccionado(vista))
+            .SelectMany(id => _reporteService.ObtenerRecaudacion(desde, hasta, agrupacion.Valor, id))
+            .GroupBy(r => r.Grupo)
+            .Select(g => new ReporteRecaudacionFila { Grupo = g.Key, CantidadTurnos = g.Sum(r => r.CantidadTurnos), MontoTotal = g.Sum(r => r.MontoTotal) })
+            .OrderByDescending(r => r.MontoTotal)
+            .ToList();
 
         vista.Grilla.Columns["colGrupo"]!.HeaderText = agrupacion.Texto;
         MostrarDatos(vista, datos);
@@ -811,7 +820,10 @@ public partial class FormReportes : Form
 
     private int GenerarAsistencia(VistaReporte vista, DateOnly desde, DateOnly hasta)
     {
-        var datos = _reporteService.ObtenerAsistencia(desde, hasta, MedicoSeleccionado(vista));
+        var datos = MedicosAConsultar(MedicoSeleccionado(vista))
+            .SelectMany(id => _reporteService.ObtenerAsistencia(desde, hasta, id))
+            .OrderBy(a => a.Medico)
+            .ToList();
         MostrarDatos(vista, datos);
 
         int atendidos = datos.Sum(a => a.Atendidos);
@@ -839,7 +851,10 @@ public partial class FormReportes : Form
 
     private int GenerarOcupacion(VistaReporte vista, DateOnly desde, DateOnly hasta)
     {
-        var datos = _reporteService.ObtenerOcupacionAgenda(desde, hasta, MedicoSeleccionado(vista));
+        var datos = MedicosAConsultar(MedicoSeleccionado(vista))
+            .SelectMany(id => _reporteService.ObtenerOcupacionAgenda(desde, hasta, id))
+            .OrderBy(o => o.Medico)
+            .ToList();
         MostrarDatos(vista, datos);
 
         decimal configuradas = datos.Sum(o => o.HorasConfiguradas);
