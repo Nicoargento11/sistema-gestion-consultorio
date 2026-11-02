@@ -17,6 +17,8 @@ internal static class IconosUi
     public const string Atencion = "";
     public const string Historial = "";
     public const string CerrarSesion = "";
+    // Segoe MDL2 "Save" (disquete).
+    public const string Backup = "";
     public const string Salud = "";
 
     public static readonly string Familia = ElegirFamilia();

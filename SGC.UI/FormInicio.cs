@@ -39,6 +39,7 @@ public class FormInicio : Form
     private readonly NotificacionService _notificacionService = new();
     private readonly MedicoService _medicoService = new();
     private readonly SistemaService _sistemaService = new();
+    private readonly BackupService _backupService = new();
 
     private readonly Panel _raiz = new();
     private readonly FlowLayoutPanel _contenido = new();
@@ -146,7 +147,27 @@ public class FormInicio : Form
         tarjetas.Controls.Add(CrearTarjeta(salud.MedicosSinHorarios.ToString(CulturaAr), "Médicos sin horarios", ColorSegunAviso(salud.MedicosSinHorarios), IconoReloj));
         tarjetas.Controls.Add(CrearTarjeta(salud.MedicosSinRecepcionista.ToString(CulturaAr), "Médicos sin recepcionista", ColorSegunAviso(salud.MedicosSinRecepcionista), IconoPersona));
         tarjetas.Controls.Add(CrearTarjeta(salud.ObrasSocialesActivas.ToString(CulturaAr), "Obras sociales activas", ColorTexto, IconoConfirmado));
+        tarjetas.Controls.Add(CrearTarjetaUltimoBackup());
         _contenido.Controls.Add(tarjetas);
+    }
+
+    // Aviso (advertencia) si nunca hubo copia, no se pudo consultar o la ultima
+    // tiene mas de 7 dias.
+    private Panel CrearTarjetaUltimoBackup()
+    {
+        var ultimo = _backupService.ObtenerUltimoBackup();
+        if (ultimo == null)
+            return CrearTarjeta("-", "Última copia de seguridad", EstiloUi.Advertencia, IconoBackup, 0, "Sin copias registradas");
+
+        int dias = (DateTime.Today - ultimo.Value.Date).Days;
+        string detalle = dias switch
+        {
+            <= 0 => "Hoy",
+            1 => "Hace 1 día",
+            _ => $"Hace {dias} días"
+        };
+        var color = dias > 7 ? EstiloUi.Advertencia : PaletaEstados.Acento(EstadoTurno.Asistio);
+        return CrearTarjeta(ultimo.Value.ToString("dd/MM/yyyy", CulturaAr), "Última copia de seguridad", color, IconoBackup, 0, detalle);
     }
 
     private static Color ColorSegunAviso(int cantidad) =>
@@ -415,6 +436,7 @@ public class FormInicio : Form
     private const string IconoAlerta = "";
     private const string IconoCancelar = "";
     private const string IconoCalendario = "";
+    private const string IconoBackup = "";
     private const string IconoPersonas = "";
 
     private static readonly string FamiliaIconos = ElegirFamiliaIconos();

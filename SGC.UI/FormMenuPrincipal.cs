@@ -49,6 +49,7 @@ public partial class FormMenuPrincipal : Form
         btnUsuarios.Visible = _usuarioActivo.Rol == RolUsuario.Administrador;
         btnObrasSociales.Visible = _usuarioActivo.Rol == RolUsuario.Administrador;
         btnExcepcionesAgenda.Visible = _usuarioActivo.Rol == RolUsuario.Administrador;
+        btnBackup.Visible = _usuarioActivo.Rol == RolUsuario.Administrador;
 
         // Modulo Medico
         btnAgenda.Visible = _usuarioActivo.Rol == RolUsuario.Medico;
@@ -69,6 +70,7 @@ public partial class FormMenuPrincipal : Form
         btnUsuarios.Click += (s, e) => { ResaltarBoton((Button)s!); AbrirFormularioHijo(new FormUsuarios()); };
         btnObrasSociales.Click += (s, e) => { ResaltarBoton((Button)s!); AbrirFormularioHijo(new FormObrasSociales()); };
         btnExcepcionesAgenda.Click += (s, e) => { ResaltarBoton((Button)s!); AbrirFormularioHijo(new FormExcepcionesAgenda()); };
+        btnBackup.Click += (s, e) => { ResaltarBoton((Button)s!); AbrirFormularioHijo(new FormBackup()); };
 
         btnAgenda.Click += (s, e) => { ResaltarBoton((Button)s!); AbrirFormularioHijo(new FormAgendaMedico(_usuarioActivo, AbrirFormularioHijo)); };
         btnActividad.Click += (s, e) => { ResaltarBoton((Button)s!); AbrirFormularioHijo(new FormRegistrarActividad(null, _usuarioActivo, AbrirFormularioHijo)); };
@@ -122,6 +124,7 @@ public partial class FormMenuPrincipal : Form
         yield return btnUsuarios;
         yield return btnObrasSociales;
         yield return btnExcepcionesAgenda;
+        yield return btnBackup;
         yield return btnReportes;
         yield return btnCerrarSesion;
     }
@@ -139,6 +142,7 @@ public partial class FormMenuPrincipal : Form
         _iconos[btnUsuarios] = IconosUi.Usuarios;
         _iconos[btnObrasSociales] = IconosUi.ObrasSociales;
         _iconos[btnExcepcionesAgenda] = IconosUi.Ausencias;
+        _iconos[btnBackup] = IconosUi.Backup;
         _iconos[btnReportes] = IconosUi.Reportes;
         _iconos[btnCerrarSesion] = IconosUi.CerrarSesion;
 

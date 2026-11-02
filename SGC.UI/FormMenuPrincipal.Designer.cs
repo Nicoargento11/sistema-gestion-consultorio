@@ -33,6 +33,7 @@ partial class FormMenuPrincipal
         btnUsuarios = new Button();
         btnObrasSociales = new Button();
         btnExcepcionesAgenda = new Button();
+        btnBackup = new Button();
         btnReportes = new Button();
         pnlPie = new Panel();
         btnCerrarSesion = new Button();
@@ -175,6 +176,7 @@ partial class FormMenuPrincipal
         flowMenu.Controls.Add(btnUsuarios);
         flowMenu.Controls.Add(btnObrasSociales);
         flowMenu.Controls.Add(btnExcepcionesAgenda);
+        flowMenu.Controls.Add(btnBackup);
         flowMenu.Controls.Add(btnReportes);
         flowMenu.Dock = DockStyle.Fill;
         flowMenu.FlowDirection = FlowDirection.TopDown;
@@ -360,6 +362,22 @@ partial class FormMenuPrincipal
         btnExcepcionesAgenda.TextAlign = ContentAlignment.MiddleLeft;
         btnExcepcionesAgenda.UseVisualStyleBackColor = false;
         //
+        // btnBackup
+        //
+        btnBackup.BackColor = Color.FromArgb(27, 42, 74);
+        btnBackup.FlatAppearance.BorderSize = 0;
+        btnBackup.FlatAppearance.MouseOverBackColor = Color.FromArgb(40, 62, 105);
+        btnBackup.FlatStyle = FlatStyle.Flat;
+        btnBackup.Font = new Font("Segoe UI", 10F);
+        btnBackup.ForeColor = Color.White;
+        btnBackup.Margin = new Padding(0, 0, 0, 2);
+        btnBackup.Name = "btnBackup";
+        btnBackup.Size = new Size(224, 40);
+        btnBackup.TabIndex = 11;
+        btnBackup.Text = "Copia de seguridad";
+        btnBackup.TextAlign = ContentAlignment.MiddleLeft;
+        btnBackup.UseVisualStyleBackColor = false;
+        //
         // btnReportes
         //
         btnReportes.BackColor = Color.FromArgb(27, 42, 74);
@@ -371,7 +389,7 @@ partial class FormMenuPrincipal
         btnReportes.Margin = new Padding(0, 0, 0, 2);
         btnReportes.Name = "btnReportes";
         btnReportes.Size = new Size(224, 40);
-        btnReportes.TabIndex = 11;
+        btnReportes.TabIndex = 12;
         btnReportes.Text = "Reportes";
         btnReportes.TextAlign = ContentAlignment.MiddleLeft;
         btnReportes.UseVisualStyleBackColor = false;
@@ -428,6 +446,7 @@ partial class FormMenuPrincipal
     private Button btnUsuarios;
     private Button btnObrasSociales;
     private Button btnExcepcionesAgenda;
+    private Button btnBackup;
     private Button btnReportes;
     private Button btnCerrarSesion;
 }
