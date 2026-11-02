@@ -49,6 +49,33 @@ public class UsuarioService
         return usuario;
     }
 
+    // Relee de la base los medicos ACTIVOS asignados a una recepcionista y los deja
+    // en el mismo objeto Usuario de la sesion (que se cargo al iniciar sesion y puede
+    // haber quedado viejo si el administrador cambio asignaciones o dio de baja medicos).
+    // Si la base no responde conserva la lista que ya tenia.
+    public void ActualizarMedicosAsignados(Usuario usuario)
+    {
+        if (usuario == null || usuario.Rol != RolUsuario.Recepcionista)
+            return;
+
+        try
+        {
+            using var contexto = SGCContextFactory.Crear();
+            var medicos = contexto.Usuarios
+                .Where(u => u.Id == usuario.Id)
+                .SelectMany(u => u.MedicosAsignados)
+                .Where(m => m.Activo)
+                .OrderBy(m => m.Apellido).ThenBy(m => m.Nombre)
+                .ToList();
+
+            usuario.MedicosAsignados = medicos;
+            SincronizarIds(usuario);
+        }
+        catch (Exception)
+        {
+        }
+    }
+
     // MedicosAsignadosIds es [NotMapped] (pegamento con la UI, el
     // CheckedListBox) - mismo problema que Medico.ObrasSocialesAceptadasIds:
     // hay que sincronizarlo a mano desde la navegacion real despues de leer,

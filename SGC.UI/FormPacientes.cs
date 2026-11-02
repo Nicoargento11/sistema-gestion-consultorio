@@ -47,6 +47,8 @@ public partial class FormPacientes : Form
         InitializeComponent();
         EstiloUi.AlinearBotonesConScroll(pnlCampos, pnlBotones);
         _usuarioActivo = usuarioActivo;
+        // Releer los medicos asignados (pudieron cambiar desde el inicio de sesion).
+        if (usuarioActivo != null) new UsuarioService().ActualizarMedicosAsignados(usuarioActivo);
 
         _mensajes = new FranjaMensaje(pnlEstado, LblMensaje) { ReacomodarContenedor = true };
         _contadores = new BarraContadores(FlpContadores);

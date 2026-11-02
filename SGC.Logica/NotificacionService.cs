@@ -6,6 +6,13 @@ public class NotificacionService
 {
     private static readonly List<string> _avisos = new();
 
+    // Vacia los avisos en memoria: se llama al cerrar sesion o iniciar una nueva,
+    // para que el usuario siguiente no vea los avisos (con emails de pacientes) del anterior.
+    public static void LimpiarAvisos()
+    {
+        _avisos.Clear();
+    }
+
     public List<string> ObtenerAvisos()
     {
         return _avisos.ToList();

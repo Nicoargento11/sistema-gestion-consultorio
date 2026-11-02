@@ -45,7 +45,7 @@ public partial class FormLogin : Form
         try
         {
             var servicio = new AutenticacionService();
-            usuario = servicio.Autenticar(TxtUsuario.Text, TxtContrasenia.Text);
+            usuario = servicio.Autenticar(TxtUsuario.Text.Trim(), TxtContrasenia.Text);
         }
         catch (Exception ex)
         {
@@ -62,8 +62,24 @@ public partial class FormLogin : Form
         }
 
         _franja.Limpiar();
+        // La clave no queda escrita en el cuadro mientras dura la sesion.
+        TxtContrasenia.Clear();
+        // Los avisos son de la sesion anterior: el usuario nuevo no los hereda.
+        NotificacionService.LimpiarAvisos();
         var menu = new FormMenuPrincipal(usuario);
         menu.Show();
         Hide();
+    }
+
+    // Vuelve a mostrar este formulario (es el principal de la aplicacion y quedo
+    // oculto) al cerrar sesion, sin datos de la sesion anterior.
+    public void Reiniciar()
+    {
+        TxtUsuario.Clear();
+        TxtContrasenia.Clear();
+        _franja.Limpiar();
+        Show();
+        Activate();
+        TxtUsuario.Focus();
     }
 }

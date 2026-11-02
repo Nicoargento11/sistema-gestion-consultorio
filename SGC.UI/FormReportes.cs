@@ -90,6 +90,8 @@ public partial class FormReportes : Form
     public FormReportes(Usuario usuarioActivo)
     {
         _usuarioActivo = usuarioActivo ?? throw new ArgumentNullException(nameof(usuarioActivo));
+        // Releer los medicos asignados (pudieron cambiar desde el inicio de sesion).
+        new UsuarioService().ActualizarMedicosAsignados(_usuarioActivo);
         InitializeComponent();
         _franja = new FranjaMensaje(pnlMensaje, LblMensaje) { ReacomodarContenedor = true };
 

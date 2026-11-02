@@ -71,6 +71,8 @@ public partial class FormTurnos : Form
     public FormTurnos(Usuario? usuarioActivo = null)
     {
         _usuarioActivo = usuarioActivo;
+        // Releer los medicos asignados (pudieron cambiar desde el inicio de sesion).
+        if (usuarioActivo != null) new UsuarioService().ActualizarMedicosAsignados(usuarioActivo);
         InitializeComponent();
 
         components ??= new System.ComponentModel.Container();

@@ -47,6 +47,8 @@ public class FormInicio : Form
     public FormInicio(Usuario usuario, DateOnly? fechaReferencia = null)
     {
         _usuario = usuario;
+        // Releer los medicos asignados (pudieron cambiar desde el inicio de sesion).
+        new UsuarioService().ActualizarMedicosAsignados(usuario);
         _fecha = fechaReferencia ?? DateOnly.FromDateTime(DateTime.Today);
 
         Text = "Inicio";

@@ -1,4 +1,5 @@
 using SGC.Entidades;
+using SGC.Logica;
 
 namespace SGC.UI;
 
@@ -346,11 +347,37 @@ public partial class FormMenuPrincipal : Form
     [System.Runtime.InteropServices.DllImport("user32.dll")]
     private static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
 
+    // true mientras se cierra la sesion: en ese caso se vuelve al login en vez de
+    // terminar la aplicacion.
+    private bool _cerrandoSesion;
+
     private void BtnCerrarSesion_Click(object? sender, EventArgs e)
     {
-        var login = new FormLogin();
-        login.Show();
+        _cerrandoSesion = true;
+        NotificacionService.LimpiarAvisos();
+
+        // El login original (formulario principal de la app) quedo oculto: se reutiliza.
+        var login = Application.OpenForms.OfType<FormLogin>().FirstOrDefault();
+        if (login == null)
+        {
+            login = new FormLogin();
+            login.Show();
+        }
+        else
+        {
+            login.Reiniciar();
+        }
+
         Close();
+    }
+
+    // Cerrar la ventana con la X termina la aplicacion; el login oculto la
+    // mantendria viva sin ninguna ventana a la vista.
+    protected override void OnFormClosed(FormClosedEventArgs e)
+    {
+        base.OnFormClosed(e);
+        if (!_cerrandoSesion)
+            Application.Exit();
     }
 
     private void pnlContenido_Paint(object? sender, PaintEventArgs e) { }
