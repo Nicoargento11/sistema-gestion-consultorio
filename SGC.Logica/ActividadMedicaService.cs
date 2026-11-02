@@ -122,7 +122,7 @@ public class ActividadMedicaService
             throw new InvalidOperationException("No se puede registrar actividad médica en un turno de una fecha futura.");
 
         var tipo = contexto.TiposActividad.FirstOrDefault(t => t.Id == tipoActividadId)
-            ?? throw new InvalidOperationException("El tipo de actividad seleccionado no es valido.");
+            ?? throw new InvalidOperationException("El tipo de actividad seleccionado no es válido.");
 
         // Se busca sin filtrar por Activo: el indice unico por TurnoId incluye
         // las eliminadas, asi que una actividad dada de baja se reactiva y se
@@ -157,7 +157,7 @@ public class ActividadMedicaService
     {
         using var contexto = SGCContextFactory.Crear();
         var actividad = contexto.ActividadesMedicas.FirstOrDefault(a => a.Id == actividadId)
-            ?? throw new InvalidOperationException("La actividad medica no existe.");
+            ?? throw new InvalidOperationException("La actividad médica no existe.");
 
         actividad.Activo = false;
         contexto.SaveChanges();

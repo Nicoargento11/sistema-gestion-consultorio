@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using SGC.Datos;
 
@@ -15,7 +16,15 @@ static class Program
         // see https://aka.ms/applicationconfiguration.
         ApplicationConfiguration.Initialize();
 
-        // Errores no controlados: se muestran en espanol y sin stack trace.
+        // Toda la interfaz en español de Argentina: nombres de días y meses,
+        // formato de fechas y separadores numéricos de los selectores de fecha y montos.
+        var es = new CultureInfo("es-AR");
+        CultureInfo.DefaultThreadCurrentCulture = es;
+        CultureInfo.DefaultThreadCurrentUICulture = es;
+        CultureInfo.CurrentCulture = es;
+        CultureInfo.CurrentUICulture = es;
+
+        // Errores no controlados: se muestran en español y sin stack trace.
         // Los de la interfaz (ThreadException) no cierran la aplicacion.
         Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
         Application.ThreadException += (s, e) => MostrarErrorInesperado(e.Exception);
@@ -24,7 +33,7 @@ static class Program
 
         // Aplica migraciones pendientes (crea la base si no existe) y
         // siembra datos de prueba la primera vez que arranca contra una
-        // base vacia. Falla rapido y visible si SQL Server no esta
+        // base vacia. Falla rapido y visible si SQL Server no está
         // disponible, en vez de que cada pantalla tire un error distinto
         // mas adelante. Crear() va dentro del try: un appsettings.Local.json
         // mal formado tambien se informa aca.

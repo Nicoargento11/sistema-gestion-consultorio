@@ -529,7 +529,7 @@ public partial class FormUsuarios : Form
 
             if (_idSeleccionado == _usuarioActivo.Id && CboRol.SelectedItem is RolUsuario nuevoRol && nuevoRol != _usuarioActivo.Rol)
             {
-                throw new InvalidOperationException("No podés cambiar tu propio rol mientras tenés la sesión iniciada.");
+                throw new InvalidOperationException("No puede cambiar su propio rol mientras tiene la sesión iniciada.");
             }
 
             var usuario = new Usuario
@@ -579,7 +579,7 @@ public partial class FormUsuarios : Form
 
         if (usuarioSeleccionado.Id == _usuarioActivo.Id)
         {
-            MostrarMensaje("No podés eliminar tu propio usuario mientras tenés la sesión iniciada.", TipoMensaje.Error);
+            MostrarMensaje("No puede eliminar su propio usuario mientras tiene la sesión iniciada.", TipoMensaje.Error);
             return;
         }
 

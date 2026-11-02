@@ -34,7 +34,16 @@ public class Turno
     public string PacienteDni => Paciente?.Dni ?? "";
     public string MedicoNombre => Medico?.NombreCompleto ?? "";
     public string HorarioRango => $"{HoraInicio:HH:mm} - {HoraFin:HH:mm}";
-    public string EstadoAtencion => ActividadMedica != null && ActividadMedica.Activo ? "Atendido" : Estado.ToString();
+    public string EstadoAtencion => ActividadMedica != null && ActividadMedica.Activo
+        ? "Atendido"
+        : Estado switch
+        {
+            EstadoTurno.Confirmado => "Confirmado",
+            EstadoTurno.Asistio => "Asistió",
+            EstadoTurno.Ausente => "Ausente",
+            EstadoTurno.Cancelado => "Cancelado",
+            _ => Estado.ToString()
+        };
 
     public ActividadMedica? ActividadMedica { get; set; }
 }

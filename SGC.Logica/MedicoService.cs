@@ -102,7 +102,7 @@ public class MedicoService
         var existente = contexto.Medicos
             .Include(m => m.ObrasSocialesAceptadas)
             .FirstOrDefault(m => m.Id == medico.Id)
-            ?? throw new InvalidOperationException("El medico que intenta modificar no existe.");
+            ?? throw new InvalidOperationException("El médico que intenta modificar no existe.");
 
         existente.Nombre = medico.Nombre;
         existente.Apellido = medico.Apellido;
@@ -122,7 +122,7 @@ public class MedicoService
     {
         using var contexto = SGCContextFactory.Crear();
         var medico = contexto.Medicos.FirstOrDefault(m => m.Id == id)
-            ?? throw new InvalidOperationException("El medico que intenta eliminar no existe.");
+            ?? throw new InvalidOperationException("El médico que intenta eliminar no existe.");
 
         int turnosFuturos = TurnosFuturos.Confirmados(contexto).Count(t => t.MedicoId == id);
         if (turnosFuturos > 0)
@@ -171,8 +171,8 @@ public class MedicoService
             !medico.Especialidad.All(c => char.IsLetter(c) || c == ' '))
             throw new ArgumentException("La especialidad solo puede contener letras (máximo 80 caracteres).");
 
-        if (medico.PrecioConsultaParticular < 0)
-            throw new ArgumentException("El precio de consulta particular no puede ser negativo.");
+        if (medico.PrecioConsultaParticular <= 0)
+            throw new ArgumentException("El precio de consulta particular debe ser mayor que cero.");
 
         // Los indices unicos de la base no distinguen activos de dados de baja,
         // asi que el chequeo tampoco lo hace (pero el mensaje si).

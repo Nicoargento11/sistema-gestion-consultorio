@@ -159,10 +159,10 @@ public class UsuarioService
         // usuario de Rol=Medico para el mismo medico, reactivar este
         // generaria un duplicado - mismas reglas que Agregar/Modificar.
         if (contexto.Usuarios.Any(u => u.Activo && u.NombreUsuario == usuario.NombreUsuario))
-            throw new InvalidOperationException($"Ya existe un usuario activo con el nombre {usuario.NombreUsuario}. Cambiale el nombre antes de reactivarlo.");
+            throw new InvalidOperationException($"Ya existe un usuario activo con el nombre {usuario.NombreUsuario}. Cambie el nombre antes de reactivarlo.");
 
         if (usuario.Rol == RolUsuario.Medico && contexto.Usuarios.Any(u => u.Activo && u.Rol == RolUsuario.Medico && u.MedicoId == usuario.MedicoId))
-            throw new InvalidOperationException("Ese medico ya tiene otro usuario activo asignado.");
+            throw new InvalidOperationException("Ese médico ya tiene otro usuario activo asignado.");
 
         usuario.Activo = true;
         Persistencia.Guardar(contexto);
@@ -174,7 +174,7 @@ public class UsuarioService
     {
         bool hayOtro = contexto.Usuarios.Any(u => u.Activo && u.Rol == RolUsuario.Administrador && u.Id != usuarioId);
         if (!hayOtro)
-            throw new InvalidOperationException($"No se puede {accion} el único administrador activo. Creá o reactivá otro administrador primero.");
+            throw new InvalidOperationException($"No se puede {accion} el único administrador activo. Cree o reactive otro administrador primero.");
     }
 
     private void ResolverAsignaciones(Usuario usuario, SGCContext contexto)
@@ -191,18 +191,18 @@ public class UsuarioService
     {
         if (string.IsNullOrWhiteSpace(usuario.NombreUsuario) || usuario.NombreUsuario.Length < 3 ||
             !usuario.NombreUsuario.All(c => char.IsLetterOrDigit(c) || c == '_' || c == '.'))
-            throw new ArgumentException("El nombre de usuario debe tener al menos 3 caracteres: solo letras, numeros, '_' o '.', sin espacios.");
+            throw new ArgumentException("El nombre de usuario debe tener al menos 3 caracteres: solo letras, números, '_' o '.', sin espacios.");
 
         // Al modificar, contrasena en blanco significa "no cambiarla" (ver
         // Modificar) - solo es obligatoria cuando se esta creando el usuario.
         if (esNuevo && string.IsNullOrWhiteSpace(usuario.Contrasena))
-            throw new ArgumentException("La contrasena es obligatoria.");
+            throw new ArgumentException("La contraseña es obligatoria.");
 
         // Se valida el largo minimo ANTES de hashear (una vez hasheada,
         // el string siempre mide ~69 caracteres sin importar la clave
         // real, asi que esta validacion no se puede mover a la base).
         if (!string.IsNullOrWhiteSpace(usuario.Contrasena) && usuario.Contrasena.Length < 6)
-            throw new ArgumentException("La contrasena debe tener al menos 6 caracteres.");
+            throw new ArgumentException("La contraseña debe tener al menos 6 caracteres.");
 
         // El indice unico de la base incluye a los usuarios dados de baja.
         var mismoNombre = contexto.Usuarios.FirstOrDefault(u => u.NombreUsuario == usuario.NombreUsuario && u.Id != usuario.Id);
@@ -214,11 +214,11 @@ public class UsuarioService
         if (usuario.Rol == RolUsuario.Medico)
         {
             if (usuario.MedicoId is null)
-                throw new ArgumentException("Debe seleccionar a que medico corresponde este usuario.");
+                throw new ArgumentException("Debe seleccionar a qué médico corresponde este usuario.");
 
             var medico = contexto.Medicos.FirstOrDefault(m => m.Id == usuario.MedicoId.Value);
             if (medico is null || !medico.Activo)
-                throw new ArgumentException("El medico seleccionado no es valido.");
+                throw new ArgumentException("El médico seleccionado no es válido.");
 
             // El indice unico de la base (UQ_Usuario_MedicoUnico) no filtra por Activo.
             var usuarioDelMedico = contexto.Usuarios.FirstOrDefault(u => u.Id != usuario.Id && u.Rol == RolUsuario.Medico && u.MedicoId == usuario.MedicoId);
@@ -229,6 +229,6 @@ public class UsuarioService
         }
 
         if (usuario.Rol == RolUsuario.Recepcionista && usuario.MedicosAsignadosIds.Count == 0)
-            throw new ArgumentException("Debe asignar al menos un medico a la recepcionista.");
+            throw new ArgumentException("Debe asignar al menos un médico a la recepcionista.");
     }
 }

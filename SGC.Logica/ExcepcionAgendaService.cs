@@ -126,7 +126,7 @@ public class ExcepcionAgendaService
 
         foreach (var turno in turnosCancelados.Where(t => t.Paciente != null))
         {
-            notificacionService.AvisarTurno(turno.Paciente!, "Cancelacion",
+            notificacionService.AvisarTurno(turno.Paciente!, "Cancelación",
                 $"Se cancelo su turno del {turno.Fecha:dd/MM/yyyy} con el Dr./Dra. {excepcion.Medico?.Apellido} por ausencia del profesional.");
         }
     }
@@ -146,7 +146,7 @@ public class ExcepcionAgendaService
         using var contexto = SGCContextFactory.Crear();
 
         var existente = contexto.ExcepcionesAgenda.FirstOrDefault(e => e.Id == excepcion.Id)
-            ?? throw new InvalidOperationException("La excepcion que intenta modificar no existe.");
+            ?? throw new InvalidOperationException("La excepción que intenta modificar no existe.");
 
         var medico = Validar(excepcion, contexto, existente);
 
@@ -164,7 +164,7 @@ public class ExcepcionAgendaService
     {
         using var contexto = SGCContextFactory.Crear();
         var excepcion = contexto.ExcepcionesAgenda.FirstOrDefault(e => e.Id == id)
-            ?? throw new InvalidOperationException("La excepcion que intenta eliminar no existe.");
+            ?? throw new InvalidOperationException("La excepción que intenta eliminar no existe.");
 
         excepcion.Activo = false;
         contexto.SaveChanges();

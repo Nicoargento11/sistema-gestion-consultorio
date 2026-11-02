@@ -265,15 +265,15 @@ public class TurnoService
             throw new InvalidOperationException("Solo se puede confirmar asistencia de un turno en estado Confirmado.");
 
         if (turno.Fecha > DateOnly.FromDateTime(DateTime.Today))
-            throw new InvalidOperationException("No se puede confirmar la asistencia de un turno que todavia no llego a su fecha.");
+            throw new InvalidOperationException("No se puede confirmar la asistencia de un turno que todavía no llegó a su fecha.");
 
         if (asistio)
         {
             if (string.IsNullOrWhiteSpace(medioPago))
-                throw new ArgumentException("Debe indicar el medio de pago cuando el paciente asistio.");
+                throw new ArgumentException("Debe indicar el medio de pago cuando el paciente asistió.");
 
             if (monto == null || monto < 0)
-                throw new ArgumentException("Debe indicar un monto valido (no puede ser negativo) cuando el paciente asistio.");
+                throw new ArgumentException("Debe indicar un monto válido (no puede ser negativo) cuando el paciente asistió.");
 
             turno.Estado = EstadoTurno.Asistio;
             turno.MedioPago = medioPago;

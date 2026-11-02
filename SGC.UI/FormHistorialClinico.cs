@@ -389,7 +389,7 @@ public partial class FormHistorialClinico : Form
             : _pacienteSeleccionado.ObraSocial?.Nombre;
 
         lblPacienteDetalle.Text =
-            $"{_pacienteSeleccionado.NombreCompleto}  |  DNI {_pacienteSeleccionado.Dni}  |  {edad} años  |  {obraSocial}  |  {_pacienteSeleccionado.Telefono}";
+            $"{_pacienteSeleccionado.NombreCompleto}  |  DNI {_pacienteSeleccionado.Dni}  |  {(edad == 1 ? "1 año" : $"{edad} años")}  |  {obraSocial}  |  {_pacienteSeleccionado.Telefono}";
 
         lblResumenHistorial.ForeColor = ColorResumen;
         if (historial.Count == 0)
@@ -495,8 +495,4 @@ public partial class FormHistorialClinico : Form
         return string.IsNullOrWhiteSpace(valor) ? placeholder : valor;
     }
 
-    private void DtpFechaFiltro_ValueChanged(object sender, EventArgs e)
-    {
-
-    }
 }

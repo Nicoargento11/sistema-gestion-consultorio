@@ -67,7 +67,7 @@ partial class FormHistorialPaciente
         lblTitulo.Name = "lblTitulo";
         lblTitulo.Size = new Size(334, 30);
         lblTitulo.TabIndex = 0;
-        lblTitulo.Text = "Historial Clinico de Atenciones ";
+        lblTitulo.Text = "Historial clínico de atenciones";
         // 
         // DgvHistorial
         // 
@@ -140,7 +140,7 @@ partial class FormHistorialPaciente
         lblReceta.Name = "lblReceta";
         lblReceta.Size = new Size(160, 20);
         lblReceta.TabIndex = 5;
-        lblReceta.Text = "Prescripcion / Receta:";
+        lblReceta.Text = "Prescripción / receta:";
         // 
         // TxtDiagnostico
         // 
@@ -163,7 +163,7 @@ partial class FormHistorialPaciente
         lblDiagnostico.Name = "lblDiagnostico";
         lblDiagnostico.Size = new Size(213, 20);
         lblDiagnostico.TabIndex = 3;
-        lblDiagnostico.Text = "Diagnostico / Procedimiento:";
+        lblDiagnostico.Text = "Diagnóstico / procedimiento:";
         // 
         // TxtMotivo
         // 
@@ -186,7 +186,7 @@ partial class FormHistorialPaciente
         lblMotivo.Name = "lblMotivo";
         lblMotivo.Size = new Size(149, 20);
         lblMotivo.TabIndex = 1;
-        lblMotivo.Text = "Motivo de Consulta:";
+        lblMotivo.Text = "Motivo de consulta:";
         // 
         // lblDetalleTitulo
         // 
@@ -197,7 +197,7 @@ partial class FormHistorialPaciente
         lblDetalleTitulo.Name = "lblDetalleTitulo";
         lblDetalleTitulo.Size = new Size(250, 23);
         lblDetalleTitulo.TabIndex = 0;
-        lblDetalleTitulo.Text = "Detalle de la Atencion Clinica:";
+        lblDetalleTitulo.Text = "Detalle de la atención clínica:";
         // 
         // FormHistorialPaciente
         // 
@@ -213,7 +213,7 @@ partial class FormHistorialPaciente
         MinimizeBox = false;
         Name = "FormHistorialPaciente";
         StartPosition = FormStartPosition.CenterParent;
-        Text = "Historial Clinico del Paciente";
+        Text = "Historial clínico del paciente";
         pnlHeader.ResumeLayout(false);
         pnlHeader.PerformLayout();
         ((System.ComponentModel.ISupportInitialize)DgvHistorial).EndInit();

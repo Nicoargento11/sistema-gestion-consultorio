@@ -24,10 +24,10 @@ public class AgendaMedico
         {
             DayOfWeek.Monday => "Lunes",
             DayOfWeek.Tuesday => "Martes",
-            DayOfWeek.Wednesday => "Miercoles",
+            DayOfWeek.Wednesday => "Miércoles",
             DayOfWeek.Thursday => "Jueves",
             DayOfWeek.Friday => "Viernes",
-            DayOfWeek.Saturday => "Sabado",
+            DayOfWeek.Saturday => "Sábado",
             DayOfWeek.Sunday => "Domingo",
             _ => dia.ToString()
         };

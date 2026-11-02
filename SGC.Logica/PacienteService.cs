@@ -160,8 +160,8 @@ public class PacienteService
         if (paciente.FechaNacimiento == default)
             throw new ArgumentException("Debe ingresar la fecha de nacimiento.");
 
-        if (paciente.FechaNacimiento > DateOnly.FromDateTime(DateTime.Today))
-            throw new ArgumentException("La fecha de nacimiento no puede ser futura.");
+        if (paciente.FechaNacimiento >= DateOnly.FromDateTime(DateTime.Today))
+            throw new ArgumentException("La fecha de nacimiento debe ser anterior a hoy.");
 
         if (paciente.FechaNacimiento < DateOnly.FromDateTime(DateTime.Today).AddYears(-120))
             throw new ArgumentException("La fecha de nacimiento no es válida.");
@@ -178,7 +178,7 @@ public class PacienteService
         {
             var obraSocial = contexto.ObrasSociales.FirstOrDefault(o => o.Id == obraSocialId);
             if (obraSocial is null || !obraSocial.Activo)
-                throw new ArgumentException("La obra social seleccionada no es valida.");
+                throw new ArgumentException("La obra social seleccionada no es válida.");
         }
     }
 }

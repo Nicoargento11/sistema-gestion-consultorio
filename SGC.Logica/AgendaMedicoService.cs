@@ -209,7 +209,7 @@ public class AgendaMedicoService
         {
             if (a.HoraInicio < agenda.HoraFin && agenda.HoraInicio < a.HoraFin)
             {
-                throw new InvalidOperationException("El rango horario seleccionado se superpone con otro registro de agenda para el mismo medico y dia de semana.");
+                throw new InvalidOperationException("El rango horario seleccionado se superpone con otro registro de agenda para el mismo médico y día de la semana.");
             }
         }
     }
@@ -218,7 +218,7 @@ public class AgendaMedicoService
     {
         var medico = contexto.Medicos.FirstOrDefault(m => m.Id == agenda.MedicoId);
         if (medico is null || !medico.Activo)
-            throw new ArgumentException("Debe seleccionar un medico valido.");
+            throw new ArgumentException("Debe seleccionar un médico válido.");
 
         if (agenda.HoraFin <= agenda.HoraInicio)
             throw new ArgumentException("La hora de fin debe ser posterior a la hora de inicio.");

@@ -83,7 +83,7 @@ partial class FormHistorialClinico
         lblSubtitulo.Name = "lblSubtitulo";
         lblSubtitulo.Size = new Size(596, 21);
         lblSubtitulo.TabIndex = 1;
-        lblSubtitulo.Text = "Solo lectura: consulte atenciones ya cargadas. Para escribir una nueva, use la Agenda.";
+        lblSubtitulo.Text = "Solo lectura: consulte atenciones ya cargadas. Para escribir una nueva, use «Registrar atención».";
         // 
         // lblTitulo
         // 
@@ -94,7 +94,7 @@ partial class FormHistorialClinico
         lblTitulo.Name = "lblTitulo";
         lblTitulo.Size = new Size(306, 32);
         lblTitulo.TabIndex = 0;
-        lblTitulo.Text = "Consultar historial clinico";
+        lblTitulo.Text = "Consultar historial clínico";
         // 
         // pnlFiltro
         // 
@@ -131,7 +131,7 @@ partial class FormHistorialClinico
         BtnNuevaConsulta.Name = "BtnNuevaConsulta";
         BtnNuevaConsulta.Size = new Size(180, 32);
         BtnNuevaConsulta.TabIndex = 4;
-        BtnNuevaConsulta.Text = "Ir a la Agenda";
+        BtnNuevaConsulta.Text = "Registrar atención";
         BtnNuevaConsulta.UseVisualStyleBackColor = false;
         // 
         // CboTipoFiltro
@@ -175,7 +175,7 @@ partial class FormHistorialClinico
         lblMedicoFiltro.Name = "lblMedicoFiltro";
         lblMedicoFiltro.Size = new Size(64, 20);
         lblMedicoFiltro.TabIndex = 10;
-        lblMedicoFiltro.Text = "Medico:";
+        lblMedicoFiltro.Text = "Médico:";
         // 
         // DtpFechaFiltro
         // 
@@ -184,7 +184,6 @@ partial class FormHistorialClinico
         DtpFechaFiltro.Name = "DtpFechaFiltro";
         DtpFechaFiltro.Size = new Size(120, 27);
         DtpFechaFiltro.TabIndex = 11;
-        DtpFechaFiltro.ValueChanged += DtpFechaFiltro_ValueChanged;
         // 
         // ChkFiltrarFecha
         // 
@@ -370,7 +369,7 @@ partial class FormHistorialClinico
         lblHistorialTitulo.Padding = new Padding(0, 0, 0, 6);
         lblHistorialTitulo.Size = new Size(968, 28);
         lblHistorialTitulo.TabIndex = 0;
-        lblHistorialTitulo.Text = "Registro cronologico de atenciones";
+        lblHistorialTitulo.Text = "Registro cronológico de atenciones";
         // 
         // pnlDetalle
         // 
@@ -418,7 +417,7 @@ partial class FormHistorialClinico
         lblDetalleTitulo.Name = "lblDetalleTitulo";
         lblDetalleTitulo.Size = new Size(962, 28);
         lblDetalleTitulo.TabIndex = 0;
-        lblDetalleTitulo.Text = "Detalle de la atencion clinica";
+        lblDetalleTitulo.Text = "Detalle de la atención clínica";
         lblDetalleTitulo.TextAlign = ContentAlignment.MiddleLeft;
         // 
         // lblMotivo
@@ -456,7 +455,7 @@ partial class FormHistorialClinico
         lblDiagnostico.Name = "lblDiagnostico";
         lblDiagnostico.Size = new Size(962, 22);
         lblDiagnostico.TabIndex = 2;
-        lblDiagnostico.Text = "Diagnostico / Procedimiento";
+        lblDiagnostico.Text = "Diagnóstico / procedimiento";
         lblDiagnostico.TextAlign = ContentAlignment.BottomLeft;
         // 
         // TxtDiagnostico
@@ -482,7 +481,7 @@ partial class FormHistorialClinico
         lblReceta.Name = "lblReceta";
         lblReceta.Size = new Size(962, 22);
         lblReceta.TabIndex = 3;
-        lblReceta.Text = "Prescripcion / Receta";
+        lblReceta.Text = "Prescripción / receta";
         lblReceta.TextAlign = ContentAlignment.BottomLeft;
         // 
         // TxtReceta
@@ -511,7 +510,7 @@ partial class FormHistorialClinico
         Controls.Add(pnlHeader);
         MinimumSize = new Size(820, 520);
         Name = "FormHistorialClinico";
-        Text = "Historial Clinico de Pacientes";
+        Text = "Historial clínico de pacientes";
         pnlHeader.ResumeLayout(false);
         pnlHeader.PerformLayout();
         pnlFiltro.ResumeLayout(false);

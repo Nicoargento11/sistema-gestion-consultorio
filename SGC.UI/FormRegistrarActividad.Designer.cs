@@ -75,7 +75,7 @@ partial class FormRegistrarActividad
         BtnVolverAgenda.Name = "BtnVolverAgenda";
         BtnVolverAgenda.Size = new Size(175, 38);
         BtnVolverAgenda.TabIndex = 2;
-        BtnVolverAgenda.Text = "<- Volver a Agenda";
+        BtnVolverAgenda.Text = "← Volver a la agenda";
         BtnVolverAgenda.UseVisualStyleBackColor = false;
         // 
         // lblMedicoInfo
@@ -100,7 +100,7 @@ partial class FormRegistrarActividad
         lblTitulo.Name = "lblTitulo";
         lblTitulo.Size = new Size(353, 38);
         lblTitulo.TabIndex = 0;
-        lblTitulo.Text = "Cargar atencion del turno";
+        lblTitulo.Text = "Cargar atención del turno";
         // 
         // pnlSeleccionTurno
         // 
@@ -201,7 +201,7 @@ partial class FormRegistrarActividad
         lblInfoPaciente.Name = "lblInfoPaciente";
         lblInfoPaciente.Size = new Size(1210, 34);
         lblInfoPaciente.TabIndex = 0;
-        lblInfoPaciente.Text = "Seleccione un turno para comenzar la atencion clinica.";
+        lblInfoPaciente.Text = "Seleccione un turno para comenzar la atención clínica.";
         lblInfoPaciente.TextAlign = ContentAlignment.MiddleLeft;
         // 
         // pnlFormulario
@@ -268,7 +268,7 @@ partial class FormRegistrarActividad
         BtnBorrarRegistro.Name = "BtnBorrarRegistro";
         BtnBorrarRegistro.Size = new Size(188, 48);
         BtnBorrarRegistro.TabIndex = 9;
-        BtnBorrarRegistro.Text = "Borrar Registro";
+        BtnBorrarRegistro.Text = "Borrar registro";
         BtnBorrarRegistro.UseVisualStyleBackColor = false;
         // 
         // BtnLimpiar
@@ -300,7 +300,7 @@ partial class FormRegistrarActividad
         BtnGuardar.Name = "BtnGuardar";
         BtnGuardar.Size = new Size(231, 48);
         BtnGuardar.TabIndex = 8;
-        BtnGuardar.Text = "Guardar Atencion";
+        BtnGuardar.Text = "Guardar atención";
         BtnGuardar.UseVisualStyleBackColor = false;
         // 
         // TxtReceta
@@ -312,7 +312,7 @@ partial class FormRegistrarActividad
         TxtReceta.AcceptsReturn = true;
         TxtReceta.Multiline = true;
         TxtReceta.Name = "TxtReceta";
-        TxtReceta.PlaceholderText = "Ej: ibuprofeno 400 mg cada 8 hs por 3 dias";
+        TxtReceta.PlaceholderText = "Ej: ibuprofeno 400 mg cada 8 hs por 3 días";
         TxtReceta.ScrollBars = ScrollBars.Vertical;
         TxtReceta.Size = new Size(1174, 93);
         TxtReceta.TabIndex = 7;
@@ -327,7 +327,7 @@ partial class FormRegistrarActividad
         lblReceta.Name = "lblReceta";
         lblReceta.Size = new Size(365, 25);
         lblReceta.TabIndex = 6;
-        lblReceta.Text = "Prescripcion / Receta de Medicamentos:";
+        lblReceta.Text = "Prescripción / receta de medicamentos:";
         // 
         // TxtDiagnostico
         // 
@@ -353,7 +353,7 @@ partial class FormRegistrarActividad
         lblDiagnostico.Name = "lblDiagnostico";
         lblDiagnostico.Size = new Size(337, 25);
         lblDiagnostico.TabIndex = 4;
-        lblDiagnostico.Text = "Diagnostico / Procedimiento Clinico:";
+        lblDiagnostico.Text = "Diagnóstico / procedimiento clínico:";
         // 
         // TxtMotivo
         // 
@@ -368,7 +368,6 @@ partial class FormRegistrarActividad
         TxtMotivo.ScrollBars = ScrollBars.Vertical;
         TxtMotivo.Size = new Size(1174, 80);
         TxtMotivo.TabIndex = 3;
-        TxtMotivo.TextChanged += TxtMotivo_TextChanged;
         // 
         // lblMotivo
         // 
@@ -380,7 +379,7 @@ partial class FormRegistrarActividad
         lblMotivo.Name = "lblMotivo";
         lblMotivo.Size = new Size(219, 25);
         lblMotivo.TabIndex = 2;
-        lblMotivo.Text = "Motivo de Consulta (*):";
+        lblMotivo.Text = "Motivo de consulta (*):";
         // 
         // CboTipoActividad
         // 
@@ -403,7 +402,7 @@ partial class FormRegistrarActividad
         lblTipoActividad.Name = "lblTipoActividad";
         lblTipoActividad.Size = new Size(172, 25);
         lblTipoActividad.TabIndex = 0;
-        lblTipoActividad.Text = "Tipo de Actividad:";
+        lblTipoActividad.Text = "Tipo de actividad:";
         // 
         // FormRegistrarActividad
         // 
@@ -417,7 +416,7 @@ partial class FormRegistrarActividad
         Controls.Add(pnlHeader);
         Margin = new Padding(4, 4, 4, 4);
         Name = "FormRegistrarActividad";
-        Text = "Registro de Atencion Clinica";
+        Text = "Registro de atención clínica";
         pnlHeader.ResumeLayout(false);
         pnlHeader.PerformLayout();
         pnlSeleccionTurno.ResumeLayout(false);

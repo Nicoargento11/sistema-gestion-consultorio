@@ -115,7 +115,7 @@ partial class FormAgendaMedico
         lblTitulo.Name = "lblTitulo";
         lblTitulo.Size = new Size(186, 32);
         lblTitulo.TabIndex = 0;
-        lblTitulo.Text = "Agenda del dia";
+        lblTitulo.Text = "Agenda del día";
         // 
         // pnlResumen
         // 
@@ -191,7 +191,6 @@ partial class FormAgendaMedico
         BtnFiltroTotal.TabIndex = 0;
         BtnFiltroTotal.Text = "TOTAL TURNOS (0)";
         BtnFiltroTotal.UseVisualStyleBackColor = false;
-        BtnFiltroTotal.Click += BtnFiltroTotal_Click;
         // 
         // pnlGrilla
         // 
@@ -258,7 +257,7 @@ partial class FormAgendaMedico
         BtnHistorialRapido.Name = "BtnHistorialRapido";
         BtnHistorialRapido.Size = new Size(185, 36);
         BtnHistorialRapido.TabIndex = 1;
-        BtnHistorialRapido.Text = "Ver Historial Clinico";
+        BtnHistorialRapido.Text = "Ver historial clínico";
         BtnHistorialRapido.UseVisualStyleBackColor = false;
         // 
         // BtnAtender
@@ -273,7 +272,7 @@ partial class FormAgendaMedico
         BtnAtender.Name = "BtnAtender";
         BtnAtender.Size = new Size(200, 36);
         BtnAtender.TabIndex = 0;
-        BtnAtender.Text = "Atender Paciente";
+        BtnAtender.Text = "Atender paciente";
         BtnAtender.UseVisualStyleBackColor = false;
         // 
         // TxtBuscarPaciente
@@ -281,7 +280,7 @@ partial class FormAgendaMedico
         TxtBuscarPaciente.Font = new Font("Segoe UI", 9.5F);
         TxtBuscarPaciente.Location = new Point(280, 8);
         TxtBuscarPaciente.Name = "TxtBuscarPaciente";
-        TxtBuscarPaciente.PlaceholderText = "Buscar paciente del dia...";
+        TxtBuscarPaciente.PlaceholderText = "Buscar paciente del día...";
         TxtBuscarPaciente.Size = new Size(250, 29);
         TxtBuscarPaciente.TabIndex = 4;
         // 
@@ -306,7 +305,7 @@ partial class FormAgendaMedico
         lblGrillaTitulo.Name = "lblGrillaTitulo";
         lblGrillaTitulo.Size = new Size(251, 28);
         lblGrillaTitulo.TabIndex = 0;
-        lblGrillaTitulo.Text = "Lista de pacientes del dia";
+        lblGrillaTitulo.Text = "Lista de pacientes del día";
         // 
         // FormAgendaMedico
         // 
@@ -318,7 +317,7 @@ partial class FormAgendaMedico
         Controls.Add(pnlResumen);
         Controls.Add(pnlSuperior);
         Name = "FormAgendaMedico";
-        Text = "Mi Agenda de Atencion Medica";
+        Text = "Mi agenda de atención médica";
         pnlSuperior.ResumeLayout(false);
         pnlSuperior.PerformLayout();
         pnlResumen.ResumeLayout(false);

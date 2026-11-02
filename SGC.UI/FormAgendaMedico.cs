@@ -1,4 +1,4 @@
-﻿﻿using SGC.Entidades;
+﻿using SGC.Entidades;
 using SGC.Logica;
 
 namespace SGC.UI;
@@ -51,7 +51,7 @@ public partial class FormAgendaMedico : Form
         BtnFiltroCancelados.Click += (s, e) => { _filtroActual = FiltroTurno.Cancelados; CargarTurnos(); };
 
         DgvTurnos.SelectionChanged += DgvTurnos_SelectionChanged;
-        DgvTurnos.CellDoubleClick += (s, e) => BtnAtender_Click(s, e);
+        DgvTurnos.CellDoubleClick += (s, e) => { if (e.RowIndex >= 0) BtnAtender_Click(s, e); };
         DgvTurnos.CellFormatting += DgvTurnos_CellFormatting;
         BtnAtender.Click += BtnAtender_Click;
         BtnHistorialRapido.Click += BtnHistorialRapido_Click;
@@ -114,7 +114,7 @@ public partial class FormAgendaMedico : Form
         DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colEdad", HeaderText = "Edad", DataPropertyName = "Edad", FillWeight = 7, DefaultCellStyle = estiloCentrado });
         DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colObraSocial", HeaderText = "Obra Social", DataPropertyName = "ObraSocial", FillWeight = 18 });
         DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colPerfil", HeaderText = "Tipo de paciente", DataPropertyName = "Perfil", FillWeight = 12, DefaultCellStyle = estiloCentrado });
-        DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colEstadoAtencion", HeaderText = "Atención Clínica", DataPropertyName = "EstadoAtencion", FillWeight = 14 });
+        DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colEstadoAtencion", HeaderText = "Atención clínica", DataPropertyName = "EstadoAtencion", FillWeight = 14 });
         DgvTurnos.Columns.Add(new DataGridViewTextBoxColumn { Name = "colEstado", HeaderText = "Estado Turno", DataPropertyName = "Estado", FillWeight = 14 });
 
         foreach (DataGridViewColumn columna in DgvTurnos.Columns)
@@ -295,7 +295,7 @@ public partial class FormAgendaMedico : Form
         }
 
         var p = _proximoPaciente;
-        string edad = p.Edad is int anios ? $"{anios} años" : "Sin datos de edad";
+        string edad = p.Edad is int anios ? (anios == 1 ? "1 año" : $"{anios} años") : "Sin datos de edad";
         _lblProximoDetalle.Text = $"{p.PacienteNombre}   ·   {p.Turno.HoraInicio:HH:mm} hs   ·   {edad}   ·   {p.ObraSocial}   ·   {p.Perfil}";
         _lblProximoDetalle.ForeColor = Color.FromArgb(27, 42, 74);
     }
@@ -477,10 +477,5 @@ public partial class FormAgendaMedico : Form
             var formHistorial = new FormHistorialPaciente(_turnoSeleccionado.Paciente, _usuarioActivo);
             formHistorial.ShowDialog();
         }
-    }
-
-    private void BtnFiltroTotal_Click(object sender, EventArgs e)
-    {
-
     }
 }

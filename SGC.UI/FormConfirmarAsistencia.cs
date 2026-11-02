@@ -49,6 +49,8 @@ public partial class FormConfirmarAsistencia : Form
         RbAusente.CheckedChanged += RadioButtons_CheckedChanged;
         CboMedioPago.SelectedIndexChanged += CboMedioPago_SelectedIndexChanged;
         BtnConfirmar.Click += BtnConfirmar_Click;
+        AcceptButton = BtnConfirmar;
+        CancelButton = BtnCancelar;
 
         // Los textos que pueden partirse en varias lineas y el alto del dialogo
         // se recalculan cuando cambia el ancho o aparece un mensaje.
@@ -169,12 +171,18 @@ public partial class FormConfirmarAsistencia : Form
                 return;
             }
 
+            if (!ConfirmarAccion("¿Confirma que el paciente asistió? Se registrará el cobro y no podrá modificarse después."))
+                return;
+
             Asistio = true;
             MedioPagoSeleccionado = CboMedioPago.SelectedItem.ToString();
             MontoSeleccionado = NudMonto.Value;
         }
         else
         {
+            if (!ConfirmarAccion("¿Confirma que el paciente estuvo ausente? No podrá modificarse después."))
+                return;
+
             Asistio = false;
             MedioPagoSeleccionado = null;
             MontoSeleccionado = null;
@@ -182,5 +190,12 @@ public partial class FormConfirmarAsistencia : Form
 
         DialogResult = DialogResult.OK;
         Close();
+    }
+
+    // Acción irreversible: se pide confirmación, con "No" como opción por defecto.
+    private bool ConfirmarAccion(string pregunta)
+    {
+        return MessageBox.Show(this, pregunta, "Confirmar asistencia",
+            MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2) == DialogResult.Yes;
     }
 }

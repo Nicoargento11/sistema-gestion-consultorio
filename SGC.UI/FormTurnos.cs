@@ -110,6 +110,8 @@ public partial class FormTurnos : Form
         _mensajes = new FranjaMensaje(pnlEstado, LblMensaje);
         _contadores = new BarraContadores(FlpContadores);
 
+        AcceptButton = BtnAsignar;
+
         Load += FormTurnos_Load;
     }
 
@@ -606,7 +608,7 @@ public partial class FormTurnos : Form
         try
         {
             aviso = _notificacionService.AvisarTurno(
-                paciente, "Confirmacion", $"{fecha:dd/MM/yyyy} {horario.Rango} con {medico.NombreCompleto}");
+                paciente, "Confirmación", $"{fecha:dd/MM/yyyy} {horario.Rango} con {medico.NombreCompleto}");
         }
         catch (Exception ex)
         {
@@ -650,7 +652,7 @@ public partial class FormTurnos : Form
         {
             var turno = _turnoService.ObtenerPorId(idTurno);
             if (turno?.Paciente != null)
-                aviso = _notificacionService.AvisarTurno(turno.Paciente, "Reprogramacion", $"{fecha:dd/MM/yyyy} {horario.Rango}");
+                aviso = _notificacionService.AvisarTurno(turno.Paciente, "Reprogramación", $"{fecha:dd/MM/yyyy} {horario.Rango}");
         }
         catch (Exception ex)
         {
@@ -694,7 +696,7 @@ public partial class FormTurnos : Form
         try
         {
             if (turnoSeleccionado.Paciente != null)
-                aviso = _notificacionService.AvisarTurno(turnoSeleccionado.Paciente, "Cancelacion", $"{turnoSeleccionado.Fecha:dd/MM/yyyy} {turnoSeleccionado.HorarioRango}");
+                aviso = _notificacionService.AvisarTurno(turnoSeleccionado.Paciente, "Cancelación", $"{turnoSeleccionado.Fecha:dd/MM/yyyy} {turnoSeleccionado.HorarioRango}");
         }
         catch (Exception ex)
         {
@@ -717,10 +719,12 @@ public partial class FormTurnos : Form
             return;
         }
 
+        bool asistio;
         using (var dialogo = new FormConfirmarAsistencia(turno))
         {
             if (dialogo.ShowDialog() != DialogResult.OK)
                 return;
+            asistio = dialogo.Asistio;
 
             try
             {
@@ -737,7 +741,7 @@ public partial class FormTurnos : Form
         _horarioElegido = null;
         CargarGrilla();
         ActualizarHorarios();
-        MostrarMensaje("Asistencia confirmada.", TipoMensaje.Ok);
+        MostrarMensaje(asistio ? "Asistencia confirmada." : "Se registró la ausencia.", TipoMensaje.Ok);
     }
 
     // ----------------------------------------------------------- grilla y datos

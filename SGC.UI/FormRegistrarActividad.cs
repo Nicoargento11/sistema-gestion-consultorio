@@ -72,7 +72,7 @@ public partial class FormRegistrarActividad : Form
 
         if (_medicoActual != null)
         {
-            lblMedicoInfo.Text = $"Escribe la atencion de un turno  |  {_medicoActual.NombreCompleto}  |  Mat {_medicoActual.Matricula}";
+            lblMedicoInfo.Text = $"Registre la atención de un turno  |  {_medicoActual.NombreCompleto}  |  Mat {_medicoActual.Matricula}";
         }
     }
 
@@ -187,11 +187,11 @@ public partial class FormRegistrarActividad : Form
                 TxtDiagnostico.Text = actividad.Procedimiento;
                 TxtReceta.Text = actividad.RecetaMedicamentos;
 
-                BtnGuardar.Text = "Actualizar Atencion";
+                BtnGuardar.Text = "Actualizar atención";
                 BtnBorrarRegistro.Visible = true;
                 BtnVerHistorial.Enabled = _turnoSeleccionado.Paciente != null;
                 LblMensaje.ForeColor = Color.FromArgb(46, 134, 222);
-                LblMensaje.Text = "Atencion cargada previamente. Puede modificarla y guardar los cambios.";
+                LblMensaje.Text = "Atención cargada previamente. Puede modificarla y guardar los cambios.";
             }
             else
             {
@@ -201,7 +201,7 @@ public partial class FormRegistrarActividad : Form
                 if (CboTipoActividad.Items.Count > 0)
                     CboTipoActividad.SelectedIndex = 0;
 
-                BtnGuardar.Text = "Guardar Atencion";
+                BtnGuardar.Text = "Guardar atención";
                 BtnBorrarRegistro.Visible = false;
                 BtnVerHistorial.Enabled = _turnoSeleccionado.Paciente != null;
                 LblMensaje.Text = "";
@@ -225,7 +225,7 @@ public partial class FormRegistrarActividad : Form
         if (CboTipoActividad.Items.Count > 0)
             CboTipoActividad.SelectedIndex = 0;
 
-        BtnGuardar.Text = "Guardar Atencion";
+        BtnGuardar.Text = "Guardar atención";
         BtnBorrarRegistro.Visible = false;
         BtnVerHistorial.Enabled = _turnoSeleccionado != null;
         LblMensaje.Text = "";
@@ -292,8 +292,8 @@ public partial class FormRegistrarActividad : Form
         }
 
         var confirmacion = MessageBox.Show(
-            "Esta seguro que desea eliminar la atencion registrada para este paciente?",
-            "Confirmar eliminacion",
+            "¿Está seguro que desea eliminar la atención registrada para este paciente?",
+            "Confirmar eliminación",
             MessageBoxButtons.YesNo,
             MessageBoxIcon.Question);
 
@@ -321,7 +321,7 @@ public partial class FormRegistrarActividad : Form
     {
         if (_turnoSeleccionado?.Paciente == null)
         {
-            MessageBox.Show("Seleccione un turno con paciente valido.", "Atencion", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show("Seleccione un turno con paciente válido.", "Atención", MessageBoxButtons.OK, MessageBoxIcon.Information);
             return;
         }
 
@@ -346,10 +346,5 @@ public partial class FormRegistrarActividad : Form
         {
             Close();
         }
-    }
-
-    private void TxtMotivo_TextChanged(object sender, EventArgs e)
-    {
-
     }
 }

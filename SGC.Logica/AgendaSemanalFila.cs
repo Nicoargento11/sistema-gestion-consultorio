@@ -34,7 +34,7 @@ public class AgendaSemanalFila
             .Select(f => f.HorarioRango));
     }
 
-    // Nombre del dia en es-AR con la primera letra en mayuscula (Miercoles, Sabado).
+    // Nombre del dia en es-AR con la primera letra en mayuscula (Miércoles, Sábado).
     public static string NombreDia(DayOfWeek dia)
     {
         var nombre = CulturaAr.DateTimeFormat.GetDayName(dia);

@@ -604,7 +604,7 @@ partial class FormPacientes
         lblObraSocial.Font = new Font("Segoe UI", 9F);
         lblObraSocial.ForeColor = Color.FromArgb(110, 120, 135);
         lblObraSocial.Margin = new Padding(0, 2, 0, 2);
-        lblObraSocial.Text = "Obra social (vacío = Particular)";
+        lblObraSocial.Text = "Obra social";
         lblObraSocial.TabIndex = 17;
         lblObraSocial.Name = "lblObraSocial";
         //
