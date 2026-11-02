@@ -16,7 +16,7 @@ Columna **Origen**: *Rediseñada* = usa los componentes compartidos del patrón 
 |------------|-----|----------|-------------------|--------|
 | `FormLogin` | Todos | Pide usuario y clave y abre el menú | `AutenticacionService` (→ `UsuarioService`) | Rediseñada |
 | `FormMenuPrincipal` | Todos | Barra lateral por rol y panel donde se abren las pantallas | — | Rediseñada |
-| `FormInicio` | Todos | Resumen del día según el rol (tarjetas, próximo paciente, avisos) | `ResumenService`, `NotificacionService`, `MedicoService` | Código |
+| `FormInicio` | Todos | Resumen según el rol (tarjetas, próximo paciente, avisos). Administrador: estado del sistema y última copia, sin dinero | `ResumenService`, `NotificacionService`, `MedicoService`, `SistemaService`, `BackupService` | Código |
 | `FormPacientes` | Recepcionista | ABM de pacientes, buscador, "solo con ausencias" | `PacienteService`, `ObraSocialService` | Rediseñada |
 | `FormTurnos` | Recepcionista | Asignar, reprogramar, cancelar y confirmar asistencia | `TurnoService`, `PacienteService`, `MedicoService`, `AgendaMedicoService`, `HorarioService`, `NotificacionService` | Rediseñada |
 | `FormConfirmarAsistencia` | Recepcionista | Diálogo modal: Asistió/Ausente, medio de pago y monto | (usa métodos estáticos de `TurnoService`) | Rediseñada |
@@ -25,13 +25,16 @@ Columna **Origen**: *Rediseñada* = usa los componentes compartidos del patrón 
 | `FormUsuarios` | Administrador | ABM de usuarios, rol, médico o médicos asignados, reactivar | `UsuarioService`, `MedicoService` | Rediseñada |
 | `FormObrasSociales` | Administrador | ABM de obras sociales y porcentaje de cobertura | `ObraSocialService` | Rediseñada |
 | `FormExcepcionesAgenda` ("Vacaciones y ausencias") | Administrador | Cargar ausencias; cancela los turnos afectados | `ExcepcionAgendaService`, `MedicoService` | Rediseñada |
+| `FormBackup` ("Copia de seguridad") | Administrador | Crear una copia `.bak` (con verificación), ver el historial y restaurar. Flujo en [`04`](04-flujos.md#i-copia-de-seguridad-y-restauración) | `BackupService` | Rediseñada (tres tarjetas, `FranjaMensaje`, `GrillaUi`; las operaciones corren en `Task.Run`) |
 | `FormAgendaMedico` ("Mi agenda") | Médico | Turnos del día, próximo paciente, filtros | `AgendaDiariaService`, `MedicoService`, `ActividadMedicaService` | Luciano (usa `PaletaEstados`) |
 | `FormRegistrarActividad` | Médico | Escribir la atención de un turno (motivo, procedimiento, receta) | `ActividadMedicaService`, `TurnoService`, `MedicoService` | Luciano |
 | `FormHistorialClinico` | Médico | Historial de atenciones con filtros y detalle | `ActividadMedicaService`, `PacienteService`, `MedicoService` | Luciano (usa `EscalaDpi`, `HistorialGrilla`) |
 | `FormHistorialPaciente` | Médico | Versión modal del historial; solo se abre si no hay navegador (hoy no se usa desde el menú) | `ActividadMedicaService`, `MedicoService` | Luciano (usa `EscalaDpi`, `HistorialGrilla`) |
-| `FormReportes` (+ `FormReportes.Estadisticas.cs`) | Todos (distinto alcance) | 7 pestañas de reportes con grilla, gráfico y CSV | `ReporteService`, `MedicoService` | Rediseñada; las 3 pestañas "por año" son de Luciano ([`07`](07-reportes.md)) |
+| `FormReportes` (+ `FormReportes.Estadisticas.cs`) | Recepcionista (7 pestañas) y Médico (6); el Administrador no la tiene | Reportes con grilla, gráfico y CSV, acotados a los médicos del usuario | `ReporteService`, `MedicoService` | Rediseñada; las 3 pestañas "por año" son de Luciano ([`07`](07-reportes.md)) |
 
-Quién ve qué botón del menú está en [`01-arquitectura.md`](01-arquitectura.md#quién-ve-qué-menú) (tabla de `ConfigurarBotonesPorRol`).
+Quién ve qué botón del menú está en [`01-arquitectura.md`](01-arquitectura.md#quién-ve-qué-menú) (tabla de `ConfigurarBotonesPorRol`). Resumen: el Administrador ve además **Copia de seguridad** (`btnBackup`, que abre `FormBackup`) y **no** ve Reportes.
+
+> El diagrama dibuja a `FormBackup` dentro de "Administrador" (nodo "Sistema y backup"), pero no la flecha del Inicio del Administrador hacia `SistemaService` y `BackupService`: la tabla de arriba es la que tiene todos los servicios de cada pantalla.
 
 ## 2. Navegación
 

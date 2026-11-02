@@ -4,6 +4,8 @@ Acá vas a encontrar los 10 procedimientos almacenados (SP) que usa el sistema: 
 
 Todo se verificó contra los archivos `.sql`, las migraciones, el código C# y la base real (los 10 procedimientos existen en la base de desarrollo; `sp_ResumenDelDia` y `sp_ReporteAsistencia` se ejecutaron con `sqlcmd` y respondieron).
 
+> **Novedad, no probada contra la base todavía:** `sp_ReporteRecaudacion`, `sp_ReporteTurnosPorObraSocial` y `sp_ReporteRendimientoMedicos` ahora reciben `@MedicoId INT = NULL`, por la migración `20261102151455_AgregaMedicoIdAReportes`. El texto del `.sql` y el de la migración se compararon (coinciden), pero la migración no se aplicó ni los procedimientos se ejecutaron contra una instancia real (la de desarrollo estaba detenida).
+
 ## Tabla resumen
 
 | Procedimiento | Qué hace (en una línea) | Quién lo llama | Pantalla |
@@ -11,13 +13,13 @@ Todo se verificó contra los archivos `.sql`, las migraciones, el código C# y l
 | `sp_AsignarTurno` | Crea un turno validando fecha, agenda, ausencias y superposición | **Nadie** | **Ninguna** |
 | `sp_ObtenerTurnosPorMedicoYFecha` | Lista los turnos de un médico (y opcionalmente de un día) | `TurnoService.ObtenerPorMedicoYFecha` | Turnos, Registrar actividad, Mi agenda (vía `AgendaDiariaService`) |
 | `sp_ReporteTurnosPorPeriodo` | Una fila por turno de un período | `ReporteService.ObtenerTurnosPorPeriodo` | Reportes → Turnos |
-| `sp_ReporteRecaudacion` | Plata cobrada, agrupada por médico, medio de pago u obra social | `ReporteService.ObtenerRecaudacion` | Reportes → Recaudación (solo Administrador) |
+| `sp_ReporteRecaudacion` | Plata cobrada, agrupada por médico, medio de pago u obra social; opcionalmente de un solo médico | `ReporteService.ObtenerRecaudacion` | Reportes → Recaudación (Recepcionista y Médico) |
 | `sp_ReporteAsistencia` | Atendidos, ausentes y % de asistencia por médico | `ReporteService.ObtenerAsistencia` | Reportes → Asistencia |
 | `sp_ReporteOcupacionAgenda` | Horas de agenda vs. horas ocupadas por médico | `ReporteService.ObtenerOcupacionAgenda` | Reportes → Ocupación de agenda |
 | `sp_ResumenDelDia` | Contadores del día, semana y mes (una sola fila) | `ResumenService.ObtenerResumen` / `ObtenerResumenDeMedicos` | Inicio |
 | `sp_ReportePacientesPorMes` | Turnos por mes de un año | `ReporteService.ObtenerPacientesPorMes` | Reportes → Pacientes por mes |
-| `sp_ReporteRendimientoMedicos` | Turnos, atendidos, ausentes y recaudado por médico | `ReporteService.ObtenerRendimientoMedicos` | Reportes → Rendimiento de médicos (Administrador) |
-| `sp_ReporteTurnosPorObraSocial` | Turnos y recaudado por obra social del paciente | `ReporteService.ObtenerTurnosPorObraSocial` | Reportes → Obras sociales |
+| `sp_ReporteRendimientoMedicos` | Turnos, atendidos, ausentes y recaudado por médico (o de uno solo) | `ReporteService.ObtenerRendimientoMedicos` | Reportes → Rendimiento de médicos (solo Recepcionista) |
+| `sp_ReporteTurnosPorObraSocial` | Turnos y recaudado por obra social del paciente; opcionalmente de un solo médico | `ReporteService.ObtenerTurnosPorObraSocial` | Reportes → Obras sociales (Recepcionista y Médico) |
 
 Los llamadores se confirmaron con búsquedas en `SGC.Logica` y `SGC.UI` (`EXEC sp_`, `CommandType.StoredProcedure` y los nombres de método).
 
@@ -85,12 +87,13 @@ Validaciones, en orden (todas cortan con `RAISERROR`): fecha no pasada; existe u
 |-----------|------|------|
 | `@FechaDesde`, `@FechaHasta` | DATE | |
 | `@AgruparPor` | NVARCHAR(20) | `'MEDICO'`, `'MEDIO_PAGO'` u `'OBRA_SOCIAL'`; otro valor → `RAISERROR` |
+| `@MedicoId` | INT = NULL | `NULL` = todos los médicos; si se informa, filtra `t.MedicoId = @MedicoId` |
 
 **Devuelve:** `Grupo`, `CantidadTurnos`, `MontoTotal`, ordenado por monto descendente.
 
 **Reglas:** solo cuenta turnos con `Estado = 3` (Asistió) y `Monto` informado. Con `OBRA_SOCIAL` agrupa por la obra social **actual del paciente** y los pacientes sin obra social van a "Particular". En `MEDIO_PAGO`, un valor nulo se muestra como "Sin especificar".
 
-**Quién lo llama:** `ReporteService.ObtenerRecaudacion` (traduce el enum `AgrupacionRecaudacion` al texto) desde la pestaña Recaudación de `FormReportes`, visible solo para el Administrador.
+**Quién lo llama:** `ReporteService.ObtenerRecaudacion` (traduce el enum `AgrupacionRecaudacion` al texto) desde la pestaña Recaudación de `FormReportes`, visible para la Recepcionista (sus médicos asignados) y el Médico (el propio). Con "Todos mis médicos" la pantalla llama una vez por médico asignado y suma los grupos iguales.
 
 ### `sp_ReporteAsistencia`
 
@@ -152,10 +155,10 @@ Los tres vienen del módulo de reportes de Luciano (ver comentario de la migraci
 | Procedimiento | Parámetros | Devuelve | Notas |
 |---------------|------------|----------|-------|
 | `sp_ReportePacientesPorMes` | `@Anio INT`, `@MedicoId INT = NULL` | `MesNumero`, `NombreMes`, `TotalTurnos`, `PacientesAtendidos`, `Ausentes`, `Cancelados`, `PendientesOConfirmados` | Agrupa por mes; **solo aparecen los meses con turnos** (no rellena los vacíos). Los nombres de mes están escritos en el CASE. No filtra `Activo`. |
-| `sp_ReporteRendimientoMedicos` | `@Anio INT`, `@Mes INT = NULL` | `MedicoId`, `MedicoNombre`, `Especialidad`, `TotalTurnos`, `TurnosAtendidos`, `TurnosAusentes`, `TurnosCancelados`, `TotalRecaudado` | `LEFT JOIN` con la condición del año/mes **en el `ON`**: así un médico activo sin turnos igual aparece con ceros. Solo médicos activos. Ordena por atendidos y total. |
-| `sp_ReporteTurnosPorObraSocial` | `@Anio INT` | `ObraSocial`, `CantidadTurnos`, `TotalRecaudado` | Agrupa por la obra social **actual** del paciente ("Particular" si no tiene). Filtra `Activo = 1` (excluye cancelados). No recibe médico. |
+| `sp_ReporteRendimientoMedicos` | `@Anio INT`, `@Mes INT = NULL`, `@MedicoId INT = NULL` | `MedicoId`, `MedicoNombre`, `Especialidad`, `TotalTurnos`, `TurnosAtendidos`, `TurnosAusentes`, `TurnosCancelados`, `TotalRecaudado` | `LEFT JOIN` con la condición del año/mes **en el `ON`**: así un médico activo sin turnos igual aparece con ceros. Solo médicos activos. Ordena por atendidos y total. `@MedicoId` filtra `m.Id` (un médico sin turnos igual aparece con ceros). |
+| `sp_ReporteTurnosPorObraSocial` | `@Anio INT`, `@MedicoId INT = NULL` | `ObraSocial`, `CantidadTurnos`, `TotalRecaudado` | Agrupa por la obra social **actual** del paciente ("Particular" si no tiene). Filtra `Activo = 1` (excluye cancelados). `@MedicoId` filtra `t.MedicoId`; sin él cuenta todos los médicos. |
 
-**Quién los llama:** `ReporteService.ObtenerPacientesPorMes`, `ObtenerRendimientoMedicos` y `ObtenerTurnosPorObraSocial`, todos desde `FormReportes.Estadisticas.cs` (pestañas Pacientes por mes, Rendimiento de médicos —solo Administrador— y Obras sociales). `ObtenerTurnosPorObraSocial` también alimenta el indicador "Facturación anual" del Administrador.
+**Quién los llama:** `ReporteService.ObtenerPacientesPorMes`, `ObtenerRendimientoMedicos` y `ObtenerTurnosPorObraSocial`, todos desde `FormReportes.Estadisticas.cs` (pestañas Pacientes por mes, Rendimiento de médicos —solo Recepcionista— y Obras sociales). `ObtenerTurnosPorObraSocial` también alimenta el indicador "Facturación anual" de la pestaña Pacientes por mes, acotado a los mismos médicos. Los métodos de `ReporteService` reciben `int? medicoId = null` y lo mandan como `@MedicoId` (`DBNull.Value` si es nulo).
 
 ---
 
@@ -210,7 +213,7 @@ Las tres funcionan; la diferencia es de estilo: la tercera es más larga porque 
 
 ## 3. Cómo se despliegan
 
-Cada procedimiento existe en **dos lugares con el mismo texto** (verificado comparando los 10 archivos contra las 3 migraciones, ignorando espacios):
+Cada procedimiento existe en **dos lugares con el mismo texto** (verificado comparando los 10 archivos contra las migraciones, ignorando espacios; los 3 de `@MedicoId` también contra la migración nueva):
 
 | Lugar | Rol |
 |-------|-----|
@@ -222,12 +225,13 @@ Cada procedimiento existe en **dos lugares con el mismo texto** (verificado comp
 | `20261019103826_AgregaStoredProcedures` | `sp_AsignarTurno`, `sp_ObtenerTurnosPorMedicoYFecha`, `sp_ReporteTurnosPorPeriodo`, `sp_ReporteRecaudacion`, `sp_ReporteAsistencia`, `sp_ReporteOcupacionAgenda` |
 | `20261019114456_AgregaSpResumenDelDia` | `sp_ResumenDelDia` |
 | `20261019153000_AgregaSpReportesPacientesRendimientoObraSocial` | `sp_ReportePacientesPorMes`, `sp_ReporteRendimientoMedicos`, `sp_ReporteTurnosPorObraSocial` |
+| `20261102151455_AgregaMedicoIdAReportes` | No crea nada nuevo: **reemplaza** (`CREATE OR ALTER`) `sp_ReporteRecaudacion`, `sp_ReporteTurnosPorObraSocial` y `sp_ReporteRendimientoMedicos` para sumarles `@MedicoId`. Su `Down` restaura las versiones anteriores. |
 
 **Cómo llegan a la base:**
 
 1. Al arrancar, `Program.cs` ejecuta `Database.Migrate()` (ver `01-arquitectura.md`), que aplica las migraciones que falten y las anota en `__EFMigrationsHistory`.
 2. Cada `Sql(...)` tiene `CREATE OR ALTER PROCEDURE`: crea el procedimiento si no existe y lo reemplaza si ya existe, así que es seguro volver a correrlo.
-3. `Down()` de cada migración hace `DROP PROCEDURE IF EXISTS`, para poder deshacerla.
+3. `Down()` de las migraciones que crean procedimientos hace `DROP PROCEDURE IF EXISTS`. La de `@MedicoId` no puede borrar (los procedimientos los crearon migraciones anteriores): su `Down` vuelve a ejecutar las versiones previas con `CREATE OR ALTER`.
 4. Hay **un `migrationBuilder.Sql` por procedimiento** a propósito: `CREATE PROCEDURE` tiene que ser la primera instrucción de su lote, y no se puede usar `GO` dentro de `Sql()`.
 
 ---

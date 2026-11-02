@@ -19,6 +19,7 @@ Las reglas se verificaron leyendo el código. Cuando una regla vive en la UI o e
 | 9 | Actividad médica (historial clínico) | `ActividadMedicaService` |
 | 10 | Validaciones de pacientes, médicos, obras sociales | `PacienteService`, `MedicoService`, `ObraSocialService` |
 | 11 | Diferencias entre C# y los procedimientos | — |
+| 12 | Copia de seguridad y restauración | `BackupService` |
 
 ---
 
@@ -227,14 +228,15 @@ Arma `ExcepcionFila`: estado respecto de hoy (`Vigente` si es hoy, `Proxima` si 
 
 | Aspecto | Administrador | Recepcionista | Médico |
 |---------|---------------|---------------|--------|
-| Menú | Médicos, Horarios, Usuarios, Obras Sociales, Ausencias, Reportes, Inicio | Pacientes, Turnos, Reportes, Inicio | Agenda, Actividad, Historial, Reportes, Inicio |
+| Menú | Médicos, Horarios, Usuarios, Obras Sociales, Ausencias, Copia de seguridad, Inicio (sin Reportes) | Pacientes, Turnos, Reportes, Inicio | Agenda, Actividad, Historial, Reportes, Inicio |
 | Médicos disponibles al agendar turnos | Todos | **Solo los asignados** (`MedicosAsignados`) | — |
 | "Próximo turno" en el listado de pacientes | De cualquier médico | Solo de sus médicos asignados | Solo del propio médico |
-| Inicio (resumen del día) | Resumen general | Suma de sus médicos asignados (`ObtenerResumenDeMedicos`; lista vacía = todo en cero) | Su propia agenda |
-| Pestañas de Reportes | Turnos, Recaudación, Asistencia, Ocupación, Pacientes por mes, Rendimiento de médicos, Obras sociales | Turnos, Pacientes por mes, Obras sociales ("Todos mis médicos" consulta uno por uno los asignados) | Turnos, Asistencia, Ocupación, Pacientes por mes; siempre filtrado por su propio `MedicoId` aunque el combo diga otra cosa |
+| Inicio | **Estado del sistema** (usuarios activos por rol, médicos sin horarios, médicos sin recepcionista, obras sociales activas, última copia de seguridad) más turnos de hoy y de la semana; sin dinero | Resumen del día sumando sus médicos asignados (`ObtenerResumenDeMedicos`; lista vacía = todo en cero) | Su propia agenda |
+| Pestañas de Reportes | **Ninguna** (no tiene Reportes ni ve dinero) | Las **7**: Turnos, Recaudación, Asistencia, Ocupación, Pacientes por mes, Rendimiento de médicos y Obras sociales, siempre de sus médicos asignados ("Todos mis médicos" consulta uno por uno y suma) | **6**: Turnos, Recaudación, Asistencia, Ocupación, Pacientes por mes y Obras sociales (sin Rendimiento); siempre filtrado por su propio `MedicoId` aunque el combo diga otra cosa |
+| Copia de seguridad | **Sí (único rol)**, ver sección 12 | No | No |
 | **Datos clínicos** | No | No | **Sí (único rol)** |
 
-Fuentes de la tabla: `FormMenuPrincipal.ConfigurarBotonesPorRol`, `FormTurnos` (carga de `CboMedico`), `FormPacientes.MedicosVisibles`, `FormInicio`, `FormReportes` (`MedicoSeleccionado`, pestañas por rol). Estas restricciones de alcance viven en la **UI**; los Services de reportes aceptan cualquier `medicoId` (lo aclara el comentario de `ReporteService`).
+Fuentes de la tabla: `FormMenuPrincipal.ConfigurarBotonesPorRol`, `FormTurnos` (carga de `CboMedico`), `FormPacientes.MedicosVisibles`, `FormInicio`, `FormReportes` (`MedicoSeleccionado`, `MedicosAConsultar`, pestañas por rol). El alcance sigue viviendo en la **UI**: los Services de reportes aceptan cualquier `medicoId` (lo aclara el comentario de `ReporteService`). Desde esta versión los procedimientos de Recaudación, Obras sociales y Rendimiento también reciben `@MedicoId` (ver `05-procedimientos-almacenados.md`); la Recepcionista con "Todos mis médicos" los llama una vez por médico asignado y suma en memoria.
 
 ### RNF#07: datos clínicos solo para el rol Médico
 
@@ -325,6 +327,32 @@ Los procedimientos de reporte además no filtran todos igual los turnos cancelad
 
 ---
 
+## 12. Copia de seguridad y restauración
+
+`SGC.Logica/BackupService.cs` (pantalla `SGC.UI/FormBackup.cs`). Solo el Administrador ve el botón; el control está en el menú, no en el Service. **No hay tabla propia**: el historial se lee de `msdb`.
+
+> Nota: no probado contra la base todavía. Esto describe lo que hace el código; el backup y la restauración no se ejecutaron contra una instancia real.
+
+| Regla | Método | Detalle |
+|-------|--------|---------|
+| La carpeta de destino es obligatoria | `RealizarBackup` | `ArgumentException` si está vacía. Se sugiere la carpeta por defecto de la instancia (`ObtenerCarpetaPorDefecto`, `InstanceDefaultBackupPath`) |
+| El archivo se llama `SGC_yyyyMMdd_HHmmss.bak` y se escribe con `INIT, CHECKSUM` | `NombreArchivo`, `RealizarBackup` | `INIT` sobrescribe un archivo del mismo nombre |
+| Toda copia se verifica al terminar | `RealizarBackup` | `RESTORE VERIFYONLY ... WITH CHECKSUM`. Si falla, la copia queda creada pero `Verificado = false` y la pantalla avisa que no hay que confiar en ella |
+| El `.bak` lo escribe y lo lee la **cuenta de servicio de SQL Server**, no la aplicación | `TraducirError` | La carpeta tiene que existir en el servidor y esa cuenta necesita permiso (escritura al crear, lectura al restaurar). Errores 3201, 3203 y 3013 se traducen a ese mensaje |
+| El historial sale de `msdb.dbo.backupset` (tipo `D`, últimas 20) | `ObtenerHistorial` | Si no se puede leer `msdb`, `Disponible = false` y la grilla muestra el motivo |
+| "Última copia" del Inicio del Administrador | `ObtenerUltimoBackup` | `MAX(backup_finish_date)`; la tarjeta se pone en advertencia si nunca hubo copia, no se pudo consultar o tiene más de 7 días |
+| Restaurar verifica el archivo **antes** de tocar la base | `Restaurar` | `RESTORE VERIFYONLY` desde `master` |
+| Restaurar usa `master` y acceso exclusivo | `Restaurar` | `ALTER DATABASE ... SET SINGLE_USER WITH ROLLBACK IMMEDIATE`, luego `RESTORE DATABASE ... WITH REPLACE` |
+| La base nunca queda en `SINGLE_USER` | `Restaurar` | El `finally` vuelve a `MULTI_USER`, aun si la restauración falló |
+| Los pooles de conexiones se vacían antes y después | `Restaurar` | `SqlConnection.ClearAllPools()`: las conexiones reutilizadas apuntarían a la base anterior |
+| Se pide confirmación y, al terminar, se vuelve al login | `FormBackup.RestaurarAsync` | Cuadro de advertencia (el botón por defecto es "No"); después abre un `FormLogin` nuevo y cierra el menú |
+
+Detalles de seguridad en el código: la ruta del `.bak` siempre viaja como parámetro `@ruta` y el nombre de la base se escapa con corchetes (`Entre`), porque un identificador no admite parámetros. La operación corre sin límite de tiempo (`CommandTimeout = 0`).
+
+Flujo paso a paso: [`04-flujos.md`](04-flujos.md#i-copia-de-seguridad-y-restauración).
+
+---
+
 ## Hallazgos
 
 Hechos observados en el código, sin juicio.
@@ -338,7 +366,7 @@ Hechos observados en el código, sin juicio.
 | 5 | **`Pendiente (0)` nunca se crea**, pero hay lógica que lo trata (y `ObtenerProximosSinConfirmar` solo busca `Pendiente`). | Varios (sección 1) |
 | 6 | **Editar un paciente cuya obra social fue dada de baja lo guarda como Particular sin avisar.** El combo de `FormPacientes` solo carga obras sociales activas; al editar, `CboObraSocial.SelectedValue` queda sin coincidencia y `BtnGuardar_Click` lo interpreta como 0 = Particular. Deducido del código, no ejecutado. | `SGC.UI/FormPacientes.cs` (`CargarCombos`, `BtnGuardar_Click`) |
 | 7 | **Mensajes sin tildes en los Services** ("Debe seleccionar un medico valido.", "El turno no existe.") mientras que `DisponibilidadDia`, `ReporteService`, `PacienteService` (DNI, email, teléfono) sí las llevan. | `SGC.Logica/*.cs` |
-| 8 | **Reporte "Obras sociales" visible para Recepcionista con datos de todos los médicos y la columna "Total recaudado":** el procedimiento no recibe médico, y solo el contador de facturación está restringido al administrador; la columna de la grilla no se oculta. Deducido del código. | `SGC.UI/FormReportes.Estadisticas.cs`, `sp_ReporteTurnosPorObraSocial` |
+| 8 | **Resuelto.** Antes, el reporte "Obras sociales" mostraba a la Recepcionista datos de todos los médicos (el procedimiento no recibía médico). Ahora `sp_ReporteTurnosPorObraSocial` recibe `@MedicoId` y la pantalla acota a los médicos del usuario; el Médico lo ve con lo propio y el Administrador ya no tiene Reportes. | `SGC.UI/FormReportes.Estadisticas.cs` (`ObtenerObrasSocialesAcotado`), `sp_ReporteTurnosPorObraSocial` |
 | 9 | **La unicidad de matrícula de médico no se valida en C#**; solo la base la rechaza. | `SGC.Logica/MedicoService.cs` |
 | 10 | **Altas de entidades dadas de baja con los mismos datos únicos fallan en la base** (índices sin filtro de `Activo`), aunque la validación de C# las deje pasar. | Ver `02-modelo-de-datos.md`, sección 6 |
 

@@ -58,6 +58,17 @@ Está completo en [`05-procedimientos-almacenados.md`](05-procedimientos-almacen
 
 Pasos 1 a 10 en [`07-reportes.md`](07-reportes.md#6-cómo-agregar-una-pestaña-nueva). Lo que más se olvida: completar `vista.Encabezados` y `vista.FilasExportacion` (si no, no exporta) y decidir qué roles la ven.
 
+### Copia de seguridad: qué revisar antes de tocarla
+
+Código en `SGC.Logica/BackupService.cs` y `SGC.UI/FormBackup.cs`; reglas en [`03`](03-reglas-de-negocio.md#12-copia-de-seguridad-y-restauración), recorrido en [`04`](04-flujos.md#i-copia-de-seguridad-y-restauración). *Sin probar contra la base todavía.*
+
+1. **La ruta la usa SQL Server, no la app.** La carpeta tiene que existir **en el servidor** y la **cuenta de servicio de SQL Server** necesita permiso de escritura (crear) o lectura (restaurar). Si falla con "no pudo acceder", casi siempre es eso (errores 3201, 3203, 3013). La carpeta que sugiere la pantalla (`InstanceDefaultBackupPath`) es la que ya tiene ese permiso.
+2. **Restaurar se hace desde `master`** con `SINGLE_USER WITH ROLLBACK IMMEDIATE` y vuelve siempre a `MULTI_USER` en un `finally`. Si cambiás ese método, no saques el `finally`: una base que queda en `SINGLE_USER` rechaza a todos.
+3. **Después de restaurar hay que vaciar los pooles** (`SqlConnection.ClearAllPools()`) y volver al login: las conexiones abiertas apuntan a la base anterior.
+4. **El usuario de conexión necesita permisos** de backup/restore (por ejemplo `db_owner` o `sysadmin`) y lectura de `msdb` para el historial. Sin lectura de `msdb`, la pantalla funciona pero el historial y la tarjeta "Última copia" del Inicio quedan vacíos o en advertencia.
+5. **El nombre de la base no se escribe a mano:** sale de la cadena de conexión (`NombreBase`) y se escapa con corchetes (`Entre`); la ruta viaja como parámetro `@ruta`. Mantené ese criterio si agregás sentencias.
+6. **Un backup es de una base y una versión:** restaurar una copia vieja devuelve también el esquema viejo (`__EFMigrationsHistory` incluido); al abrir la app, `Migrate()` aplica de nuevo las migraciones que falten.
+
 ### Cambiar una regla de negocio
 
 1. Buscá la regla en [`03-reglas-de-negocio.md`](03-reglas-de-negocio.md): dice en qué archivo y método vive.
@@ -83,6 +94,8 @@ Pasos 1 a 10 en [`07-reportes.md`](07-reportes.md#6-cómo-agregar-una-pestaña-n
 | Un reporte "no cierra" con otro | Los procedimientos filtran distinto los cancelados (ver defecto R-2 más abajo). |
 | Una pantalla de Luciano se corta con otra escala | Usa píxeles fijos en algunos lugares; reemplazar por `EscalaDpi.Px` (ver [`06`](06-capa-ui.md#6-escala-de-pantalla-dpi)). |
 | Querés ver qué cambió un procedimiento | `git log -- SGC.Datos/StoredProcedures/<archivo>.sql` |
+| "SQL Server no pudo acceder a ..." al crear o restaurar una copia | La ruta la usa la cuenta de servicio de SQL Server: la carpeta debe existir en el servidor y esa cuenta debe tener permiso (ver la receta de copia de seguridad). |
+| Tras una restauración fallida la base rechaza conexiones | Quedó en `SINGLE_USER`: `ALTER DATABASE [SGC] SET MULTI_USER` desde `master`. El código lo evita con un `finally`, pero un corte del servidor en medio puede dejarla así (deducido). |
 
 ---
 
@@ -100,6 +113,8 @@ Pasos 1 a 10 en [`07-reportes.md`](07-reportes.md#6-cómo-agregar-una-pestaña-n
 | **Parámetros opcionales** | Un `null` de C# no viaja como `NULL` de SQL. | `DBNull.Value` (`ParametroEntero`, `ParametroFecha`). |
 | **Baja lógica e índices únicos** | Los índices únicos incluyen filas inactivas: no se puede volver a crear un registro dado de baja con el mismo DNI/nombre. | Ver defecto D-1. |
 | **Migraciones viejas** | Una migración aplicada no se vuelve a ejecutar. | Cambios nuevos = migración nueva. |
+| **Ruta del backup** | El `.bak` lo escribe y lee la cuenta de servicio de SQL Server, no tu usuario de Windows: una carpeta tuya puede fallar aunque exista. | Usar la carpeta por defecto de la instancia o dar permiso a esa cuenta. |
+| **Restaurar y `SINGLE_USER`** | Reemplazar la base exige `master` y acceso exclusivo; si queda en `SINGLE_USER` nadie entra. | No quitar el `finally` de `BackupService.Restaurar`; vaciar los pooles. |
 
 ---
 
@@ -198,10 +213,10 @@ Consolidado de **todos** los hallazgos de [`01`](01-arquitectura.md#hallazgos), 
 |----|----------|-------|:----:|-----------------------|
 | R-1 | **`sp_AsignarTurno` no está conectado a nada** (ningún Service ni pantalla lo invoca) | `sp_AsignarTurno.sql`, `TurnoService.cs` | M | Conectarlo (ver N-1) o eliminarlo para no tener dos reglas |
 | R-2 | **Los reportes filtran distinto los cancelados:** cuentan cancelados `sp_ReporteTurnosPorPeriodo`, `sp_ReporteAsistencia`, `sp_ReportePacientesPorMes` y `sp_ReporteRendimientoMedicos`; los excluyen `sp_ReporteOcupacionAgenda` y `sp_ReporteTurnosPorObraSocial`; Recaudación solo cuenta `Asistio` | `StoredProcedures/*.sql` | M | Definir un criterio único y aplicarlo con una migración nueva por procedimiento |
-| R-3 | **Reporte "Obras sociales" para la Recepcionista:** muestra datos y recaudación de **todos** los médicos | `FormReportes.Estadisticas.cs`; `sp_ReporteTurnosPorObraSocial` | A | Agregar `@MedicoId` al procedimiento o limitar la pestaña al Administrador; ocultar "Total recaudado" a la Recepcionista |
+| R-3 | **Resuelto.** Reporte "Obras sociales" para la Recepcionista: mostraba datos y recaudación de todos los médicos. Ahora `sp_ReporteTurnosPorObraSocial` recibe `@MedicoId` y la pantalla acota a los médicos del usuario (migración `AgregaMedicoIdAReportes`, no probada contra la base todavía) | `FormReportes.Estadisticas.cs`; `sp_ReporteTurnosPorObraSocial` | — | — |
 | R-4 | Dos reportes agrupan por la **obra social actual del paciente**, no por lo cobrado | `sp_ReporteRecaudacion`, `sp_ReporteTurnosPorObraSocial` | M | Guardar la obra social usada en el turno al cobrar |
 | R-5 | **Texto acoplado SQL ↔ pantalla:** `EstadoNombre = 'Asistió'` se compara por texto | `sp_ReporteTurnosPorPeriodo`; `FormReportes.GenerarTurnos` | B | Devolver también el número de estado y comparar por número |
-| R-6 | Procedimientos con filtro de **un solo médico** se ejecutan una vez por médico para la Recepcionista | `ResumenService`, `FormReportes` | B | Parámetro con lista de médicos (tabla de valores) |
+| R-6 | **Vigente y ampliado:** los procedimientos con filtro de **un solo médico** se ejecutan una vez por médico para la Recepcionista. Antes eran Turnos, Asistencia, Ocupación, Pacientes por mes y el resumen de Inicio; ahora también Recaudación, Obras sociales y Rendimiento (`MedicosAConsultar`), así que "Todos mis médicos" hace N consultas por pestaña | `ResumenService`, `FormReportes` | B | Parámetro con lista de médicos (tabla de valores) |
 | R-7 | `sp_ReporteOcupacionAgenda` no filtra `Medicos.Activo` (deducido) | `sp_ReporteOcupacionAgenda.sql` | B | Agregar el filtro |
 | R-8 | El CSV no escapa un `-` inicial (solo `=`, `+`, `@`); **no verificado** cómo lo trata Excel | `FormReportes.EscaparCsv` | B | Agregar `-` a la lista si corresponde |
 
@@ -217,6 +232,7 @@ Consolidado de **todos** los hallazgos de [`01`](01-arquitectura.md#hallazgos), 
 | A-6 | `FormHistorialPaciente` (versión modal) no se abre desde el menú: solo corre sin navegador | `FormHistorialPaciente.cs` | B | Eliminarla o usarla de verdad |
 | A-7 | **No hay proyecto de pruebas automáticas** en la solución | `SistemaGestionConsultorio.sln` | M | Agregar un proyecto de pruebas para las reglas de `TurnoService` |
 | A-8 | El README estaba desactualizado (decía que no había base de datos) | `README.md` | B | **Resuelto en esta rama** (el README ya describe EF Core y SQL Server) |
+| A-9 | La **copia de seguridad/restauración** y la migración `AgregaMedicoIdAReportes` **no se probaron contra una base real** (la instancia de desarrollo estaba detenida) | `BackupService.cs`, `FormBackup.cs`, `Migrations/20261102151455_AgregaMedicoIdAReportes.cs` | A | Probar en una base de prueba: crear, verificar y restaurar una copia, y los tres procedimientos con y sin `@MedicoId` |
 
 ---
 
@@ -230,7 +246,7 @@ Ordenado por prioridad (primero lo que evita datos incorrectos):
 4. **Validar la matrícula duplicada en `MedicoService.Validar`** con un mensaje claro. Cierra N-9.
 5. **Poder reactivar médicos, franjas, pacientes y obras sociales** dados de baja (como `UsuarioService.Reactivar`). Cierra N-10.
 
-Si queda tiempo, en este orden: restringir el reporte de Obras sociales para la Recepcionista (R-3), unificar el `SaveChanges` de la carga de ausencias (N-2), impedir modificar o cancelar turnos ya atendidos (N-5) y mostrar un error cuando un usuario Médico no tiene médico vinculado (N-14).
+Si queda tiempo, en este orden: unificar el `SaveChanges` de la carga de ausencias (N-2), impedir modificar o cancelar turnos ya atendidos (N-5) y mostrar un error cuando un usuario Médico no tiene médico vinculado (N-14).
 
 ## Para seguir leyendo
 

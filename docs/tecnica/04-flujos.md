@@ -1,6 +1,6 @@
 # Flujos de punta a punta
 
-Acá vas a encontrar los 8 recorridos más importantes del sistema, **de la pantalla a la base y de vuelta**: qué archivo y qué método se ejecuta en cada paso, y por qué el código está armado así. Sirve para entender qué pasa "por debajo" cuando alguien aprieta un botón, y para saber dónde tocar si hay que cambiar algo.
+Acá vas a encontrar los 9 recorridos más importantes del sistema, **de la pantalla a la base y de vuelta**: qué archivo y qué método se ejecuta en cada paso, y por qué el código está armado así. Sirve para entender qué pasa "por debajo" cuando alguien aprieta un botón, y para saber dónde tocar si hay que cambiar algo.
 
 Cada flujo tiene un diagrama de secuencia (las flechas van de arriba hacia abajo en el orden en que ocurren; las punteadas son respuestas), una tabla con el recorrido y un cierre con el **porqué**. Los nombres entre comillas de las franjas de mensajes son los que ve el usuario.
 
@@ -16,6 +16,7 @@ Cada flujo tiene un diagrama de secuencia (las flechas van de arriba hacia abajo
 | f | [Cargar una ausencia](#f-cargar-una-ausencia) | `FormExcepcionesAgenda` |
 | g | [Generar un reporte](#g-generar-un-reporte) | `FormReportes` |
 | h | [Pantalla de Inicio](#h-pantalla-de-inicio) | `FormInicio` |
+| i | [Copia de seguridad y restauración](#i-copia-de-seguridad-y-restauración) | `FormBackup` |
 
 **Dos cosas que se repiten en todos los flujos** (explicadas en [`01-arquitectura.md`](01-arquitectura.md)): cada método de un Service abre su propio `SGCContext` con `SGCContextFactory.Crear()` y lo descarta al terminar, y las pantallas nunca tocan la base: siempre pasan por un Service.
 
@@ -199,7 +200,7 @@ El diagrama muestra la pestaña "Turnos"; todas siguen el mismo camino. El módu
 | Paso | Archivo y método | Qué pasa |
 |------|------------------|----------|
 | 1 | `SGC.UI/FormReportes.cs` → `Generar(vista)` | Valida los filtros (`ValidarFiltros`: desde ≤ hasta, y máximo 366 días en Ocupación), pone el cursor de espera y deshabilita el botón. |
-| 2 | `FormReportes.GenerarTurnos` (u otro `Generar*`) | Decide qué médico filtrar según el rol (`MedicoSeleccionado`) y llama al método de `ReporteService`. |
+| 2 | `FormReportes.GenerarTurnos` (u otro `Generar*`) | Decide qué médico filtrar según el rol (`MedicoSeleccionado`; `MedicosAConsultar` expande "Todos mis médicos" a los asignados) y llama al método de `ReporteService`. El Administrador no llega acá: no tiene Reportes. |
 | 3 | `SGC.Logica/ReporteService.cs` → `ObtenerTurnosPorPeriodo` | Valida el período y ejecuta `EXEC sp_ReporteTurnosPorPeriodo` con `SqlQueryRaw<ReporteTurnoFila>`. |
 | 4 | `SGC.Datos/StoredProcedures/sp_ReporteTurnosPorPeriodo.sql` | Hace el `SELECT` con los `JOIN` y devuelve las filas. |
 | 5 | `FormReportes.MostrarDatos` | Asigna la lista como `DataSource` de la grilla; arma el resumen de abajo. En Recaudación y Ocupación también actualiza el gráfico (`ActualizarGrafico`). |
@@ -209,7 +210,7 @@ El diagrama muestra la pestaña "Turnos"; todas siguen el mismo camino. El módu
 
 - **La agregación vive en la base** (procedimientos) y la pantalla solo dibuja: así el cálculo es el mismo para cualquier pantalla y no se traen miles de filas para sumarlas en C#.
 - **Se guarda `Encabezados` y `FilasExportacion` al generar:** el CSV exporta exactamente lo que se ve, sin volver a consultar.
-- **El alcance por rol lo controla la pantalla,** no el Service ni el procedimiento (ver [`07`](07-reportes.md)). Si el Recepcionista elige "Todos mis médicos", la pantalla ejecuta el procedimiento **una vez por médico asignado** y une los resultados, porque el procedimiento recibe un solo médico.
+- **El alcance por rol lo decide la pantalla** (ver [`07`](07-reportes.md)): el Service y el procedimiento solo filtran por el `medicoId` que reciben. Desde esta versión Recaudación, Obras sociales y Rendimiento también lo aceptan (`@MedicoId`, opcional). Si la Recepcionista elige "Todos mis médicos", la pantalla ejecuta el procedimiento **una vez por médico asignado** y une o suma los resultados, porque el procedimiento recibe un solo médico.
 - **Errores:** un `ArgumentException` (por ejemplo, fechas invertidas) se muestra tal cual; cualquier otra excepción se muestra como "No se pudo generar el reporte..." y limpia el resultado.
 
 ---
@@ -221,18 +222,52 @@ El diagrama muestra la pestaña "Turnos"; todas siguen el mismo camino. El módu
 | Paso | Archivo y método | Qué pasa |
 |------|------------------|----------|
 | 1 | `FormMenuPrincipal.CargarPantallaInicialPorDefecto` | Todos los roles arrancan en Inicio: `new FormInicio(usuario)`. |
-| 2 | `SGC.UI/FormInicio.cs` → `Cargar` | Según el rol llama a `CargarAdministrador`, `CargarMedico` o `CargarRecepcionista`. |
+| 2 | `SGC.UI/FormInicio.cs` → `Cargar` | Según el rol llama a `CargarAdministrador`, `CargarMedico` o `CargarRecepcionista`. El Administrador ve el estado del sistema; no ve dinero. |
 | 3 | `SGC.Logica/ResumenService.cs` → `ObtenerResumen` | `EXEC sp_ResumenDelDia @Fecha, @MedicoId` y devuelve **una fila** (`ResumenDelDiaFila`) con los contadores del día, la semana y el mes. |
 | 4 | `ResumenService.ObtenerResumenDeMedicos` | Para la Recepcionista: llama al procedimiento una vez por médico asignado y suma con `ResumenDelDiaFila.Sumar`. Una lista vacía da todo en cero. |
 | 5 | `ResumenService.ObtenerProximoPaciente` / `ObtenerProximosSinConfirmar` | Consultas con EF para el próximo paciente (Médico) y la lista de turnos en estado `Pendiente` (Recepcionista). |
 | 6 | `NotificacionService.ObtenerAvisos` / `ObtenerAvisosDeMedico` | Muestra los avisos simulados **de esta sesión**: están en una lista en memoria. |
+| 7 | `FormInicio.AgregarEstadoDelSistema` → `SistemaService.ObtenerSalud` (solo Administrador) | Consultas EF de solo lectura: usuarios activos por rol, médicos sin horarios, médicos sin recepcionista y obras sociales activas. Los contadores en cero se pintan normal; los que indican algo por corregir, en advertencia. |
+| 8 | `FormInicio.CrearTarjetaUltimoBackup` → `BackupService.ObtenerUltimoBackup` (solo Administrador) | `MAX(backup_finish_date)` de `msdb`. Advertencia si nunca hubo copia, si no se pudo consultar o si tiene más de 7 días. |
 
 **Por qué está armado así**
 
 - **`FormInicio` no tiene Designer:** toda la interfaz se arma en código (ver [`06-capa-ui.md`](06-capa-ui.md)). Es la excepción al patrón normal y se hizo para que el diseñador de Visual Studio no pueda borrarla.
-- **Los números vienen de un solo procedimiento** para no hacer cinco consultas separadas.
+- **Los números del día vienen de un solo procedimiento** para no hacer cinco consultas separadas. El estado del sistema del Administrador no: son contadores de configuración, y por eso salen de EF.
 - **El botón "Actualizar"** vuelve a ejecutar `Cargar`; la pantalla no se refresca sola.
 - **La tarjeta "Pendientes"** cuenta turnos en **estado** `Pendiente` (valor 0). Como ninguna pantalla crea ese estado, en una base creada solo por la aplicación suele mostrar 0.
+
+---
+
+## i) Copia de seguridad y restauración
+
+![Copia de seguridad y restauración](diagramas/flujo-backup.png)
+
+Solo el Administrador. Dos operaciones en la misma pantalla: **crear una copia** (con verificación) y **restaurar** una existente. Las reglas están en [`03`](03-reglas-de-negocio.md#12-copia-de-seguridad-y-restauración).
+
+> No probado contra la base todavía: el recorrido sale de leer el código; ni el backup ni la restauración se ejecutaron contra una instancia real de SQL Server.
+
+| Paso | Archivo y método | Qué pasa |
+|------|------------------|----------|
+| 1 | `SGC.UI/FormMenuPrincipal.cs` → `btnBackup.Click` | Abre `new FormBackup()` como hijo. El botón solo es visible para el Administrador. |
+| 2 | `SGC.UI/FormBackup.cs` → `CargarInicialAsync` | En un hilo aparte (`Task.Run`): `BackupService.ObtenerCarpetaPorDefecto` (`SERVERPROPERTY('InstanceDefaultBackupPath')`) para sugerir la carpeta, y `ObtenerHistorial` (últimas 20 copias de `msdb`). |
+| 3 | `FormBackup.CrearCopiaAsync` → `BackupService.RealizarBackup` | Arma la ruta `carpeta\SGC_yyyyMMdd_HHmmss.bak` y ejecuta `BACKUP DATABASE [base] TO DISK = @ruta WITH INIT, CHECKSUM, STATS = 10`. |
+| 4 | `RealizarBackup` | Verifica con `RESTORE VERIFYONLY FROM DISK = @ruta WITH CHECKSUM`. Si falla, la copia existe pero queda `Verificado = false`. |
+| 5 | `RealizarBackup` → `ObtenerTamano` | Lee el tamaño de `msdb.dbo.backupset`; si no puede, el tamaño queda en blanco. |
+| 6 | `FormBackup.CrearCopiaAsync` | Muestra "Copia creada y verificada" (o el error de verificación) y recarga el historial. |
+| 7 | `FormBackup.ElegirArchivo` / `UsarSeleccionada` | Para restaurar se elige un `.bak` con el diálogo o se toma una fila del historial. |
+| 8 | `FormBackup.RestaurarAsync` | Muestra un `MessageBox` de advertencia (por defecto "No"). Solo si el usuario confirma, sigue. |
+| 9 | `BackupService.Restaurar` | `SqlConnection.ClearAllPools()`, conecta a **`master`**, `RESTORE VERIFYONLY` del archivo, `ALTER DATABASE ... SET SINGLE_USER WITH ROLLBACK IMMEDIATE`. |
+| 10 | `Restaurar` | `RESTORE DATABASE [base] FROM DISK = @ruta WITH REPLACE, STATS = 10`. El `finally` siempre ejecuta `SET MULTI_USER` y vuelve a vaciar los pooles. |
+| 11 | `FormBackup.RestaurarAsync` | Avisa que se restauró, abre un `FormLogin` nuevo y cierra el menú: la sesión termina para empezar con los datos restaurados. |
+
+**Por qué está armado así**
+
+- **Lo hace SQL Server, no la aplicación.** El `.bak` lo escribe y lo lee la **cuenta de servicio de SQL Server**: la carpeta tiene que existir en el servidor y esa cuenta necesita permiso. Una carpeta de tu usuario de Windows puede fallar aunque exista (errores 3201/3203/3013, traducidos a un mensaje que lo explica).
+- **Se restaura desde `master`**, porque no se puede reemplazar una base desde una conexión que está usando esa misma base. Por eso `SINGLE_USER ... ROLLBACK IMMEDIATE` (corta las demás conexiones) y el `finally` que garantiza volver a `MULTI_USER`.
+- **Se verifica siempre,** al crear y antes de restaurar: una copia que no se puede leer no sirve cuando hace falta.
+- **Las operaciones corren en `Task.Run`** y la pantalla deshabilita los botones mientras tanto, para que la ventana no se congele; el `CommandTimeout` es 0 (sin límite) porque una copia grande puede tardar minutos.
+- **No hay tabla propia de copias:** el historial y la tarjeta "Última copia de seguridad" del Inicio salen de `msdb.dbo.backupset`. Si el usuario de conexión no puede leer `msdb`, la grilla muestra el motivo en vez de fallar.
 
 ---
 

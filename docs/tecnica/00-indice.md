@@ -5,8 +5,8 @@ Acá vas a encontrar la puerta de entrada a la documentación técnica: qué es 
 ## Qué es el SGC
 
 - **Sistema de Gestión de Consultorio:** una aplicación de escritorio (C#, .NET 8, Windows Forms) con Entity Framework Core y SQL Server.
-- Gestiona **pacientes, médicos, horarios, turnos, cobro de la consulta, atención clínica y reportes**.
-- Tiene **tres roles** con pantallas distintas: Administrador (configura), Recepcionista (agenda y cobra) y Médico (atiende y ve el historial clínico; es el único que ve datos clínicos).
+- Gestiona **pacientes, médicos, horarios, turnos, cobro de la consulta, atención clínica, reportes y copias de seguridad**.
+- Tiene **tres roles** con pantallas distintas: Administrador (administra el sistema: usuarios, médicos, horarios y copias de seguridad; sin reportes ni dinero), Recepcionista (agenda, cobra y ve los reportes de sus médicos asignados) y Médico (atiende, ve el historial clínico y sus propios reportes; es el único que ve datos clínicos).
 - Está dividido en **cuatro capas** (Entidades, Datos, Lógica, UI) y parte de los cálculos (reportes, resumen del día) viven en 10 procedimientos almacenados de la base.
 - Todo lo escrito acá se verificó contra el código y la base de la rama; lo que no se pudo comprobar dice "no verificado" o "deducido".
 
@@ -43,6 +43,7 @@ La dependencia va de arriba hacia abajo: `SGC.UI` → `SGC.Logica` → `SGC.Dato
 | ¿Por qué el Designer "me borra" cosas? ¿Cómo manejo la escala de pantalla? | [`06-capa-ui.md`](06-capa-ui.md#5-lógica-en-el-cs-el-designer-solo-para-la-estructura) |
 | ¿Qué quiere decir "pendiente"? | [`06-capa-ui.md`](06-capa-ui.md#las-dos-acepciones-de-pendiente) |
 | ¿Qué ve cada rol en Reportes? | [`07-reportes.md`](07-reportes.md#2-reglas-por-rol) |
+| ¿Cómo se hace y se restaura una copia de seguridad? | [`04-flujos.md`](04-flujos.md#i-copia-de-seguridad-y-restauración) y [`03`](03-reglas-de-negocio.md#12-copia-de-seguridad-y-restauración) |
 | ¿Cómo agrego una pantalla, un campo, un reporte o un procedimiento? | [`08-guia-para-modificar.md`](08-guia-para-modificar.md#recetas) |
 | ¿Cómo depuro "no se puede conectar" o un error de compilación por DLL bloqueada? | [`08-guia-para-modificar.md`](08-guia-para-modificar.md#cómo-depurar) |
 | ¿Qué defectos conocidos hay y qué conviene arreglar primero? | [`08-guia-para-modificar.md`](08-guia-para-modificar.md#defectos-y-deuda-conocidos) |
@@ -75,6 +76,7 @@ Después, según lo que vayas a tocar: modelo de datos (02), procedimientos (05)
 | **Fila / DTO** | Clase que junta lo que muestra una grilla (la entidad más datos calculados): `PacienteFila`, `ReporteTurnoFila`... |
 | **Service** | Clase de `SGC.Logica` que concentra las reglas de un tema (`TurnoService`...). Las pantallas solo hablan con los Services. |
 | **Rol** | Tipo de usuario: Administrador, Recepcionista o Médico. Define qué menú y qué datos ve. |
+| **Copia de seguridad (backup)** | Archivo `.bak` con toda la base, que genera SQL Server (no la aplicación) en una carpeta del servidor. Se puede restaurar desde la pantalla de Copia de seguridad (solo Administrador). |
 
 ## Todos los documentos
 
@@ -83,10 +85,10 @@ Después, según lo que vayas a tocar: modelo de datos (02), procedimientos (05)
 | [`01-arquitectura.md`](01-arquitectura.md) | Capas, arranque, patrones, sesión y roles |
 | [`02-modelo-de-datos.md`](02-modelo-de-datos.md) | Tablas, relaciones, restricciones, baja lógica |
 | [`03-reglas-de-negocio.md`](03-reglas-de-negocio.md) | Todas las reglas y dónde viven |
-| [`04-flujos.md`](04-flujos.md) | 8 recorridos de la pantalla a la base |
+| [`04-flujos.md`](04-flujos.md) | 9 recorridos de la pantalla a la base (incluye copia de seguridad) |
 | [`05-procedimientos-almacenados.md`](05-procedimientos-almacenados.md) | Los 10 procedimientos y cómo se despliegan |
 | [`06-capa-ui.md`](06-capa-ui.md) | Pantallas, navegación, patrón visual, componentes |
-| [`07-reportes.md`](07-reportes.md) | Las 7 pestañas, roles, gráficos, CSV |
+| [`07-reportes.md`](07-reportes.md) | Las 7 pestañas, qué ve cada rol, gráficos, CSV |
 | [`08-guia-para-modificar.md`](08-guia-para-modificar.md) | Recetas, trampas, defectos y mejoras |
 
 ## Diagramas
@@ -105,4 +107,5 @@ Cada diagrama tiene una versión en imagen (`.png`), una interactiva (`.html`, s
 | Cargar una ausencia | [`flujo-ausencia.png`](diagramas/flujo-ausencia.png) | [`flujo-ausencia.html`](diagramas/flujo-ausencia.html) |
 | Generar un reporte | [`flujo-reporte.png`](diagramas/flujo-reporte.png) | [`flujo-reporte.html`](diagramas/flujo-reporte.html) |
 | Pantalla de Inicio | [`flujo-inicio.png`](diagramas/flujo-inicio.png) | [`flujo-inicio.html`](diagramas/flujo-inicio.html) |
+| Copia de seguridad y restauración | [`flujo-backup.png`](diagramas/flujo-backup.png) | [`flujo-backup.html`](diagramas/flujo-backup.html) |
 | Pantallas y servicios | [`pantallas-servicios.png`](diagramas/pantallas-servicios.png) | [`pantallas-servicios.html`](diagramas/pantallas-servicios.html) |

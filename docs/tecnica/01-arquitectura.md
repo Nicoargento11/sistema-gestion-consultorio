@@ -18,7 +18,7 @@ Fuente editable: `diagramas/capas.json` (versión interactiva en `diagramas/capa
 |----------|--------|--------------|--------------|
 | `SGC.Entidades` | Clases del dominio | `Paciente`, `Medico`, `Turno`, `Usuario`, enums (`EstadoTurno`, `RolUsuario`, `TipoExcepcionAgenda`), `PasswordHasher`, DTO de reportes (`Reportes/`) | Nadie |
 | `SGC.Datos` | Acceso a SQL Server | `SGCContext` (EF Core), `SGCContextFactory`, `Migrations/`, `DbSeeder`, `StoredProcedures/*.sql` | `SGC.Entidades` |
-| `SGC.Logica` | Reglas de negocio | Un `*Service` por tema (`TurnoService`, `PacienteService`, ...) y las clases "Fila" | `SGC.Datos` y `SGC.Entidades` |
+| `SGC.Logica` | Reglas de negocio | Un `*Service` por tema (`TurnoService`, `PacienteService`, `BackupService`, ...) y las clases "Fila" | `SGC.Datos` y `SGC.Entidades` |
 | `SGC.UI` | Pantallas WinForms | `Form*.cs`, `Program.cs`, helpers de estilo | `SGC.Logica` y `SGC.Entidades` |
 
 Esto sale de los `ProjectReference` de cada `.csproj`.
@@ -156,9 +156,9 @@ FormMenuPrincipal → new FormPacientes(_usuarioActivo), new FormTurnos(_usuario
 
 | Valor | Rol | Qué lo distingue |
 |-------|-----|------------------|
-| 0 | `Administrador` | Ve todo. Configura médicos, horarios, usuarios, obras sociales y ausencias. |
-| 1 | `Recepcionista` | Tiene una lista de médicos asignados (`Usuario.MedicosAsignados`, tabla `UsuarioMedico`). Solo ve y agenda con esos médicos. |
-| 2 | `Medico` | Está vinculado a un único `Medico` (`Usuario.MedicoId`). Es el único rol que ve datos clínicos. |
+| 0 | `Administrador` | Administra el sistema: médicos, horarios, usuarios, obras sociales, ausencias y copias de seguridad. No tiene reportes ni ve dinero; su Inicio muestra el estado del sistema. |
+| 1 | `Recepcionista` | Tiene una lista de médicos asignados (`Usuario.MedicosAsignados`, tabla `UsuarioMedico`). Solo ve y agenda con esos médicos, y sus 7 reportes se acotan a ellos. |
+| 2 | `Medico` | Está vinculado a un único `Medico` (`Usuario.MedicoId`). Es el único rol que ve datos clínicos; sus reportes son solo los propios (6 de 7, sin Rendimiento). |
 
 El número importa: la base tiene un índice filtrado `[Rol] = 2` y un CHECK `Rol <> 2 OR MedicoId IS NOT NULL`. Ver `02-modelo-de-datos.md`.
 
@@ -171,10 +171,11 @@ El número importa: la base tiene un índice filtrado `[Rol] = 2` y un CHECK `Ro
 | Inicio | sí | sí | sí |
 | Pacientes, Turnos | no | sí | no |
 | Médicos, Horarios, Usuarios, Obras Sociales, Ausencias | sí | no | no |
+| Copia de seguridad | sí | no | no |
 | Agenda, Actividad, Historial | no | no | sí |
-| Reportes | sí | sí | sí |
+| Reportes | no | sí | sí |
 
-`FormReportes` luego limita el alcance según el rol (por ejemplo, la pestaña de recaudación solo aparece para el administrador). El detalle de reglas por rol está en `03-reglas-de-negocio.md`.
+`FormReportes` luego limita el alcance según el rol (la Recepcionista ve sus médicos asignados, el Médico solo lo propio). El detalle está en `03-reglas-de-negocio.md` (sección 8) y en `07-reportes.md`.
 
 ---
 

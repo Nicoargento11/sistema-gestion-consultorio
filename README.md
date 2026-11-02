@@ -15,9 +15,9 @@ Trabajo integrador de Taller de Programación II. Aplicación de escritorio en C
 
 | Usuario     | Contraseña      | Rol            | Qué ve                                                        |
 |-------------|-----------------|----------------|----------------------------------------------------------------|
-| admin       | admin123        | Administrador  | Médicos, Horarios, Usuarios, Obras sociales, Vacaciones y ausencias, Reportes |
-| recepcion   | recepcion123    | Recepcionista  | Pacientes, Turnos, Reportes (de sus médicos asignados; el de Obras sociales es global) |
-| medico      | medico123       | Médico         | Mi agenda, Registrar actividad, Historial clínico, Reportes (solo los suyos) |
+| admin       | admin123        | Administrador  | Médicos, Horarios, Usuarios, Obras sociales, Vacaciones y ausencias, Copia de seguridad (sin Reportes; su Inicio muestra el estado del sistema) |
+| recepcion   | recepcion123    | Recepcionista  | Pacientes, Turnos, Reportes (los 7, de sus médicos asignados) |
+| medico      | medico123       | Médico         | Mi agenda, Registrar actividad, Historial clínico, Reportes (6, solo los suyos; sin Rendimiento) |
 
 Todos ven además la pantalla de **Inicio** con el resumen del día según su rol.
 
@@ -45,7 +45,8 @@ Regla de dependencias: cada capa solo referencia a la de abajo. `SGC.Entidades` 
 
 - **Datos:** SQL Server vía EF Core. Cada operación abre su propio contexto con `SGCContextFactory.Crear()`.
 - **Procedimientos almacenados:** los reportes, el resumen del día y la agenda del médico se calculan en la base (`sp_*`). Se crean con migraciones (`CREATE OR ALTER`), por eso no hay que ejecutar nada a mano.
-- **Roles:** Administrador, Recepcionista y Médico. Los datos clínicos solo los ve el rol Médico.
+- **Roles:** Administrador (administra el sistema, sin reportes ni dinero), Recepcionista (reportes de sus médicos asignados) y Médico (reportes propios). Los datos clínicos solo los ve el rol Médico.
+- **Copia de seguridad:** el Administrador crea y restaura archivos `.bak` desde la pantalla Copia de seguridad. Los escribe SQL Server (su cuenta de servicio necesita permiso sobre la carpeta). Todavía no se probó contra una base real.
 
 ## Estado actual
 
@@ -54,8 +55,9 @@ Regla de dependencias: cada capa solo referencia a la de abajo. `SGC.Entidades` 
 | Login + menú principal con navegación por rol | Hecho |
 | Recepcionista: Pacientes, Turnos (asignar, modificar, cancelar, confirmar asistencia) | Hecho |
 | Administrador: Médicos, Horarios, Usuarios, Obras sociales, Vacaciones y ausencias | Hecho |
+| Administrador: Copia de seguridad (crear, verificar, ver historial, restaurar) | Implementado; sin probar contra una base real |
 | Médico: Mi agenda, Registrar actividad, Historial clínico | Hecho |
-| Inicio (resumen del día) y Reportes con estadísticas, gráficos y exportación a CSV | Hecho |
+| Inicio (resumen según el rol) y Reportes con estadísticas, gráficos y exportación a CSV, acotados por rol | Hecho; el alcance por médico (migración `AgregaMedicoIdAReportes`) sin probar contra una base real |
 
 Pendientes y defectos conocidos: ver `docs/tecnica/08-guia-para-modificar.md`.
 

@@ -11,54 +11,66 @@ Acá vas a encontrar cómo funciona la pantalla **Reportes**: las 7 pestañas (c
 | # | Pestaña | De quién | Procedimiento | Filtros | Gráfico |
 |---|---------|----------|---------------|---------|---------|
 | 1 | Turnos | Nuestra | `sp_ReporteTurnosPorPeriodo` | Desde, Hasta, Médico, Estado | No |
-| 2 | Recaudación | Nuestra | `sp_ReporteRecaudacion` | Desde, Hasta, Agrupar por (médico, medio de pago, obra social) | Barras (control `Chart`) |
+| 2 | Recaudación | Nuestra | `sp_ReporteRecaudacion` | Desde, Hasta, Médico, Agrupar por (médico, medio de pago, obra social) | Barras (control `Chart`) |
 | 3 | Asistencia | Nuestra | `sp_ReporteAsistencia` | Desde, Hasta, Médico | No |
 | 4 | Ocupación de agenda | Nuestra | `sp_ReporteOcupacionAgenda` | Desde, Hasta (máx. 366 días), Médico | Barras (control `Chart`) |
 | 5 | Pacientes por mes | Luciano | `sp_ReportePacientesPorMes` | Año, Médico | Barras por mes (GDI+ a mano) |
-| 6 | Rendimiento de médicos | Luciano | `sp_ReporteRendimientoMedicos` | Año, Mes (opcional) | No |
-| 7 | Obras sociales | Luciano | `sp_ReporteTurnosPorObraSocial` | Año | Barras horizontales (GDI+ a mano) |
+| 6 | Rendimiento de médicos | Luciano | `sp_ReporteRendimientoMedicos` | Año, Mes (opcional), Médico | No |
+| 7 | Obras sociales | Luciano | `sp_ReporteTurnosPorObraSocial` | Año, Médico | Barras horizontales (GDI+ a mano) |
 
 - Las pestañas 1 a 4 se arman en `FormReportes.cs`; las 5 a 7 (las "por año") en `FormReportes.Estadisticas.cs`, que es una clase parcial del mismo formulario. El autor de cada procedimiento se ve con `git log -- SGC.Datos/StoredProcedures/<archivo>.sql`.
 - Las 5 a 7 "se calculan solas" al abrir la pestaña por primera vez (`GenerarEstadisticasAlAbrir`) y se recalculan al cambiar año o mes (`RegenerarSiCorresponde`). Las 1 a 4 esperan el botón **Generar**.
+- Qué pestañas ve cada rol está en la sección 2: la Recepcionista ve las 7, el Médico 6 y el Administrador ninguna.
 - Ninguna pestaña incluye datos clínicos (RNF#07): ni los procedimientos ni los DTO tienen motivo, procedimiento ni receta.
 
 ## 2. Reglas por rol
 
-Se verifican en `FormReportes.ConstruirPestaniasPorRol` y `ConstruirPestaniasEstadisticas`: **a cada rol solo se le agregan las pestañas permitidas** al `TabControl`.
+Se verifican en `FormReportes.ConstruirPestaniasPorRol` y `ConstruirPestaniasEstadisticas`: **a cada rol solo se le agregan las pestañas permitidas** al `TabControl`. El Administrador administra el sistema y **no tiene Reportes** (el menú oculta el botón); no hay plata en su Inicio.
 
 | Pestaña | Administrador | Recepcionista | Médico |
 |---------|:-:|:-:|:-:|
-| Turnos | Sí (todos los médicos) | Sí (sus asignados) | Sí (solo el propio) |
-| Recaudación | **Sí** | No | No |
-| Asistencia | Sí | No | Sí (solo el propio) |
-| Ocupación de agenda | Sí | No | Sí (solo el propio) |
-| Pacientes por mes | Sí | Sí (sus asignados) | Sí (solo el propio) |
-| Rendimiento de médicos | **Sí** | No | No |
-| Obras sociales | Sí | **Sí (global)** | No |
-| **Total de pestañas** | **7** | **3** | **4** |
+| Turnos | No | Sí (sus asignados) | Sí (solo el propio) |
+| Recaudación | No | **Sí** (sus asignados) | **Sí** (solo la propia) |
+| Asistencia | No | **Sí** (sus asignados) | Sí (solo el propio) |
+| Ocupación de agenda | No | **Sí** (sus asignados) | Sí (solo el propio) |
+| Pacientes por mes | No | Sí (sus asignados) | Sí (solo el propio) |
+| Rendimiento de médicos | No | **Sí** (sus asignados) | No |
+| Obras sociales | No | **Sí** (sus asignados) | **Sí** (solo las propias) |
+| **Total de pestañas** | **0** | **7** | **6** |
 
 Cómo se hace cumplir el alcance de médicos:
 
 | Rol | Combo "Médico" | Qué se consulta |
 |-----|----------------|-----------------|
-| Administrador | "Todos" + todos los médicos | `medicoId = null` (todos) o el elegido |
-| Recepcionista | "Todos mis médicos" + sus asignados | Un médico elegido; con "Todos mis médicos" se ejecuta el procedimiento **una vez por médico asignado** y se unen los resultados (`GenerarTurnos`, `GenerarMensual`) |
+| Administrador | — (sin reportes) | Si igual llegara a abrir la pantalla: queda `_sinAcceso`, mensaje "Su rol no tiene acceso a los reportes." y todo deshabilitado |
+| Recepcionista | "Todos mis médicos" + sus asignados | Un médico elegido; con "Todos mis médicos", `MedicosAConsultar` expande a los asignados y se ejecuta el procedimiento **una vez por médico**; después se unen o suman los resultados en memoria |
 | Médico | Un solo ítem (él mismo), deshabilitado | `MedicoSeleccionado` devuelve siempre `_usuarioActivo.MedicoId`, **sin mirar el combo** (defensa en profundidad) |
+
+Detalles por pestaña con "Todos mis médicos":
+
+| Pestaña | Cómo se combinan los resultados |
+|---------|---------------------------------|
+| Turnos, Pacientes por mes | Se unen las listas (comportamiento previo) |
+| Asistencia, Ocupación | Se unen y se ordenan por médico |
+| Recaudación | Se agrupan por `Grupo` sumando turnos y monto; orden por monto descendente |
+| Obras sociales | Se agrupan por obra social sumando turnos y recaudado (`ObtenerObrasSocialesAcotado`) |
+| Rendimiento de médicos | Se unen y se ordenan por atendidos y total |
+
+Otras reglas del Médico: en Recaudación no se ofrece "Agrupar por Médico" (solo medio de pago y obra social), porque ve un solo médico. La Recepcionista sí lo tiene.
 
 Casos sin acceso (`_sinAcceso`): un Médico sin `MedicoId` o una Recepcionista sin médicos asignados ven un mensaje de error y todos los botones **Generar** quedan deshabilitados.
 
-**Por qué Recaudación y Rendimiento son solo del Administrador:** `sp_ReporteRecaudacion` no admite filtrar por médico, así que no se puede limitar a "los suyos"; y el rendimiento compara a todos los profesionales.
+**Por qué ahora Recaudación y Rendimiento no son solo de un rol:** antes `sp_ReporteRecaudacion` no admitía filtrar por médico, así que solo podía verla quien ve todo. Los tres procedimientos de plata (Recaudación, Obras sociales, Rendimiento) ahora reciben `@MedicoId` opcional, y eso permite acotarlos a "los suyos". El rendimiento compara médicos entre sí, por eso queda solo para la Recepcionista (que ve varios).
 
 > **Importante:** estas restricciones viven **solo en la pantalla**. Ni `ReporteService` ni los procedimientos validan el rol (el comentario de `ReporteService` lo dice: "restringir a qué médicos puede ver cada usuario es responsabilidad de la UI").
 
-### Hallazgo: "Obras sociales" y la Recepcionista
+> **No probado contra la base todavía:** la migración que agrega `@MedicoId` y las pantallas por rol no se ejecutaron contra una instancia real; el alcance descripto sale de leer el código.
 
-La pestaña **Obras sociales** se le agrega a todo rol distinto de Médico (`Rol != RolUsuario.Medico`), es decir, también a la Recepcionista. Pero `sp_ReporteTurnosPorObraSocial` recibe solo `@Anio`: **no filtra por médico**. Resultado:
+### Hallazgo resuelto: "Obras sociales" y la Recepcionista
 
-- La Recepcionista ve los turnos de **todos los médicos** (no solo los asignados), contradiciendo lo que dice el README ("Reportes de sus médicos asignados").
-- Ve también la columna **"Total recaudado"** de la grilla (`AgregarColumnasObrasSociales` la agrega siempre). Solo el contador "Facturación anual" está limitado al Administrador.
+Antes, la pestaña **Obras sociales** se le agregaba a todo rol distinto de Médico y `sp_ReporteTurnosPorObraSocial` recibía solo `@Anio`, así que la Recepcionista veía los turnos y la plata de **todos los médicos** (no solo los asignados), contradiciendo el README.
 
-Cómo arreglarlo (cualquiera de las dos): ocultar la columna y los datos de plata para la Recepcionista; o, mejor, agregar `@MedicoId` al procedimiento y reutilizar el mismo mecanismo que "Pacientes por mes" (una consulta por médico asignado). Está en la lista de [`08-guia-para-modificar.md`](08-guia-para-modificar.md#defectos-y-deuda-conocidos).
+Ahora el procedimiento recibe `@MedicoId`, la pantalla acota la pestaña a los médicos del usuario (la Recepcionista ve sus asignados; el Médico, lo propio) y el Administrador ya no tiene Reportes. Quedó registrado como resuelto en [`08-guia-para-modificar.md`](08-guia-para-modificar.md#defectos-y-deuda-conocidos).
 
 ## 3. Cómo se arma un reporte
 
@@ -95,9 +107,9 @@ Un parámetro opcional sin valor tiene que viajar como `DBNull.Value`, no como `
 | Recaudación | Monto total, turnos cobrados | Solo cuenta turnos `Asistio` con monto. El encabezado de la primera columna cambia según el agrupamiento. |
 | Asistencia | Total, atendidos, ausentes, % de asistencia | El % es `atendidos / (atendidos + ausentes)`: los cancelados no entran. |
 | Ocupación | Horas configuradas, ocupadas y % global | Descuenta de la agenda las ausencias cargadas. |
-| Pacientes por mes | Contadores de chips (total, atendidos, ausentes, cancelados, "pendientes o confirmados") y, solo Admin, "Facturación anual" | "Pendientes o confirmados" suma los estados 0 y 1 juntos (columna `PendientesOConfirmados`). La facturación sale de `ObtenerTurnosPorObraSocial(anio)`. |
+| Pacientes por mes | Contadores de chips (total, atendidos, ausentes, cancelados, "pendientes o confirmados") y "Facturación anual" | "Pendientes o confirmados" suma los estados 0 y 1 juntos (columna `PendientesOConfirmados`). La facturación sale de `ObtenerTurnosPorObraSocial(anio, medicoId)` (`ObtenerObrasSocialesAcotado`), acotada a los mismos médicos que la pestaña. |
 | Rendimiento de médicos | Cantidad de médicos, turnos, atendidos, ausentes, recaudado | Muestra todos los médicos activos, incluso con 0 turnos. |
-| Obras sociales | Cantidad de obras sociales, turnos y (Admin) facturación | Agrupa por la obra social **actual** del paciente, no por lo cobrado (ver hallazgo 3 de [`05`](05-procedimientos-almacenados.md)). |
+| Obras sociales | Cantidad de obras sociales, turnos y facturación (de los médicos del usuario) | Agrupa por la obra social **actual** del paciente, no por lo cobrado (ver hallazgo 3 de [`05`](05-procedimientos-almacenados.md)). |
 
 ## 4. Los gráficos
 
@@ -164,7 +176,7 @@ Ejemplo: un reporte "Turnos por especialidad". Los pasos, en orden:
 
 Para un reporte "por año" como los de Luciano, en el paso 5 se pasa `porAnio: new OpcionesVistaAnio(ConMes: ..., ConGrafico: ...)` y la lógica va en `FormReportes.Estadisticas.cs` (rama nueva en `GenerarEstadisticas`).
 
-**Regla de oro:** si el reporte tiene que respetar el alcance por rol, hacelo en la pantalla (como el resto) **y pensá qué pasa con la Recepcionista**: si el procedimiento no recibe médico, va a mostrar datos de todos (el problema de "Obras sociales").
+**Regla de oro:** si el reporte tiene que respetar el alcance por rol, hacelo en la pantalla (como el resto) **y pensá qué pasa con la Recepcionista**: el procedimiento tiene que recibir `@MedicoId` opcional (como los demás) y la pantalla usar `MedicosAConsultar`; si no, va a mostrar datos de todos (era el problema de "Obras sociales").
 
 ## Para seguir leyendo
 
