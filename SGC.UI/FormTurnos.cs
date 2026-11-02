@@ -48,7 +48,6 @@ public partial class FormTurnos : Form
     private FranjaMensaje _mensajes = null!;
     private BarraContadores _contadores = null!;
     private const string ContTotal = "Total";
-    private const string ContPendientes = "Pendientes";
     private const string ContConfirmados = "Confirmados";
     private const string ContAtendidos = "Atendidos";
     private const string ContAusentes = "Ausentes";
@@ -540,7 +539,6 @@ public partial class FormTurnos : Form
             {
                 EstadoTurno.Cancelado => "Este turno está cancelado.",
                 EstadoTurno.Asistio or EstadoTurno.Ausente => "La asistencia ya fue registrada.",
-                EstadoTurno.Pendiente => "Solo se confirma asistencia de turnos Confirmados.",
                 _ => "Se confirma a partir de la fecha del turno."
             };
         }
@@ -929,7 +927,6 @@ public partial class FormTurnos : Form
     private void ConfigurarBarraContadores()
     {
         _contadores.Agregar(ContTotal, Color.FromArgb(27, 42, 74), Color.White);
-        _contadores.Agregar(ContPendientes, PaletaEstados.Fondo(EstadoTurno.Pendiente), PaletaEstados.Acento(EstadoTurno.Pendiente));
         _contadores.Agregar(ContConfirmados, PaletaEstados.Fondo(EstadoTurno.Confirmado), PaletaEstados.Acento(EstadoTurno.Confirmado));
         _contadores.Agregar(ContAtendidos, PaletaEstados.Fondo(EstadoTurno.Asistio), Color.FromArgb(28, 120, 66));
         _contadores.Agregar(ContAusentes, PaletaEstados.Fondo(EstadoTurno.Ausente), Color.FromArgb(180, 50, 38));
@@ -943,7 +940,6 @@ public partial class FormTurnos : Form
         int Contar(EstadoTurno estado) => turnos.Count(t => t.Estado == estado);
 
         _contadores.Poner(ContTotal, $"Total: {turnos.Count}");
-        _contadores.Poner(ContPendientes, $"Pendientes: {Contar(EstadoTurno.Pendiente)}");
         _contadores.Poner(ContConfirmados, $"Confirmados: {Contar(EstadoTurno.Confirmado)}");
         _contadores.Poner(ContAtendidos, $"Atendidos: {Contar(EstadoTurno.Asistio)}");
         _contadores.Poner(ContAusentes, $"Ausentes: {Contar(EstadoTurno.Ausente)}");
@@ -984,7 +980,7 @@ public partial class FormTurnos : Form
         {
             // Solo tiene sentido estimar lo que todavia no se cobro: para un
             // turno ya atendido manda el Monto real, y ausente/cancelado no cobra.
-            bool pendienteDeCobro = turno.Estado == EstadoTurno.Pendiente || turno.Estado == EstadoTurno.Confirmado;
+            bool pendienteDeCobro = turno.Estado == EstadoTurno.Confirmado;
             e.Value = pendienteDeCobro
                 ? TurnoService.CalcularMontoEstimado(turno).ToString("C2", CulturaAr)
                 : "-";

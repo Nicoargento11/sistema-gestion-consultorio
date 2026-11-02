@@ -11,7 +11,7 @@ public class PacienteFila
     // Fecha del ultimo turno con Estado Asistio (null = nunca asistio).
     public DateOnly? UltimaVisita { get; init; }
 
-    // Texto "dd/MM/yyyy HH:mm - Medico" del proximo turno futuro Pendiente o
+    // Texto "dd/MM/yyyy HH:mm - Medico" del proximo turno futuro
     // Confirmado, o "-" si no tiene (o si ninguno es de un medico visible).
     public string ProximoTurno { get; init; } = "-";
 

@@ -2,11 +2,11 @@ namespace SGC.Entidades;
 
 public enum EstadoTurno
 {
-    Pendiente,
-    Confirmado,
-    Cancelado,
-    Asistio,
-    Ausente
+    // Valores explicitos: se guardan como int y los procedimientos usan los numeros.
+    Confirmado = 1,
+    Cancelado = 2,
+    Asistio = 3,
+    Ausente = 4
 }
 
 public class Turno
@@ -25,7 +25,7 @@ public class Turno
 
     public TimeOnly HoraFin => HoraInicio.AddMinutes(DuracionMinutos);
 
-    public EstadoTurno Estado { get; set; } = EstadoTurno.Pendiente;
+    public EstadoTurno Estado { get; set; } = EstadoTurno.Confirmado;
     public string? MedioPago { get; set; }
     public decimal? Monto { get; set; }
     public bool Activo { get; set; } = true;

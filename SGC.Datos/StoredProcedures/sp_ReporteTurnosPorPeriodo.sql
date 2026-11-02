@@ -1,7 +1,7 @@
 -- Reporte de turnos de un periodo (una fila por turno).
 -- RNF#07: este reporte NUNCA devuelve datos clinicos (MotivoConsulta,
 -- RecetaMedicamentos, Procedimiento), por eso es seguro para Recepcionista.
--- Estado: 0=Pendiente, 1=Confirmado, 2=Cancelado, 3=Asistio, 4=Ausente.
+-- Estado: 1=Confirmado, 2=Cancelado, 3=Asistio, 4=Ausente.
 CREATE OR ALTER PROCEDURE sp_ReporteTurnosPorPeriodo
     @FechaDesde DATE,
     @FechaHasta DATE,
@@ -26,7 +26,6 @@ BEGIN
         p.Dni,
         m.Apellido + N', ' + m.Nombre AS Medico,
         CASE t.Estado
-            WHEN 0 THEN N'Pendiente'
             WHEN 1 THEN N'Confirmado'
             WHEN 2 THEN N'Cancelado'
             WHEN 3 THEN N'Asistió'

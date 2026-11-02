@@ -214,8 +214,9 @@ public class FormInicio : Form
         tarjetas.Controls.Add(CrearTarjeta(resumen.AusentesMes.ToString(CulturaAr), "Ausentes del mes", PaletaEstados.Acento(EstadoTurno.Ausente), IconoAlerta));
         _contenido.Controls.Add(tarjetas);
 
-        AgregarSeccion("Próximos turnos sin confirmar");
-        _contenido.Controls.Add(CrearTablaProximos(_resumenService.ObtenerProximosSinConfirmar(_fecha, ids)));
+        AgregarSeccion(EsHoy ? "Próximos turnos de hoy" : $"Turnos confirmados del {_fecha:dd/MM/yyyy}");
+        var desdeHora = EsHoy ? TimeOnly.FromDateTime(DateTime.Now) : TimeOnly.MinValue;
+        _contenido.Controls.Add(CrearTablaProximos(_resumenService.ObtenerProximosTurnos(_fecha, desdeHora, ids)));
 
         AgregarAvisos(_notificacionService.ObtenerAvisos(), "Avisos");
     }
@@ -298,7 +299,6 @@ public class FormInicio : Form
         AgregarSeccion(EsHoy ? "Turnos de hoy" : $"Turnos del {_fecha:dd/MM/yyyy}");
 
         var tarjetas = CrearFilaTarjetas();
-        tarjetas.Controls.Add(CrearTarjeta(resumen.Pendientes.ToString(CulturaAr), "Pendientes", PaletaEstados.Acento(EstadoTurno.Pendiente), IconoReloj));
         tarjetas.Controls.Add(CrearTarjeta(resumen.Confirmados.ToString(CulturaAr), "Confirmados", PaletaEstados.Acento(EstadoTurno.Confirmado), IconoConfirmado));
         tarjetas.Controls.Add(CrearTarjeta(resumen.Asistieron.ToString(CulturaAr), "Asistieron", PaletaEstados.Acento(EstadoTurno.Asistio), IconoPersona));
         tarjetas.Controls.Add(CrearTarjeta(resumen.Ausentes.ToString(CulturaAr), "Ausentes", PaletaEstados.Acento(EstadoTurno.Ausente), IconoAlerta));
@@ -356,11 +356,11 @@ public class FormInicio : Form
     private Control CrearTablaProximos(List<Turno> turnos)
     {
         if (turnos.Count == 0)
-            return CrearAviso("No hay turnos pendientes de confirmación.", ColorSecundario);
+            return CrearAviso(EsHoy ? "No quedan turnos confirmados por atender hoy." : "No hay turnos confirmados para esta fecha.", ColorSecundario);
 
         var grilla = new DataGridView
         {
-            Name = "DgvProximosSinConfirmar",
+            Name = "DgvProximosTurnos",
             AllowUserToAddRows = false,
             AllowUserToDeleteRows = false,
             AllowUserToResizeRows = false,
@@ -377,13 +377,12 @@ public class FormInicio : Form
             ScrollBars = ScrollBars.None,
             Margin = new Padding(0, 0, 0, 8)
         };
-        grilla.Columns.Add(new DataGridViewTextBoxColumn { Name = "colFecha", HeaderText = "Fecha", FillWeight = 70 });
         grilla.Columns.Add(new DataGridViewTextBoxColumn { Name = "colHora", HeaderText = "Hora", FillWeight = 50 });
         grilla.Columns.Add(new DataGridViewTextBoxColumn { Name = "colPaciente", HeaderText = "Paciente", FillWeight = 160 });
         grilla.Columns.Add(new DataGridViewTextBoxColumn { Name = "colMedico", HeaderText = "Médico", FillWeight = 190 });
 
         foreach (var t in turnos)
-            grilla.Rows.Add(t.Fecha.ToString("dd/MM/yyyy"), t.HoraInicio.ToString("HH:mm"), t.PacienteNombre, t.MedicoNombre);
+            grilla.Rows.Add(t.HoraInicio.ToString("HH:mm"), t.PacienteNombre, t.MedicoNombre);
 
         // Lista de solo lectura: sin seleccion visible y con encabezado plano
         // (el estilo visual por defecto pinta de azul el encabezado activo).

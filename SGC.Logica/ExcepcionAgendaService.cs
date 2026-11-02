@@ -99,7 +99,7 @@ public class ExcepcionAgendaService
         var turnosAfectados = contexto.Turnos
             .Include(t => t.Paciente)
             .Where(t => t.Activo && t.MedicoId == excepcion.MedicoId && t.Fecha == excepcion.Fecha)
-            .Where(t => t.Estado == EstadoTurno.Pendiente || t.Estado == EstadoTurno.Confirmado)
+            .Where(t => t.Estado == EstadoTurno.Confirmado)
             .AsEnumerable()
             .Where(t => excepcion.Tipo == TipoExcepcionAgenda.DiaCompleto || SeSuperponeConRango(t, excepcion))
             .ToList();

@@ -73,8 +73,8 @@ public class AgendaDiariaService
             .ToDictionary(g => g.Key, g => g.Min(a => a.Fecha.ToDateTime(a.HoraInicio)));
     }
 
-    // Proximo paciente a atender: primer turno del dia que sigue Pendiente o
-    // Confirmado y sin atencion registrada. Si el dia consultado es hoy solo
+    // Proximo paciente a atender: primer turno del dia que sigue Confirmado
+    // y sin atencion registrada. Si el dia consultado es hoy solo
     // cuentan los turnos con HoraInicio >= ahora; en cualquier otro dia, el
     // primero del dia. Recibe hoy/ahora por parametro para poder probarlo.
     public static TurnoAgendaItem? ElegirProximo(IEnumerable<TurnoAgendaItem> agenda, DateOnly fecha, DateOnly hoy, TimeOnly ahora)
@@ -82,7 +82,7 @@ public class AgendaDiariaService
         return agenda
             .Where(i => i.Turno.Fecha == fecha
                         && i.Turno.Activo
-                        && (i.Turno.Estado == EstadoTurno.Pendiente || i.Turno.Estado == EstadoTurno.Confirmado)
+                        && i.Turno.Estado == EstadoTurno.Confirmado
                         && !i.Atendido
                         && (fecha != hoy || i.Turno.HoraInicio >= ahora))
             .OrderBy(i => i.Turno.HoraInicio)

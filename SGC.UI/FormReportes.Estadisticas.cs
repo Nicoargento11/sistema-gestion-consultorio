@@ -70,9 +70,9 @@ public partial class FormReportes
         m.Agregar("Atendidos", PaletaEstados.Fondo(EstadoTurno.Asistio), Color.FromArgb(28, 120, 66));
         m.Agregar("Ausentes", PaletaEstados.Fondo(EstadoTurno.Ausente), Color.FromArgb(180, 50, 38));
         m.Agregar("Cancelados", PaletaEstados.Fondo(EstadoTurno.Cancelado), Color.FromArgb(90, 98, 112));
-        m.Agregar("Pendientes", PaletaEstados.Fondo(EstadoTurno.Pendiente), PaletaEstados.Acento(EstadoTurno.Pendiente));
+        m.Agregar("Confirmados", PaletaEstados.Fondo(EstadoTurno.Confirmado), PaletaEstados.Acento(EstadoTurno.Confirmado));
         m.Agregar("Facturacion", Color.FromArgb(240, 230, 247), Color.FromArgb(110, 50, 140));
-        PonerContadoresVacios(_vistaMensual, "Total", "Atendidos", "Ausentes", "Cancelados", "Pendientes", "Facturacion");
+        PonerContadoresVacios(_vistaMensual, "Total", "Atendidos", "Ausentes", "Cancelados", "Confirmados", "Facturacion");
         TabReportes.TabPages.Add(_vistaMensual.Pagina);
 
         if (_usuarioActivo.Rol == RolUsuario.Recepcionista)
@@ -159,7 +159,7 @@ public partial class FormReportes
         grilla.Columns.Add(Col("colAtendidos", "Atendidos", nameof(ReporteMensualItem.PacientesAtendidos), 80, "0", DataGridViewContentAlignment.MiddleRight));
         grilla.Columns.Add(Col("colAusentes", "Ausentes", nameof(ReporteMensualItem.Ausentes), 80, "0", DataGridViewContentAlignment.MiddleRight));
         grilla.Columns.Add(Col("colCancelados", "Cancelados", nameof(ReporteMensualItem.Cancelados), 80, "0", DataGridViewContentAlignment.MiddleRight));
-        grilla.Columns.Add(Col("colPendientes", "Pend. o conf.", nameof(ReporteMensualItem.PendientesOConfirmados), 80, "0", DataGridViewContentAlignment.MiddleRight));
+        grilla.Columns.Add(Col("colConfirmados", "Confirmados", nameof(ReporteMensualItem.Confirmados), 80, "0", DataGridViewContentAlignment.MiddleRight));
     }
 
     private static void AgregarColumnasObrasSociales(DataGridView grilla)
@@ -228,7 +228,7 @@ public partial class FormReportes
                     PacientesAtendidos = g.Sum(i => i.PacientesAtendidos),
                     Ausentes = g.Sum(i => i.Ausentes),
                     Cancelados = g.Sum(i => i.Cancelados),
-                    PendientesOConfirmados = g.Sum(i => i.PendientesOConfirmados)
+                    Confirmados = g.Sum(i => i.Confirmados)
                 })
                 .ToList();
         }
@@ -244,7 +244,7 @@ public partial class FormReportes
         c.Poner("Atendidos", $"Pacientes atendidos: {_datosMensuales.Sum(d => d.PacientesAtendidos)}");
         c.Poner("Ausentes", $"Ausentes: {_datosMensuales.Sum(d => d.Ausentes)}");
         c.Poner("Cancelados", $"Cancelados: {_datosMensuales.Sum(d => d.Cancelados)}");
-        c.Poner("Pendientes", $"Pendientes o confirmados: {_datosMensuales.Sum(d => d.PendientesOConfirmados)}");
+        c.Poner("Confirmados", $"Confirmados: {_datosMensuales.Sum(d => d.Confirmados)}");
         // KPI "Facturacion anual" del modulo original, acotado a los mismos medicos
         // que el resto de la pestania.
         decimal facturado = ObtenerObrasSocialesAcotado(anio, medicoId).Sum(d => d.TotalRecaudado);
@@ -254,7 +254,7 @@ public partial class FormReportes
         vista.LblResumen.Text = _datosMensuales.Count == 0 ? "" : $"Año {anio}: {_datosMensuales.Count} {(_datosMensuales.Count == 1 ? "mes" : "meses")} con turnos";
         vista.PanelGrafico!.Invalidate();
 
-        vista.Encabezados = new[] { "Mes", "Total de turnos", "Atendidos", "Ausentes", "Cancelados", "Pendientes o confirmados" };
+        vista.Encabezados = new[] { "Mes", "Total de turnos", "Atendidos", "Ausentes", "Cancelados", "Confirmados" };
         vista.FilasExportacion = _datosMensuales.Select(d => new[]
         {
             d.NombreMes,
@@ -262,7 +262,7 @@ public partial class FormReportes
             d.PacientesAtendidos.ToString(CulturaAr),
             d.Ausentes.ToString(CulturaAr),
             d.Cancelados.ToString(CulturaAr),
-            d.PendientesOConfirmados.ToString(CulturaAr)
+            d.Confirmados.ToString(CulturaAr)
         }).ToList();
 
         return _datosMensuales.Count;

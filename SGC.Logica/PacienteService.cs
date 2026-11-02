@@ -53,7 +53,7 @@ public class PacienteService
         {
             var futuros = contexto.Turnos
                 .Where(t => t.Activo
-                            && (t.Estado == EstadoTurno.Pendiente || t.Estado == EstadoTurno.Confirmado)
+                            && t.Estado == EstadoTurno.Confirmado
                             && (t.Fecha > hoy || (t.Fecha == hoy && t.HoraInicio >= ahora))
                             && (medicosVisibles == null || medicosVisibles.Contains(t.MedicoId)))
                 .OrderBy(t => t.Fecha).ThenBy(t => t.HoraInicio)

@@ -1,7 +1,7 @@
 -- Resumen para la pantalla de inicio: una sola fila con los contadores del
 -- dia @Fecha (por estado), de la semana (lunes a domingo) y del mes en que
 -- cae @Fecha. @MedicoId NULL = todos los medicos.
--- Estado: 0=Pendiente, 1=Confirmado, 2=Cancelado, 3=Asistio, 4=Ausente.
+-- Estado: 1=Confirmado, 2=Cancelado, 3=Asistio, 4=Ausente.
 -- RNF#07: no devuelve datos clinicos ni datos de pacientes.
 -- Los dias de la semana se calculan con DATEDIFF desde 1900-01-01 (lunes) y
 -- 1900-01-07 (domingo) para no depender de @@DATEFIRST.
@@ -41,7 +41,6 @@ BEGIN
     -- Una sola pasada sobre Turnos: se calculan las filas del periodo
     -- (semana o mes) y luego se agregan con CASE.
     SELECT
-        CAST(ISNULL(SUM(CASE WHEN t.Fecha = @Fecha AND t.Estado = 0 THEN 1 ELSE 0 END), 0) AS INT) AS Pendientes,
         CAST(ISNULL(SUM(CASE WHEN t.Fecha = @Fecha AND t.Estado = 1 THEN 1 ELSE 0 END), 0) AS INT) AS Confirmados,
         CAST(ISNULL(SUM(CASE WHEN t.Fecha = @Fecha AND t.Estado = 3 THEN 1 ELSE 0 END), 0) AS INT) AS Asistieron,
         CAST(ISNULL(SUM(CASE WHEN t.Fecha = @Fecha AND t.Estado = 4 THEN 1 ELSE 0 END), 0) AS INT) AS Ausentes,

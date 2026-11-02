@@ -167,7 +167,7 @@ public partial class FormMedicos : Form
         _contadores.Agregar(ContTotal, EstiloUi.Texto, Color.White);
         _contadores.Agregar(ContHoy, PaletaEstados.Fondo(EstadoTurno.Confirmado), PaletaEstados.Acento(EstadoTurno.Confirmado));
         _contadores.Agregar(ContMes, PaletaEstados.Fondo(EstadoTurno.Asistio), PaletaEstados.Acento(EstadoTurno.Asistio));
-        _contadores.Agregar(ContSinObras, PaletaEstados.Fondo(EstadoTurno.Pendiente), PaletaEstados.Acento(EstadoTurno.Pendiente));
+        _contadores.Agregar(ContSinObras, PaletaEstados.FondoAdvertencia, PaletaEstados.AcentoAdvertencia);
         ActualizarContadores(new List<MedicoFila>());
 
         // Los contadores cuentan medicos; el texto corto se aclara en el tooltip.

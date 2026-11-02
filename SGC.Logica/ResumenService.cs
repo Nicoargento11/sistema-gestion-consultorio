@@ -35,8 +35,8 @@ public class ResumenService
         return total;
     }
 
-    // Primer paciente que todavia falta atender ese dia (Pendiente o
-    // Confirmado) a partir de la hora indicada; null si no queda ninguno.
+    // Primer paciente que todavia falta atender ese dia (Confirmado) a partir
+    // de la hora indicada; null si no queda ninguno.
     public Turno? ObtenerProximoPaciente(int medicoId, DateOnly fecha, TimeOnly desdeHora)
     {
         using var contexto = SGCContextFactory.Crear();
@@ -46,13 +46,14 @@ public class ResumenService
                         && t.Activo
                         && t.Fecha == fecha
                         && t.HoraInicio >= desdeHora
-                        && (t.Estado == EstadoTurno.Pendiente || t.Estado == EstadoTurno.Confirmado))
+                        && t.Estado == EstadoTurno.Confirmado)
             .OrderBy(t => t.HoraInicio)
             .FirstOrDefault();
     }
 
-    // Proximos turnos Pendientes (sin confirmar) desde la fecha indicada.
-    public List<Turno> ObtenerProximosSinConfirmar(DateOnly desde, IEnumerable<int> medicosIds, int cantidad = 8)
+    // Proximos turnos del dia: Confirmados (todavia no atendidos) que empiezan
+    // a partir de la hora indicada, de los medicos dados, ordenados por hora.
+    public List<Turno> ObtenerProximosTurnos(DateOnly fecha, TimeOnly desdeHora, IEnumerable<int> medicosIds, int cantidad = 8)
     {
         var ids = medicosIds.Distinct().ToList();
         if (ids.Count == 0 || cantidad <= 0)
@@ -63,10 +64,11 @@ public class ResumenService
             .Include(t => t.Paciente)
             .Include(t => t.Medico)
             .Where(t => t.Activo
-                        && t.Estado == EstadoTurno.Pendiente
-                        && t.Fecha >= desde
+                        && t.Estado == EstadoTurno.Confirmado
+                        && t.Fecha == fecha
+                        && t.HoraInicio >= desdeHora
                         && ids.Contains(t.MedicoId))
-            .OrderBy(t => t.Fecha).ThenBy(t => t.HoraInicio)
+            .OrderBy(t => t.HoraInicio)
             .Take(cantidad)
             .ToList();
     }

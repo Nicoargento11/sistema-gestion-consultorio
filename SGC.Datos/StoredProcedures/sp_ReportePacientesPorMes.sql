@@ -6,7 +6,7 @@ BEGIN
     SET NOCOUNT ON;
 
     -- EstadoTurno enum en C#:
-    -- 0: Pendiente, 1: Confirmado, 2: Cancelado, 3: Asistio, 4: Ausente
+    -- 1: Confirmado, 2: Cancelado, 3: Asistio, 4: Ausente
 
     SELECT 
         MONTH(t.Fecha) AS MesNumero,
@@ -28,7 +28,7 @@ BEGIN
         COUNT(CASE WHEN t.Estado = 3 THEN 1 END) AS PacientesAtendidos,
         COUNT(CASE WHEN t.Estado = 4 THEN 1 END) AS Ausentes,
         COUNT(CASE WHEN t.Estado = 2 THEN 1 END) AS Cancelados,
-        COUNT(CASE WHEN t.Estado IN (0, 1) THEN 1 END) AS PendientesOConfirmados
+        COUNT(CASE WHEN t.Estado = 1 THEN 1 END) AS Confirmados
     FROM Turnos t
     WHERE YEAR(t.Fecha) = @Anio
       AND (@MedicoId IS NULL OR t.MedicoId = @MedicoId)

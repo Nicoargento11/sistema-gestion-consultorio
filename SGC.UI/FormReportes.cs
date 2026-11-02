@@ -528,7 +528,6 @@ public partial class FormReportes : Form
         var estados = new List<OpcionEstado>
         {
             new(null, "Todos"),
-            new(EstadoTurno.Pendiente, "Pendiente"),
             new(EstadoTurno.Confirmado, "Confirmado"),
             new(EstadoTurno.Cancelado, "Cancelado"),
             new(EstadoTurno.Asistio, "Asistió"),

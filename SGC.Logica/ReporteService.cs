@@ -115,7 +115,7 @@ public class ReporteService
                 PacientesAtendidos = reader.GetInt32(reader.GetOrdinal("PacientesAtendidos")),
                 Ausentes = reader.GetInt32(reader.GetOrdinal("Ausentes")),
                 Cancelados = reader.GetInt32(reader.GetOrdinal("Cancelados")),
-                PendientesOConfirmados = reader.GetInt32(reader.GetOrdinal("PendientesOConfirmados"))
+                Confirmados = reader.GetInt32(reader.GetOrdinal("Confirmados"))
             });
         }
 

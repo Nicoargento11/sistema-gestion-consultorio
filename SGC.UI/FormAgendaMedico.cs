@@ -203,10 +203,10 @@ public partial class FormAgendaMedico : Form
         BtnFiltroCancelados.FlatAppearance.BorderSize = _filtroActual == FiltroTurno.Cancelados ? 3 : 1;
     }
 
-    // Pendiente de atencion = turno Pendiente o Confirmado que todavia no se atendio.
+    // Pendiente de atencion = turno Confirmado que todavia no se atendio.
     // Asistio / Ausente (ya resueltos en recepcion) y Cancelado no cuentan.
     private static bool EsPendienteDeAtencion(TurnoAgendaItem t)
-        => (t.Estado == EstadoTurno.Pendiente || t.Estado == EstadoTurno.Confirmado) && !t.Atendido;
+        => t.Estado == EstadoTurno.Confirmado && !t.Atendido;
 
     private static string Plural(int cantidad, string singular, string plural)
         => $"{cantidad} {(cantidad == 1 ? singular : plural)}";

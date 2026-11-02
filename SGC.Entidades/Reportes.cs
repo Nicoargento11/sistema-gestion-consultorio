@@ -8,7 +8,7 @@ public class ReporteMensualItem
     public int PacientesAtendidos { get; set; }
     public int Ausentes { get; set; }
     public int Cancelados { get; set; }
-    public int PendientesOConfirmados { get; set; }
+    public int Confirmados { get; set; }
 }
 
 public class ReporteObraSocialItem

@@ -8,11 +8,15 @@ namespace SGC.UI;
 // que un mismo estado se vea igual en todas las pantallas.
 public static class PaletaEstados
 {
+    // Ambar usado por los contadores de aviso y por las excepciones vigentes
+    // (antes era el color del estado Pendiente, que ya no existe).
+    public static readonly Color FondoAdvertencia = Color.FromArgb(255, 244, 214);
+    public static readonly Color AcentoAdvertencia = Color.FromArgb(196, 130, 10);
+
     // Fondos suaves: legibles con texto oscuro y coherentes con la
     // disponibilidad de la agenda (verde claro / rojo claro).
     public static Color Fondo(EstadoTurno estado) => estado switch
     {
-        EstadoTurno.Pendiente => Color.FromArgb(255, 244, 214),
         EstadoTurno.Confirmado => Color.FromArgb(222, 236, 252),
         EstadoTurno.Asistio => Color.FromArgb(220, 245, 225),
         EstadoTurno.Ausente => Color.FromArgb(250, 220, 220),
@@ -23,7 +27,6 @@ public static class PaletaEstados
     // Color fuerte del mismo estado (numeros grandes y franjas de tarjeta).
     public static Color Acento(EstadoTurno estado) => estado switch
     {
-        EstadoTurno.Pendiente => Color.FromArgb(196, 130, 10),
         EstadoTurno.Confirmado => Color.FromArgb(46, 134, 222),
         EstadoTurno.Asistio => Color.FromArgb(39, 174, 96),
         EstadoTurno.Ausente => Color.FromArgb(231, 76, 60),
@@ -32,25 +35,24 @@ public static class PaletaEstados
     };
 
     // Excepciones de agenda: se reutilizan los tonos de la paleta de turnos
-    // (vigente = ambar como Pendiente, proxima = azul como Confirmado,
+    // (vigente = ambar de advertencia, proxima = azul como Confirmado,
     // pasada = gris como Cancelado) para que se lean igual en toda la app.
     public static Color Fondo(EstadoExcepcion estado) => estado switch
     {
-        EstadoExcepcion.Vigente => Fondo(EstadoTurno.Pendiente),
+        EstadoExcepcion.Vigente => FondoAdvertencia,
         EstadoExcepcion.Proxima => Fondo(EstadoTurno.Confirmado),
         _ => Fondo(EstadoTurno.Cancelado)
     };
 
     public static Color Acento(EstadoExcepcion estado) => estado switch
     {
-        EstadoExcepcion.Vigente => Acento(EstadoTurno.Pendiente),
+        EstadoExcepcion.Vigente => AcentoAdvertencia,
         EstadoExcepcion.Proxima => Acento(EstadoTurno.Confirmado),
         _ => Acento(EstadoTurno.Cancelado)
     };
 
     public static string Texto(EstadoTurno estado) => estado switch
     {
-        EstadoTurno.Pendiente => "Pendiente",
         EstadoTurno.Confirmado => "Confirmado",
         EstadoTurno.Asistio => "Asistió",
         EstadoTurno.Ausente => "Ausente",

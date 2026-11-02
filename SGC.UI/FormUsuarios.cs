@@ -147,7 +147,7 @@ public partial class FormUsuarios : Form
         _contadores.Agregar(ContInactivos, PaletaEstados.Fondo(EstadoTurno.Cancelado), PaletaEstados.Acento(EstadoTurno.Cancelado));
         _contadores.Agregar(ContAdministradores, EstiloUi.BotonDeshabilitadoFondo, EstiloUi.Texto);
         _contadores.Agregar(ContMedicos, PaletaEstados.Fondo(EstadoTurno.Confirmado), PaletaEstados.Acento(EstadoTurno.Confirmado));
-        _contadores.Agregar(ContRecepcionistas, PaletaEstados.Fondo(EstadoTurno.Pendiente), PaletaEstados.Acento(EstadoTurno.Pendiente));
+        _contadores.Agregar(ContRecepcionistas, PaletaEstados.FondoAdvertencia, PaletaEstados.AcentoAdvertencia);
         ActualizarContadores(new List<Usuario>(), 0);
     }
 
