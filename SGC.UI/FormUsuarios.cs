@@ -16,6 +16,9 @@ public partial class FormUsuarios : Form
     private readonly UsuarioService _service = new();
     private readonly MedicoService _medicoService = new();
 
+    // Usuario con sesion iniciada: no puede eliminarse ni cambiarse el rol a si mismo.
+    private readonly Usuario _usuarioActivo;
+
     // Id del usuario cargado en la tarjeta (null = modo "nuevo").
     private int? _idSeleccionado = null;
 
@@ -41,8 +44,9 @@ public partial class FormUsuarios : Form
     private Usuario? FilaSeleccionada =>
         DgvUsuarios.SelectedRows.Count > 0 ? DgvUsuarios.SelectedRows[0].DataBoundItem as Usuario : null;
 
-    public FormUsuarios()
+    public FormUsuarios(Usuario usuarioActivo)
     {
+        _usuarioActivo = usuarioActivo;
         InitializeComponent();
         EstiloUi.AlinearBotonesConScroll(pnlCampos, pnlBotones);
 
@@ -523,6 +527,11 @@ public partial class FormUsuarios : Form
                 throw new ArgumentException("Debe seleccionar un rol.");
             }
 
+            if (_idSeleccionado == _usuarioActivo.Id && CboRol.SelectedItem is RolUsuario nuevoRol && nuevoRol != _usuarioActivo.Rol)
+            {
+                throw new InvalidOperationException("No podés cambiar tu propio rol mientras tenés la sesión iniciada.");
+            }
+
             var usuario = new Usuario
             {
                 Id = _idSeleccionado ?? 0,
@@ -565,6 +574,12 @@ public partial class FormUsuarios : Form
         if (usuarioSeleccionado == null)
         {
             MostrarMensaje("Seleccione un usuario de la lista primero.", TipoMensaje.Error);
+            return;
+        }
+
+        if (usuarioSeleccionado.Id == _usuarioActivo.Id)
+        {
+            MostrarMensaje("No podés eliminar tu propio usuario mientras tenés la sesión iniciada.", TipoMensaje.Error);
             return;
         }
 

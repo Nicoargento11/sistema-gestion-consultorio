@@ -82,6 +82,10 @@ public class UsuarioService
             .FirstOrDefault(u => u.Id == usuario.Id)
             ?? throw new InvalidOperationException("El usuario que intenta modificar no existe.");
 
+        // Un administrador activo no puede dejar de serlo si es el ultimo.
+        if (existente.Activo && existente.Rol == RolUsuario.Administrador && usuario.Rol != RolUsuario.Administrador)
+            ExigirOtroAdministradorActivo(contexto, existente.Id, "cambiarle el rol a");
+
         existente.NombreUsuario = usuario.NombreUsuario;
 
         // Contrasena en blanco = "no cambiar" (la UI nunca debe prellenar
@@ -106,6 +110,9 @@ public class UsuarioService
 
         if (!usuario.Activo)
             throw new InvalidOperationException("Ese usuario ya estaba eliminado.");
+
+        if (usuario.Rol == RolUsuario.Administrador)
+            ExigirOtroAdministradorActivo(contexto, usuario.Id, "eliminar a");
 
         usuario.Activo = false;
         contexto.SaveChanges();
@@ -132,6 +139,15 @@ public class UsuarioService
 
         usuario.Activo = true;
         contexto.SaveChanges();
+    }
+
+    // Regla: siempre debe quedar al menos un Administrador activo, si no
+    // nadie podria entrar a Usuarios, Medicos ni Copia de seguridad.
+    private static void ExigirOtroAdministradorActivo(SGCContext contexto, int usuarioId, string accion)
+    {
+        bool hayOtro = contexto.Usuarios.Any(u => u.Activo && u.Rol == RolUsuario.Administrador && u.Id != usuarioId);
+        if (!hayOtro)
+            throw new InvalidOperationException($"No se puede {accion} el único administrador activo. Creá o reactivá otro administrador primero.");
     }
 
     private void ResolverAsignaciones(Usuario usuario, SGCContext contexto)

@@ -67,7 +67,7 @@ public partial class FormMenuPrincipal : Form
         btnTurnos.Click += (s, e) => { ResaltarBoton((Button)s!); AbrirFormularioHijo(new FormTurnos(_usuarioActivo)); };
         btnMedicos.Click += (s, e) => { ResaltarBoton((Button)s!); AbrirFormularioHijo(new FormMedicos()); };
         btnHorarios.Click += (s, e) => { ResaltarBoton((Button)s!); AbrirFormularioHijo(new FormConfigurarAgenda()); };
-        btnUsuarios.Click += (s, e) => { ResaltarBoton((Button)s!); AbrirFormularioHijo(new FormUsuarios()); };
+        btnUsuarios.Click += (s, e) => { ResaltarBoton((Button)s!); AbrirFormularioHijo(new FormUsuarios(_usuarioActivo)); };
         btnObrasSociales.Click += (s, e) => { ResaltarBoton((Button)s!); AbrirFormularioHijo(new FormObrasSociales()); };
         btnExcepcionesAgenda.Click += (s, e) => { ResaltarBoton((Button)s!); AbrirFormularioHijo(new FormExcepcionesAgenda()); };
         btnBackup.Click += (s, e) => { ResaltarBoton((Button)s!); AbrirFormularioHijo(new FormBackup()); };
