@@ -39,7 +39,6 @@ public class FormInicio : Form
     private readonly NotificacionService _notificacionService = new();
     private readonly MedicoService _medicoService = new();
     private readonly SistemaService _sistemaService = new();
-    private readonly BackupService _backupService = new();
 
     private readonly Panel _raiz = new();
     private readonly FlowLayoutPanel _contenido = new();
@@ -144,7 +143,9 @@ public class FormInicio : Form
     // tiene mas de 7 dias.
     private Panel CrearTarjetaUltimoBackup()
     {
-        var ultimo = _backupService.ObtenerUltimoBackup();
+        // El servicio se crea aca (solo para el Administrador) y no como campo: su
+        // constructor lee la conexion y puede fallar.
+        var ultimo = new BackupService().ObtenerUltimoBackup();
         if (ultimo == null)
             return CrearTarjeta("-", "Última copia de seguridad", EstiloUi.Advertencia, IconoBackup, 0, "Sin copias registradas");
 

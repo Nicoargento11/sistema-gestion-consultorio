@@ -17,6 +17,10 @@ public static class SGCContextFactory
     private const string ConnectionStringPorDefecto =
         @"Server=.;Database=SGC;Trusted_Connection=True;TrustServerCertificate=True;";
 
+    // La cadena se lee una sola vez: Crear() se llama desde decenas de lugares.
+    private static string? _connectionString;
+    private static readonly object _candado = new();
+
     public static SGCContext Crear()
     {
         var options = new DbContextOptionsBuilder<SGCContext>()
@@ -28,25 +32,62 @@ public static class SGCContextFactory
 
     private static string ObtenerConnectionString()
     {
+        if (_connectionString != null)
+            return _connectionString;
+
+        lock (_candado)
+        {
+            return _connectionString ??= LeerConnectionString();
+        }
+    }
+
+    // Un archivo mal formado o con la cadena vacia se informa con un mensaje
+    // claro en espanol (en vez del error tecnico de .NET).
+    private static string LeerConnectionString()
+    {
         var rutaConfig = BuscarAppsettingsLocal();
         if (rutaConfig == null)
             return ConnectionStringPorDefecto;
 
-        using var stream = File.OpenRead(rutaConfig);
-        using var documento = JsonDocument.Parse(stream);
+        try
+        {
+            using var stream = File.OpenRead(rutaConfig);
+            using var documento = JsonDocument.Parse(stream);
 
-        return documento.RootElement.TryGetProperty("ConnectionString", out var valor) && valor.GetString() is string cadena
-            ? cadena
-            : ConnectionStringPorDefecto;
+            if (!documento.RootElement.TryGetProperty("ConnectionString", out var valor))
+                return ConnectionStringPorDefecto;
+
+            if (valor.ValueKind != JsonValueKind.String || string.IsNullOrWhiteSpace(valor.GetString()))
+                throw new InvalidOperationException(
+                    $"El archivo appsettings.Local.json ({rutaConfig}) tiene la propiedad \"ConnectionString\" vacía o inválida. " +
+                    "Indique la cadena de conexión a SQL Server (vea appsettings.example.json).");
+
+            return valor.GetString()!;
+        }
+        catch (JsonException ex)
+        {
+            throw new InvalidOperationException(
+                $"El archivo appsettings.Local.json ({rutaConfig}) no tiene un formato JSON válido. Corríjalo o elimínelo. Detalle: {ex.Message}", ex);
+        }
+        catch (IOException ex)
+        {
+            throw new InvalidOperationException(
+                $"No se pudo leer el archivo appsettings.Local.json ({rutaConfig}). Detalle: {ex.Message}", ex);
+        }
     }
 
-    // Sube carpetas desde donde este corriendo el proceso (bin/Debug/net8.0
-    // del .exe, o bin/Debug/net8.0 de SGC.Datos si es "dotnet ef") hasta
-    // encontrar la carpeta del .sln, y ahi busca appsettings.Local.json.
+    // Primero busca appsettings.Local.json junto al ejecutable (instalacion
+    // sin codigo fuente). Si no esta, sube carpetas desde donde este corriendo
+    // el proceso (bin/Debug/net8.0 del .exe, o bin/Debug/net8.0 de SGC.Datos
+    // si es "dotnet ef") hasta encontrar la carpeta del .sln, y ahi lo busca.
     // Funciona igual sin importar si se lanza con F5, el .exe directo, o
     // "dotnet ef" desde la consola.
     private static string? BuscarAppsettingsLocal()
     {
+        var junto = Path.Combine(AppContext.BaseDirectory, "appsettings.Local.json");
+        if (File.Exists(junto))
+            return junto;
+
         var directorio = new DirectoryInfo(AppContext.BaseDirectory);
 
         while (directorio != null)
