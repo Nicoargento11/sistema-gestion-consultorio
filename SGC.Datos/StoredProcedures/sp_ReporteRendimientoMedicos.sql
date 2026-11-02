@@ -1,6 +1,7 @@
 CREATE OR ALTER PROCEDURE sp_ReporteRendimientoMedicos
     @Anio INT,
-    @Mes INT = NULL
+    @Mes INT = NULL,
+    @MedicoId INT = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -19,6 +20,7 @@ BEGIN
                        AND YEAR(t.Fecha) = @Anio
                        AND (@Mes IS NULL OR MONTH(t.Fecha) = @Mes)
     WHERE m.Activo = 1
+      AND (@MedicoId IS NULL OR m.Id = @MedicoId)
     GROUP BY m.Id, m.Apellido, m.Nombre, m.Especialidad
     ORDER BY TurnosAtendidos DESC, TotalTurnos DESC;
 END;

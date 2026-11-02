@@ -31,7 +31,7 @@ public class ReporteService
             .ToList();
     }
 
-    public List<ReporteRecaudacionFila> ObtenerRecaudacion(DateOnly desde, DateOnly hasta, AgrupacionRecaudacion agruparPor)
+    public List<ReporteRecaudacionFila> ObtenerRecaudacion(DateOnly desde, DateOnly hasta, AgrupacionRecaudacion agruparPor, int? medicoId = null)
     {
         ValidarPeriodo(desde, hasta);
 
@@ -45,10 +45,11 @@ public class ReporteService
 
         using var contexto = SGCContextFactory.Crear();
         return contexto.Database.SqlQueryRaw<ReporteRecaudacionFila>(
-                "EXEC sp_ReporteRecaudacion @FechaDesde, @FechaHasta, @AgruparPor",
+                "EXEC sp_ReporteRecaudacion @FechaDesde, @FechaHasta, @AgruparPor, @MedicoId",
                 ParametroFecha("@FechaDesde", desde),
                 ParametroFecha("@FechaHasta", hasta),
-                new SqlParameter("@AgruparPor", System.Data.SqlDbType.NVarChar, 20) { Value = criterio })
+                new SqlParameter("@AgruparPor", System.Data.SqlDbType.NVarChar, 20) { Value = criterio },
+                ParametroEntero("@MedicoId", medicoId))
             .ToList();
     }
 
@@ -121,7 +122,7 @@ public class ReporteService
         return lista;
     }
 
-    public List<ReporteObraSocialItem> ObtenerTurnosPorObraSocial(int anio)
+    public List<ReporteObraSocialItem> ObtenerTurnosPorObraSocial(int anio, int? medicoId = null)
     {
         var lista = new List<ReporteObraSocialItem>();
         using var contexto = SGCContextFactory.Crear();
@@ -132,6 +133,7 @@ public class ReporteService
         comando.CommandType = CommandType.StoredProcedure;
 
         comando.Parameters.Add(new SqlParameter("@Anio", anio));
+        comando.Parameters.Add(new SqlParameter("@MedicoId", (object?)medicoId ?? DBNull.Value));
 
         if (conexion.State != ConnectionState.Open)
             conexion.Open();
@@ -150,7 +152,7 @@ public class ReporteService
         return lista;
     }
 
-    public List<ReporteMedicoRendimientoItem> ObtenerRendimientoMedicos(int anio, int? mes = null)
+    public List<ReporteMedicoRendimientoItem> ObtenerRendimientoMedicos(int anio, int? mes = null, int? medicoId = null)
     {
         var lista = new List<ReporteMedicoRendimientoItem>();
         using var contexto = SGCContextFactory.Crear();
@@ -162,6 +164,7 @@ public class ReporteService
 
         comando.Parameters.Add(new SqlParameter("@Anio", anio));
         comando.Parameters.Add(new SqlParameter("@Mes", (object?)mes ?? DBNull.Value));
+        comando.Parameters.Add(new SqlParameter("@MedicoId", (object?)medicoId ?? DBNull.Value));
 
         if (conexion.State != ConnectionState.Open)
             conexion.Open();

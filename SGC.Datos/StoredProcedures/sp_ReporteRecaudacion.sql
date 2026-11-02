@@ -4,7 +4,8 @@
 CREATE OR ALTER PROCEDURE sp_ReporteRecaudacion
     @FechaDesde DATE,
     @FechaHasta DATE,
-    @AgruparPor NVARCHAR(20)
+    @AgruparPor NVARCHAR(20),
+    @MedicoId INT = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -37,6 +38,7 @@ BEGIN
     WHERE t.Fecha BETWEEN @FechaDesde AND @FechaHasta
       AND t.Estado = 3
       AND t.Monto IS NOT NULL
+      AND (@MedicoId IS NULL OR t.MedicoId = @MedicoId)
     GROUP BY
         CASE @AgruparPor
             WHEN N'MEDICO' THEN m.Apellido + N', ' + m.Nombre
