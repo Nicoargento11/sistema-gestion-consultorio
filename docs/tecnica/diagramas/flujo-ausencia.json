@@ -42,12 +42,12 @@
     {
       "from": 157,
       "to": 333,
-      "label": "Guardar la ausencia"
+      "label": "Validar y preparar"
     },
     {
       "from": 347,
       "to": 565,
-      "label": "Cancelar los turnos afectados"
+      "label": "Cancelar y guardar"
     }
   ],
   "messages": [
@@ -72,7 +72,7 @@
       "from": "svc",
       "to": "sql",
       "y": 269,
-      "label": "Validar: el médico existe y esta activo",
+      "label": "Validar: médico activo y sin ausencia superpuesta",
       "variant": "default"
     },
     {
@@ -80,15 +80,15 @@
       "from": "svc",
       "to": "sql",
       "y": 311,
-      "label": "INSERT ExcepcionAgenda (1.er SaveChanges)",
-      "variant": "emphasis"
+      "label": "Agregar la ausencia al contexto (sin guardar)",
+      "variant": "default"
     },
     {
       "id": "m5",
       "from": "svc",
       "to": "sql",
       "y": 375,
-      "label": "SELECT turnos Pendiente o Confirmado del día",
+      "label": "SELECT turnos Confirmado del día",
       "variant": "default"
     },
     {
@@ -96,16 +96,16 @@
       "from": "svc",
       "to": "sql",
       "y": 417,
-      "label": "UPDATE Estado = Cancelado (2.o SaveChanges)",
+      "label": "Estado = Cancelado + SaveChanges único",
       "variant": "emphasis",
-      "note": "Son dos SaveChanges: dos transacciones separadas."
+      "note": "Un solo SaveChanges: la ausencia y las cancelaciones se guardan juntas."
     },
     {
       "id": "m7",
       "from": "svc",
       "to": "noti",
       "y": 459,
-      "label": "AvisarTurno por cada turno cancelado",
+      "label": "AvisarTurno (después de guardar)",
       "variant": "dashed"
     },
     {

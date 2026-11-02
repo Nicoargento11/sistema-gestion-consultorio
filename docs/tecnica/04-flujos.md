@@ -28,7 +28,8 @@ Cada flujo tiene un diagrama de secuencia (las flechas van de arriba hacia abajo
 
 | Paso | Archivo y método | Qué pasa |
 |------|------------------|----------|
-| 1 | `SGC.UI/Program.cs` → `Main` | Crea un contexto con `SGCContextFactory.Crear()` (busca `appsettings.Local.json`, si no usa `Server=.`). |
+| 0 | `SGC.UI/Program.cs` → `Main` (antes de todo) | Fija la cultura **es-AR** (`CurrentCulture`, `DefaultThreadCurrentCulture`) y registra los manejadores globales de errores (`ThreadException`, `UnhandledException`): un error no controlado muestra "Ocurrió un error inesperado..." sin cerrar la aplicación. |
+| 1 | `SGC.UI/Program.cs` → `Main` | Crea un contexto con `SGCContextFactory.Crear()` (busca `appsettings.Local.json`, si no usa `Server=.`; la cadena se lee una vez y se guarda; un archivo mal formado se informa con un mensaje claro). |
 | 2 | `contexto.Database.Migrate()` | Crea la base si no existe y aplica las migraciones que falten (incluidos los procedimientos almacenados). |
 | 3 | `SGC.Datos/DbSeeder.cs` → `Sembrar` | Si **no hay ningún médico**, carga obras sociales, médicos, pacientes, usuarios, agenda y turnos de prueba. Si ya hay datos, no hace nada. |
 | 4 | `Program.cs` (bloque `catch`) | Si 2 o 3 fallan (por ejemplo SQL Server apagado) muestra un `MessageBox` y **sale sin abrir ninguna pantalla**. |
@@ -37,7 +38,7 @@ Cada flujo tiene un diagrama de secuencia (las flechas van de arriba hacia abajo
 | 7 | `SGC.Logica/AutenticacionService.cs` → `Autenticar` | Delega en `UsuarioService.BuscarPorCredenciales` (no tiene lógica propia). |
 | 8 | `SGC.Logica/UsuarioService.cs` → `BuscarPorCredenciales` | Busca por `NombreUsuario` **y** `Activo = true`, con `Include` de `Medico` y `MedicosAsignados`. |
 | 9 | `SGC.Entidades/PasswordHasher.cs` → `Verificar` | Compara la clave tipeada con el hash guardado (PBKDF2, 100.000 iteraciones, SHA-256). Devuelve `null` si no coincide. |
-| 10 | `FormLogin.BtnIngresar_Click` | Si el resultado es `null`, muestra "Usuario o contraseña incorrectos" en la `FranjaMensaje`. Si no, crea `new FormMenuPrincipal(usuario)`, lo muestra y se **oculta** (`Hide()`). |
+| 10 | `FormLogin.BtnIngresar_Click` | Si el resultado es `null`, muestra "Usuario o contraseña incorrectos" en la `FranjaMensaje`. Si no, limpia la clave escrita y los avisos de la sesión anterior (`NotificacionService.LimpiarAvisos`), crea `new FormMenuPrincipal(usuario)`, lo muestra y se **oculta** (`Hide()`). |
 | 11 | `SGC.UI/FormMenuPrincipal.cs` → constructor | Muestra los botones del rol (`ConfigurarBotonesPorRol`) y abre `FormInicio` (flujo [h](#h-pantalla-de-inicio)). |
 
 **Por qué está armado así**
@@ -45,7 +46,7 @@ Cada flujo tiene un diagrama de secuencia (las flechas van de arriba hacia abajo
 - **El hash no se compara en SQL.** PBKDF2 con sal aleatoria no se puede traducir a un `WHERE`, así que se busca el usuario por nombre y se verifica en memoria.
 - **Mismo mensaje para "no existe" y "clave mala".** El login no revela si el usuario existe.
 - **No hay sesión global.** El `Usuario` viaja por constructor: `FormLogin` → `FormMenuPrincipal` → cada pantalla hija. Por eso cada pantalla puede saber el rol sin consultar nada.
-- **Cerrar sesión no termina el proceso (deducido, no ejecutado).** `BtnCerrarSesion_Click` crea un `FormLogin` nuevo y cierra el menú, pero la ventana principal del proceso sigue siendo el primer `FormLogin`, que quedó oculto. Cerrar la ventana nueva no termina la aplicación, y tampoco cerrar el menú con la X: en `SGC.UI` no hay `Application.Exit` ni manejadores de `FormClosed`.
+- **El cierre de la aplicación y de la sesión están separados.** El primer `FormLogin` sigue siendo la ventana principal del proceso (queda oculto). Cerrar el menú con la X ejecuta `Application.Exit()` (`FormMenuPrincipal.OnFormClosed`); "Cerrar sesión" (`CerrarSesion`) marca `_cerrandoSesion`, vacía los avisos, reutiliza el login oculto (`FormLogin.Reiniciar`) y cierra el menú sin terminar el proceso. Mientras corre un backup o una restauración no se puede cerrar la ventana.
 
 ---
 
@@ -71,17 +72,17 @@ Se hace en dos tiempos: primero la pantalla **calcula qué horarios mostrar** y 
 | Paso | Archivo y método | Qué pasa |
 |------|------------------|----------|
 | 7 | `FormTurnos.BtnAsignar_Click` | Verifica que haya paciente, médico, duración y horario elegido; si falta algo lo lista en la franja de mensajes. |
-| 8 | `TurnoService.AsignarTurno` | Valida en este orden: fecha no pasada, el médico atiende (`AgendaMedicoService.MedicoAtiende`), sin superposición (`HaySuperposicion`). |
+| 8 | `TurnoService.AsignarTurno` | Valida en este orden: duración 5 a 240 min sin cruzar la medianoche, fecha y horario no pasados, el médico atiende (`AgendaMedicoService.MedicoAtiende`), paciente y médico **activos** (`ExigirActivos`), sin ausencia del médico (`ExigirSinAusencia`), sin superposición del médico (`HaySuperposicion`) y **sin otro turno del paciente a la vez** (`ExigirPacienteLibre`). Todo en minutos. Detalle en [`03`](03-reglas-de-negocio.md#2-asignar-un-turno). |
 | 9 | `TurnoService.AsignarTurno` | Inserta `Turno` con `Estado = Confirmado` y `Activo = true` y llama a `SaveChanges` (una sola operación). |
 | 10 | `FormTurnos.BtnAsignar_Click` | Si el Service lanzó una excepción, muestra el mensaje y **vuelve a dibujar los botones** (el horario pudo ocuparse desde otra pantalla). Si salió bien, recarga la grilla. |
-| 11 | `SGC.Logica/NotificacionService.cs` → `AvisarTurno` | "Avisa" al paciente: solo agrega un texto a una lista estática en memoria (no manda ningún email). Si falla, el turno ya está guardado. |
+| 11 | `SGC.Logica/NotificacionService.cs` → `AvisarTurno` | "Avisa" al paciente (título "Confirmación"): solo agrega un texto a una lista estática en memoria (no manda ningún email; el mensaje lo aclara). Si falla, el turno ya está guardado. |
 
 **Por qué está armado así**
 
 - **El botón libre/ocupado es una ayuda visual, no la regla.** La regla real vive en `TurnoService.AsignarTurno`; los botones solo evitan que el usuario elija algo inválido.
-- **`AsignarTurno` no llama a `sp_AsignarTurno`.** Hace sus propias validaciones en C# (nadie en el código invoca ese procedimiento; ver [`05`](05-procedimientos-almacenados.md)). Una diferencia importante: el procedimiento sí rechaza horarios con ausencia cargada y el método de C# no. Hoy lo único que impide agendar durante una ausencia es que `FormTurnos` pinta ese horario como ocupado.
+- **`AsignarTurno` no llama a `sp_AsignarTurno`.** Hace sus propias validaciones en C# (nadie en el código invoca ese procedimiento y hoy tiene menos reglas que el C#; ver [`05`](05-procedimientos-almacenados.md)). Las ausencias las hace cumplir el Service (`ExigirSinAusencia`), no solo la pantalla.
 - **La superposición se resuelve en memoria** porque `Turno.HoraFin` es una propiedad calculada que EF no puede traducir a SQL.
-- **Hay una carrera posible.** Entre `HaySuperposicion` y el `INSERT` no hay transacción ni índice único: dos recepcionistas que asignen a la vez el mismo horario podrían crear turnos superpuestos. Detalle y arreglo propuesto en [`08-guia-para-modificar.md`](08-guia-para-modificar.md#transacciones-y-concurrencia).
+- **Hay una carrera posible.** Entre las comprobaciones de superposición (médico y paciente) y el `INSERT` no hay transacción ni índice único: dos recepcionistas que asignen a la vez el mismo horario podrían crear turnos superpuestos. Detalle y arreglo propuesto en [`08-guia-para-modificar.md`](08-guia-para-modificar.md#transacciones-y-concurrencia).
 - **Los horarios `Horario` no están en la base.** `HorarioService` guarda sus tramos en una lista estática en memoria; solo sirven para armar los botones.
 
 ---
@@ -95,16 +96,16 @@ Se hace en dos tiempos: primero la pantalla **calcula qué horarios mostrar** y 
 | 1 | `FormTurnos.DgvTurnos_SelectionChanged` | Al elegir una fila, la tarjeta de la izquierda pasa a **"REPROGRAMAR TURNO"** (`ActualizarModo`): paciente y médico quedan bloqueados, solo se cambia fecha, horario y duración. |
 | 2 | `FormTurnos.ActualizarHorarios` | Recalcula los botones **ignorando el propio turno** (`idPropio`), para que el turno pueda "quedarse" en su horario actual. |
 | 3 | `FormTurnos.BtnModificar_Click` | Exige un horario libre elegido y llama a `TurnoService.ModificarTurno(id, fecha, hora, duración)`. |
-| 4 | `TurnoService.ModificarTurno` | Valida: fecha no pasada, el turno existe y no está cancelado, el médico **del turno** atiende, no hay superposición (excluyendo el propio turno). Actualiza `Fecha`, `HoraInicio` y `DuracionMinutos`. |
-| 5 | `NotificacionService.AvisarTurno` | Aviso simulado de "Reprogramacion". |
+| 4 | `TurnoService.ModificarTurno` | Valida: duración, fecha y horario no pasados, el turno existe y está **`Confirmado`** (uno cancelado, atendido o ausente se rechaza), paciente y médico activos, el médico **del turno** atiende, sin ausencia, sin superposición del médico ni del paciente (excluyendo el propio turno). Actualiza `Fecha`, `HoraInicio` y `DuracionMinutos`. |
+| 5 | `NotificacionService.AvisarTurno` | Aviso simulado de "Reprogramación". |
 | 6 | `FormTurnos.BtnCancelar_Click` | Pide confirmación con un `MessageBox` y llama a `TurnoService.CancelarTurno(id)`. |
-| 7 | `TurnoService.CancelarTurno` | `Estado = Cancelado` **y** `Activo = false`; falla si ya estaba cancelado. |
+| 7 | `TurnoService.CancelarTurno` | `Estado = Cancelado` **y** `Activo = false`; falla si ya estaba cancelado o si ya fue atendido o marcado como ausente. |
 
 **Por qué está armado así**
 
 - **Cancelar no borra:** el turno queda en la base con `Activo = false` (baja lógica). Por eso la grilla lo oculta salvo que se marque "Mostrar cancelados", y los reportes lo pueden contar o no según el procedimiento (ver [`05`](05-procedimientos-almacenados.md)).
 - **No se puede cambiar de médico ni de paciente** al reprogramar (requisito RF#05 citado en el código): para eso se cancela y se asigna uno nuevo.
-- **Un turno ya atendido sí se puede modificar o cancelar** (ni el Service ni la pantalla lo impiden); es un defecto conocido, ver [`08`](08-guia-para-modificar.md#defectos-y-deuda-conocidos).
+- **Un turno ya atendido (`Asistio` o `Ausente`) no se puede modificar ni cancelar:** el Service lo rechaza y `FormTurnos.ActualizarAcciones` deshabilita los botones (solo un turno `Confirmado` es editable).
 
 ---
 
@@ -118,8 +119,8 @@ Se hace en dos tiempos: primero la pantalla **calcula qué horarios mostrar** y 
 | 2 | `FormTurnos.BtnConfirmarAsistencia_Click` | Abre el diálogo modal `new FormConfirmarAsistencia(turno)`. |
 | 3 | `SGC.UI/FormConfirmarAsistencia.cs` → constructor | Ofrece como medio de pago "Particular" y, **solo si el médico la acepta**, la obra social del paciente (`TurnoService.MedicoAceptaObraSocialDelPaciente`). |
 | 4 | `FormConfirmarAsistencia.CboMedioPago_SelectedIndexChanged` | Sugiere el monto: `CalcularMontoParticular` o `CalcularMontoConObraSocial` (editable). |
-| 5 | `FormConfirmarAsistencia.BtnConfirmar_Click` | Valida en pantalla (eligió Asistió/Ausente, medio de pago, monto no negativo) y devuelve `Asistio`, `MedioPagoSeleccionado` y `MontoSeleccionado`. |
-| 6 | `TurnoService.ConfirmarAsistencia` | Revalida (turno existe, está `Confirmado`, la fecha no es futura, medio y monto si asistió) y guarda: `Asistio` con medio y monto, o `Ausente` con ambos en `null`. |
+| 5 | `FormConfirmarAsistencia.BtnConfirmar_Click` | Valida en pantalla (eligió Asistió/Ausente, medio de pago, monto no negativo), **pregunta "¿Confirma ...?" con "No" como opción por defecto** (la acción no se puede deshacer) y devuelve `Asistio`, `MedioPagoSeleccionado` y `MontoSeleccionado`. `Enter` confirma el diálogo y `Esc` lo cancela. |
+| 6 | `TurnoService.ConfirmarAsistencia` | Revalida (turno existe, está `Confirmado`, la fecha no es futura, medio y monto si asistió) y guarda: `Asistio` con medio y monto, o `Ausente` con ambos en `null`. `FormTurnos` muestra "Asistencia confirmada." o "Se registró la ausencia." según el caso. |
 
 **La regla de cobro** (`TurnoService`, métodos estáticos): precio particular del médico; con obra social aceptada por **ese** médico, `precio − precio × cobertura / 100` (con piso en 0). Si el médico no acepta la obra social del paciente, el paciente paga particular. Ejemplo: 12.000 con 70 % de cobertura → 3.600.
 
@@ -136,7 +137,7 @@ Se hace en dos tiempos: primero la pantalla **calcula qué horarios mostrar** y 
 
 ![Atención médica](diagramas/flujo-atencion-medica.png)
 
-Esta parte es del rol Médico (pantallas de Luciano). **Atender un turno no cambia su estado**: el turno sigue `Confirmado` y se considera "atendido" porque tiene una `ActividadMedica` activa (`Turno.EstadoAtencion`).
+Esta parte es del rol Médico (pantallas de Luciano). **Atender un turno no cambia su estado**: el turno sigue `Confirmado` (o `Asistio`, si recepción ya confirmó la asistencia) y se considera "atendido" porque tiene una `ActividadMedica` activa (`Turno.EstadoAtencion`; sin atención, la columna "Atención clínica" muestra el estado con las mismas etiquetas que el resto de la interfaz: Confirmado, Asistió, Ausente, Cancelado).
 
 | Paso | Archivo y método | Qué pasa |
 |------|------------------|----------|
@@ -144,10 +145,10 @@ Esta parte es del rol Médico (pantallas de Luciano). **Atender un turno no camb
 | 2 | `FormAgendaMedico.DeterminarMedicoActivo` | El médico sale de `Usuario.MedicoId`. Si el usuario no tiene médico vinculado, cae en el **primero** de `MedicoService.ObtenerTodos()` (comportamiento del código). |
 | 3 | `SGC.Logica/AgendaDiariaService.cs` → `ObtenerAgenda` | Trae los turnos del día (con `sp_ObtenerTurnosPorMedicoYFecha`, incluyendo cancelados) y arma `TurnoAgendaItem` con edad, obra social y "Nuevo/Recurrente". |
 | 4 | `FormAgendaMedico.CargarTurnos` | Cuenta, filtra (por defecto muestra los **pendientes de atender**) y calcula el próximo paciente con `AgendaDiariaService.ElegirProximo`. |
-| 5 | `FormAgendaMedico.BtnAtender_Click` | Bloquea turnos cancelados y futuros; abre `new FormRegistrarActividad(turno, usuario, navegador)`. |
+| 5 | `FormAgendaMedico.BtnAtender_Click` | Bloquea turnos cancelados, ausentes y futuros; abre `new FormRegistrarActividad(turno, usuario, navegador)`. El doble clic en una fila lo dispara, pero ignora el clic en el encabezado (`RowIndex < 0`). |
 | 6 | `SGC.UI/FormRegistrarActividad.cs` → `BtnGuardar_Click` | Llama a `ActividadMedicaService.RegistrarOModificarActividad(turno, tipo, motivo, procedimiento, receta)`. |
-| 7 | `SGC.Logica/ActividadMedicaService.cs` | Rechaza turno cancelado o motivo vacío; si ya hay actividad activa del turno la **actualiza**, si no la **inserta** (una por turno). |
-| 8 | `FormRegistrarActividad.BtnVerHistorial_Click` | Abre `FormHistorialClinico` con ese paciente. |
+| 7 | `SGC.Logica/ActividadMedicaService.cs` | Rechaza turno de otro médico, cancelado, ausente o de fecha futura, o motivo vacío; si ya hay una actividad del turno (incluso dada de baja) la **actualiza y reactiva**, si no la **inserta** (una por turno). Un turno admite atención si está `Confirmado` o `Asistio`. |
+| 8 | `FormRegistrarActividad.BtnVerHistorial_Click` | Abre `FormHistorialClinico` con ese paciente. Desde el historial, el botón "Registrar atención" vuelve a abrir `FormRegistrarActividad`. |
 | 9 | `SGC.UI/FormHistorialClinico.cs` → `CargarHistorialPaciente` | Llama a `ActividadMedicaService.ConsultarFilas(rol, paciente, médico, desde, hasta, tipo)`. |
 | 10 | `SGC.Logica/AtencionFila.cs` | Devuelve motivo, procedimiento y receta **solo si el rol es Médico**; para otro rol los campos vienen vacíos. |
 
@@ -155,8 +156,8 @@ Esta parte es del rol Médico (pantallas de Luciano). **Atender un turno no camb
 
 - **Atención y asistencia son cosas distintas.** La asistencia/cobro la registra la recepción (flujo d); la atención clínica la registra el médico. No se pisan.
 - **El navegador (`Action<Form>`) evita ventanas sueltas.** Las pantallas del médico se abren como hijas del menú. Cada una tiene una rama alternativa con `ShowDialog()` (y `FormHistorialPaciente`, la versión modal del historial) que **solo se usa cuando no hay navegador**; en la aplicación real el menú siempre lo pasa, así que esas ramas hoy no se ejecutan (deducido).
-- **La seguridad clínica (RNF#07) está en la fila, no en la pantalla:** aunque una grilla quisiera mostrar el motivo, `AtencionFila` ya lo trae vacío para otros roles.
-- **En el combo de "Registrar actividad"** cada turno lleva la marca `[Atendido]` o `[Pendiente]`: acá "Pendiente" significa "sin atención cargada", no un estado de turno (ver [`06-capa-ui.md`](06-capa-ui.md#qué-significa-pendiente-en-la-interfaz)).
+- **La seguridad clínica (RNF#07) está en la fila, no en la pantalla:** aunque una grilla quisiera mostrar el motivo, `AtencionFila` ya lo trae vacío para otros roles. Decisión de alcance: el Médico ve la historia clínica **completa** del paciente (incluidas las atenciones de otros médicos); solo la Recepcionista queda fuera de los datos clínicos.
+- **Pendiente de atención = `Confirmado` o `Asistio` sin atención cargada.** En el combo de "Registrar actividad" cada turno lleva la marca `[Atendido]` o `[Pendiente]`: acá "Pendiente" significa "sin atención cargada", no un estado de turno (ver [`06-capa-ui.md`](06-capa-ui.md#qué-significa-pendiente-en-la-interfaz)).
 
 ---
 
@@ -164,15 +165,15 @@ Esta parte es del rol Médico (pantallas de Luciano). **Atender un turno no camb
 
 ![Cargar una ausencia](diagramas/flujo-ausencia.png)
 
-> Diagrama pendiente de regenerar: la etiqueta de la flecha del Service dice "SELECT turnos Pendiente o Confirmado del día", pero ahora solo se buscan turnos `Confirmado`.
+> La fuente (`.json`) y la versión interactiva (`.html`) de este diagrama ya reflejan el guardado único; la imagen `.png` y el `.svg` son anteriores y todavía muestran "Pendiente o Confirmado" y los "dos SaveChanges": pendiente de regenerar la imagen.
 
 | Paso | Archivo y método | Qué pasa |
 |------|------------------|----------|
 | 1 | `SGC.UI/FormExcepcionesAgenda.cs` → `BtnGuardar_Click` | Arma un `ExcepcionAgenda` (médico, fecha, tipo `DiaCompleto` o `RangoHorario`, horas, motivo) y llama a `Agregar` (o a `Modificar` si había una fila elegida). |
-| 2 | `SGC.Logica/ExcepcionAgendaService.cs` → `Validar` | Médico existente y activo, fecha no pasada (hoy sí), motivo obligatorio, y horas coherentes si es rango. |
-| 3 | `ExcepcionAgendaService.Agregar` | Inserta la ausencia (`SaveChanges` #1). |
+| 2 | `SGC.Logica/ExcepcionAgendaService.cs` → `Validar` | Médico existente y activo, fecha no pasada (hoy sí), motivo obligatorio, horas coherentes si es rango y **sin otra ausencia superpuesta** del mismo médico y fecha. |
+| 3 | `ExcepcionAgendaService.Agregar` | Agrega la ausencia al contexto (todavía sin guardar). |
 | 4 | `ExcepcionAgendaService.CancelarTurnosAfectados` | Busca los turnos **activos** del médico en esa fecha en estado `Confirmado`; si la ausencia es de rango, solo los que se superponen. |
-| 5 | `CancelarTurnosAfectados` | Los pasa a `Cancelado` con `Activo = false` y guarda (`SaveChanges` #2). Registra un aviso simulado al paciente. |
+| 5 | `CancelarTurnosAfectados` | Los pasa a `Cancelado` con `Activo = false` en el mismo contexto y **guarda todo con un único `SaveChanges`** (la ausencia y las cancelaciones, o nada). Recién después registra un aviso simulado al paciente por cada turno cancelado (`AvisarCancelaciones`). |
 | 6 | `FormExcepcionesAgenda.BtnGuardar_Click` | Muestra "Excepción guardada correctamente. Se cancelaron N turno(s)...". |
 
 **Qué pasa con los turnos existentes**
@@ -187,9 +188,9 @@ Esta parte es del rol Médico (pantallas de Luciano). **Atender un turno no camb
 **Por qué está armado así**
 
 - **Un turno en una ausencia deja de tener sentido**, por eso se cancela en el momento y no se deja para que alguien lo note.
-- **Son dos `SaveChanges` seguidos, no una transacción:** si la segunda falla, la ausencia queda guardada pero los turnos no se cancelan. Ver [`08`](08-guia-para-modificar.md#transacciones-y-concurrencia).
+- **Es un solo `SaveChanges`:** si algo falla no queda una ausencia guardada con los turnos sin cancelar. Ver [`08`](08-guia-para-modificar.md#transacciones-y-concurrencia).
 - **Solo `Agregar` cancela turnos.** `Modificar` y `EliminarLogico` no vuelven a revisar nada: editar una ausencia no cancela turnos nuevos que queden dentro, y eliminarla no restituye los ya cancelados.
-- **Las ausencias afectan a la pantalla de turnos** a través de `DisponibilidadDia` (flujo b), pero `TurnoService` no las consulta.
+- **Las ausencias también bloquean turnos nuevos:** la pantalla las pinta como ocupadas (`DisponibilidadDia`, flujo b) y `TurnoService.AsignarTurno` y `ModificarTurno` las rechazan aunque se llamen sin pasar por la pantalla.
 
 ---
 
@@ -206,13 +207,14 @@ El diagrama muestra la pestaña "Turnos"; todas siguen el mismo camino. El módu
 | 3 | `SGC.Logica/ReporteService.cs` → `ObtenerTurnosPorPeriodo` | Valida el período y ejecuta `EXEC sp_ReporteTurnosPorPeriodo` con `SqlQueryRaw<ReporteTurnoFila>`. |
 | 4 | `SGC.Datos/StoredProcedures/sp_ReporteTurnosPorPeriodo.sql` | Hace el `SELECT` con los `JOIN` y devuelve las filas. |
 | 5 | `FormReportes.MostrarDatos` | Asigna la lista como `DataSource` de la grilla; arma el resumen de abajo. En Recaudación y Ocupación también actualiza el gráfico (`ActualizarGrafico`). |
-| 6 | `FormReportes.ExportarCsv` | Con el botón "Exportar a CSV": `SaveFileDialog` y `EscribirCsv` (UTF-8 con BOM, separador `;`). |
+| 6 | `FormReportes.ExportarCsv` | Con el botón "Exportar a CSV": `SaveFileDialog` (nombre sugerido con pestaña, médico y opción elegidos, p. ej. `reporte_turnos_todos_mis_medicos_confirmado_20261001_20261031.csv`) y `EscribirCsv` (UTF-8 con BOM, separador `;`, celdas que parecen fórmula con `'` delante). |
 
 **Por qué está armado así**
 
 - **La agregación vive en la base** (procedimientos) y la pantalla solo dibuja: así el cálculo es el mismo para cualquier pantalla y no se traen miles de filas para sumarlas en C#.
 - **Se guarda `Encabezados` y `FilasExportacion` al generar:** el CSV exporta exactamente lo que se ve, sin volver a consultar.
 - **El alcance por rol lo decide la pantalla** (ver [`07`](07-reportes.md)): el Service y el procedimiento solo filtran por el `medicoId` que reciben. Desde esta versión Recaudación, Obras sociales y Rendimiento también lo aceptan (`@MedicoId`, opcional). Si la Recepcionista elige "Todos mis médicos", la pantalla ejecuta el procedimiento **una vez por médico asignado** y une o suma los resultados, porque el procedimiento recibe un solo médico.
+- **Los filtros invalidan el resultado:** al cambiar un filtro (fechas, médico o la opción de agrupación) de una pestaña ya generada, `MarcarDesactualizado` vacía la grilla, el resumen y el gráfico, deshabilita **Exportar** y avisa "Los filtros cambiaron. Pulse Generar para actualizar." (las pestañas por año se recalculan solas). Así el CSV nunca sale con datos de otros filtros.
 - **Errores:** un `ArgumentException` (por ejemplo, fechas invertidas) se muestra tal cual; cualquier otra excepción se muestra como "No se pudo generar el reporte..." y limpia el resultado.
 
 ---
@@ -247,7 +249,7 @@ El diagrama muestra la pestaña "Turnos"; todas siguen el mismo camino. El módu
 
 Solo el Administrador. Dos operaciones en la misma pantalla: **crear una copia** (con verificación) y **restaurar** una existente. Las reglas están en [`03`](03-reglas-de-negocio.md#12-copia-de-seguridad-y-restauración).
 
-> No probado contra la base todavía: el recorrido sale de leer el código; ni el backup ni la restauración se ejecutaron contra una instancia real de SQL Server.
+> Probado solo contra una base de prueba (crear, verificar y restaurar); falta la prueba desde la pantalla. El diagrama de esta sección (`flujo-backup`) es anterior a la validación del `.bak` y a la migración posterior: la tabla de abajo es la que está al día.
 
 | Paso | Archivo y método | Qué pasa |
 |------|------------------|----------|
@@ -258,18 +260,20 @@ Solo el Administrador. Dos operaciones en la misma pantalla: **crear una copia**
 | 5 | `RealizarBackup` → `ObtenerTamano` | Lee el tamaño de `msdb.dbo.backupset`; si no puede, el tamaño queda en blanco. |
 | 6 | `FormBackup.CrearCopiaAsync` | Muestra "Copia creada y verificada" (o el error de verificación) y recarga el historial. |
 | 7 | `FormBackup.ElegirArchivo` / `UsarSeleccionada` | Para restaurar se elige un `.bak` con el diálogo o se toma una fila del historial. |
-| 8 | `FormBackup.RestaurarAsync` | Muestra un `MessageBox` de advertencia (por defecto "No"). Solo si el usuario confirma, sigue. |
+| 8 | `FormBackup.RestaurarAsync` → `BackupService.ObtenerInfoBackup` | Lee el encabezado del `.bak` (`RESTORE HEADERONLY` desde `master`, sin tocar la base). Rechaza un archivo que no sea una copia **completa** o que sea de **otra base** (`DatabaseName` distinto del actual). Muestra un `MessageBox` con la base de origen, el servidor y la fecha de la copia (por defecto "No"). Solo si el usuario confirma, sigue. |
 | 9 | `BackupService.Restaurar` | `SqlConnection.ClearAllPools()`, conecta a **`master`**, `RESTORE VERIFYONLY` del archivo, `ALTER DATABASE ... SET SINGLE_USER WITH ROLLBACK IMMEDIATE`. |
 | 10 | `Restaurar` | `RESTORE DATABASE [base] FROM DISK = @ruta WITH REPLACE, STATS = 10`. El `finally` siempre ejecuta `SET MULTI_USER` y vuelve a vaciar los pooles. |
-| 11 | `FormBackup.RestaurarAsync` | Avisa que se restauró, abre un `FormLogin` nuevo y cierra el menú: la sesión termina para empezar con los datos restaurados. |
+| 11 | `BackupService.MigrarBase` | Ejecuta `Migrate()` sobre la base restaurada (la copia puede ser de una versión anterior). Nunca lanza: si falla, la restauración igual se hizo y el resultado lo informa. |
+| 12 | `FormBackup.RestaurarAsync` | Si la migración falló, muestra el error y **no** vuelve al login (pide cerrar la aplicación). Si salió bien, avisa y llama a `FormMenuPrincipal.CerrarSesion`: la sesión termina para empezar con los datos restaurados. Mientras tanto el menú lateral y el cierre de la ventana están bloqueados (`BloquearPorOperacion`). |
 
 **Por qué está armado así**
 
 - **Lo hace SQL Server, no la aplicación.** El `.bak` lo escribe y lo lee la **cuenta de servicio de SQL Server**: la carpeta tiene que existir en el servidor y esa cuenta necesita permiso. Una carpeta de tu usuario de Windows puede fallar aunque exista (errores 3201/3203/3013, traducidos a un mensaje que lo explica).
 - **Se restaura desde `master`**, porque no se puede reemplazar una base desde una conexión que está usando esa misma base. Por eso `SINGLE_USER ... ROLLBACK IMMEDIATE` (corta las demás conexiones) y el `finally` que garantiza volver a `MULTI_USER`.
-- **Se verifica siempre,** al crear y antes de restaurar: una copia que no se puede leer no sirve cuando hace falta.
+- **Se verifica siempre,** al crear y antes de restaurar: una copia que no se puede leer no sirve cuando hace falta. Además se comprueba que el `.bak` sea de **esta** base antes de reemplazarla.
 - **Las operaciones corren en `Task.Run`** y la pantalla deshabilita los botones mientras tanto, para que la ventana no se congele; el `CommandTimeout` es 0 (sin límite) porque una copia grande puede tardar minutos.
 - **No hay tabla propia de copias:** el historial y la tarjeta "Última copia de seguridad" del Inicio salen de `msdb.dbo.backupset`. Si el usuario de conexión no puede leer `msdb`, la grilla muestra el motivo en vez de fallar.
+- **Las copias son manuales:** no hay una tarea programada que las genere; el Inicio del Administrador avisa si la última tiene más de 7 días.
 
 ---
 

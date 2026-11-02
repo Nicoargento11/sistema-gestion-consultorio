@@ -62,7 +62,7 @@ Main
 
 `Migrate()` falla, el `catch` de `Program.cs` muestra un cuadro "No se pudo conectar/inicializar la base de datos" con el mensaje de la excepción y hace `return`: **la aplicación termina sin llegar al login**. No se verificó cuánto tarda en fallar (depende del timeout de conexión de SQL Server).
 
-Si SQL Server responde pero cae después de arrancar, no hay una red de seguridad global: cada pantalla captura la excepción de su operación y la muestra en su franja de mensajes (por ejemplo, `FormLogin` muestra "No se pudo verificar el acceso. Verifique la conexión...").
+Si SQL Server responde pero cae después de arrancar, cada pantalla captura la excepción de su operación y la muestra en su franja de mensajes (por ejemplo, `FormLogin` muestra "No se pudo verificar el acceso. Verifique la conexión..."). Lo que no se atrapa llega a los manejadores globales de `Program.Main` (`Application.ThreadException` y `AppDomain.UnhandledException`), que muestran "Ocurrió un error inesperado..." sin stack trace; los errores de la interfaz no cierran la aplicación.
 
 ### Cómo se encuentra la cadena de conexión
 
@@ -71,7 +71,7 @@ Archivo: `SGC.Datos/SGCContextFactory.cs`.
 1. `BuscarAppsettingsLocal()` parte de `AppContext.BaseDirectory` (la carpeta `bin/Debug/net8.0/` desde donde corre el proceso) y **sube carpeta por carpeta** hasta encontrar una que contenga un archivo `*.sln`.
 2. En esa carpeta busca `appsettings.Local.json`. Si el archivo no existe, devuelve `null`.
 3. Si lo encuentra, lee la propiedad `ConnectionString` del JSON.
-4. Si no hay archivo, o el JSON no tiene `ConnectionString`, usa el valor por defecto:
+4. Si no hay archivo, o el JSON no tiene `ConnectionString`, usa el valor por defecto (si el archivo existe pero está mal formado o la cadena está vacía, lanza un error claro en español que `Program.cs` muestra en el cuadro de conexión). La cadena se lee **una sola vez** y se guarda en memoria (`_connectionString`):
    `Server=.;Database=SGC;Trusted_Connection=True;TrustServerCertificate=True;`
 
 | Situación | Resultado |
@@ -97,7 +97,7 @@ using var contexto = SGCContextFactory.Crear();
 contexto.SaveChanges();
 ```
 
-Es decir, abre un `SGCContext`, trabaja y lo descarta al salir del método (`using`). `SGCContextFactory.Crear()` aparece unas 66 veces en `SGC.Logica`, una por operación.
+Es decir, abre un `SGCContext`, trabaja y lo descarta al salir del método (`using`). `SGCContextFactory.Crear()` aparece 69 veces en `SGC.Logica` (verificado con una búsqueda de texto), una por operación.
 
 | Ventaja | Consecuencia a tener en cuenta |
 |---------|--------------------------------|
@@ -185,8 +185,8 @@ Hechos observados en el código, sin juicio.
 
 | # | Hallazgo | Dónde |
 |---|----------|-------|
-| 1 | **Cerrar sesión no termina el proceso.** `Program.cs` hace `Application.Run(new FormLogin())` y `FormLogin` se oculta (`Hide()`) al entrar. `BtnCerrarSesion_Click` crea un `FormLogin` nuevo y cierra el menú, pero el login original sigue oculto y es el que gobierna el ciclo de vida de la aplicación: al cerrar el login nuevo, el proceso queda vivo. Deducido del código; no se ejecutó la app para comprobarlo. | `SGC.UI/FormLogin.cs`, `SGC.UI/FormMenuPrincipal.cs` (`BtnCerrarSesion_Click`) |
-| 2 | **El README está desactualizado** respecto del código: dice que no hay base de datos conectada y que los datos viven en listas en memoria, pero hoy todo pasa por EF Core y SQL Server. Las contraseñas de prueba que lista (`admin123`, `recepcion123`, `medico123`) coinciden con las del `DbSeeder`. | `README.md`, `SGC.Datos/DbSeeder.cs` |
+| 1 | ~~Cerrar sesión no terminaba el proceso~~ **Resuelto:** `FormLogin` sigue ocultándose (`Hide()`) al entrar y es la ventana principal del proceso, pero ahora `FormMenuPrincipal.OnFormClosed` ejecuta `Application.Exit()` salvo que se esté cerrando sesión (`_cerrandoSesion`), y `CerrarSesion` reutiliza el login oculto (`Reiniciar`) en vez de crear otro. Los avisos y la clave escrita se limpian. | `SGC.UI/FormLogin.cs`, `SGC.UI/FormMenuPrincipal.cs` |
+| 2 | ~~El README estaba desactualizado~~ **Resuelto:** el README describe EF Core, SQL Server, los roles y la copia de seguridad. Las contraseñas de prueba que lista (`admin123`, `recepcion123`, `medico123`) coinciden con las del `DbSeeder`. | `README.md`, `SGC.Datos/DbSeeder.cs` |
 | 3 | **Hay dos servicios con datos en memoria**, no persistidos: `HorarioService` (lista estática de slots, solo genera franjas para el combo de turnos) y `NotificacionService` (lista estática de avisos; los "emails" son simulados). Se pierden al cerrar la app. | `SGC.Logica/HorarioService.cs`, `SGC.Logica/NotificacionService.cs` |
 | 4 | **La cadena por defecto es `Server=.`**: si alguien no crea su `appsettings.Local.json`, la app intenta la instancia por defecto del equipo, no `SQLEXPRESS`. | `SGC.Datos/SGCContextFactory.cs` |
 

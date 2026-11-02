@@ -60,14 +60,17 @@ Pasos 1 a 10 en [`07-reportes.md`](07-reportes.md#6-cómo-agregar-una-pestaña-n
 
 ### Copia de seguridad: qué revisar antes de tocarla
 
-Código en `SGC.Logica/BackupService.cs` y `SGC.UI/FormBackup.cs`; reglas en [`03`](03-reglas-de-negocio.md#12-copia-de-seguridad-y-restauración), recorrido en [`04`](04-flujos.md#i-copia-de-seguridad-y-restauración). *Sin probar contra la base todavía.*
+Código en `SGC.Logica/BackupService.cs` y `SGC.UI/FormBackup.cs`; reglas en [`03`](03-reglas-de-negocio.md#12-copia-de-seguridad-y-restauración), recorrido en [`04`](04-flujos.md#i-copia-de-seguridad-y-restauración). *Probado solo contra una base de prueba (crear, verificar, restaurar); falta la prueba desde la pantalla.*
 
 1. **La ruta la usa SQL Server, no la app.** La carpeta tiene que existir **en el servidor** y la **cuenta de servicio de SQL Server** necesita permiso de escritura (crear) o lectura (restaurar). Si falla con "no pudo acceder", casi siempre es eso (errores 3201, 3203, 3013). La carpeta que sugiere la pantalla (`InstanceDefaultBackupPath`) es la que ya tiene ese permiso.
 2. **Restaurar se hace desde `master`** con `SINGLE_USER WITH ROLLBACK IMMEDIATE` y vuelve siempre a `MULTI_USER` en un `finally`. Si cambiás ese método, no saques el `finally`: una base que queda en `SINGLE_USER` rechaza a todos.
 3. **Después de restaurar hay que vaciar los pooles** (`SqlConnection.ClearAllPools()`) y volver al login: las conexiones abiertas apuntan a la base anterior.
 4. **El usuario de conexión necesita permisos** de backup/restore (por ejemplo `db_owner` o `sysadmin`) y lectura de `msdb` para el historial. Sin lectura de `msdb`, la pantalla funciona pero el historial y la tarjeta "Última copia" del Inicio quedan vacíos o en advertencia.
 5. **El nombre de la base no se escribe a mano:** sale de la cadena de conexión (`NombreBase`) y se escapa con corchetes (`Entre`); la ruta viaja como parámetro `@ruta`. Mantené ese criterio si agregás sentencias.
-6. **Un backup es de una base y una versión:** restaurar una copia vieja devuelve también el esquema viejo (`__EFMigrationsHistory` incluido); al abrir la app, `Migrate()` aplica de nuevo las migraciones que falten.
+6. **Un backup es de una base y una versión:** restaurar una copia vieja devuelve también el esquema viejo (`__EFMigrationsHistory` incluido). `Restaurar` ya ejecuta `Migrate()` al terminar (`MigrarBase`) y, si falla, la pantalla pide cerrar la aplicación en vez de volver al login.
+7. **Antes de tocar nada se valida el archivo:** `ObtenerInfoBackup` hace `RESTORE HEADERONLY` y rechaza un `.bak` que no sea una copia completa de **esta** base (`DatabaseName`). No lo saques: restaurar la copia de otra base la reemplazaría con `WITH REPLACE`.
+8. **Mientras corre una operación la ventana está bloqueada** (`FormMenuPrincipal.BloquearPorOperacion` y `OnFormClosing`): si agregás una operación larga, usá el mismo mecanismo.
+9. **No hay copias programadas:** todo es manual; el `.bak` queda en el servidor.
 
 ### Cambiar una regla de negocio
 
@@ -75,9 +78,9 @@ Código en `SGC.Logica/BackupService.cs` y `SGC.UI/FormBackup.cs`; reglas en [`0
 2. Cambiala en el Service (`SGC.Logica`). **No hay proyecto de pruebas en la solución**: probá a mano con los tres usuarios de prueba.
 3. Revisá las **copias de la regla**:
    - La pantalla que ayuda al usuario (por ejemplo `FormTurnos.CrearHorarios` repite la lógica de superposición y de ausencias para pintar botones).
-   - `sp_AsignarTurno`, que duplica `TurnoService.AsignarTurno` (aunque hoy nadie lo llama).
+   - `sp_AsignarTurno`, que duplicaba `TurnoService.AsignarTurno` (hoy nadie lo llama y tiene menos reglas que el C#: sin paciente activo, sin duración 5-240, sin paciente libre).
    - Las restricciones de la base (`CHECK`, índices): si la regla es más estricta que la base, no hace falta migración; si es más laxa, sí.
-   - Los números de estado (`0` a `4`) que usan los procedimientos.
+   - Los números de estado (`1` a `4`) que usan los procedimientos.
 4. Si cambia un texto que otro código compara (por ejemplo `"Asistió"`), buscalo con una búsqueda de texto en toda la solución.
 
 ---
@@ -88,8 +91,8 @@ Código en `SGC.Logica/BackupService.cs` y `SGC.UI/FormBackup.cs`; reglas en [`0
 |---------|-----------|
 | Al abrir la app aparece **"No se pudo conectar/inicializar la base de datos"** y se cierra | SQL Server está apagado o la cadena de conexión es otra. Iniciá el servicio de SQL Server (Servicios de Windows → "SQL Server (NOMBRE_INSTANCIA)") y revisá el `appsettings.Local.json`. Ese cuadro sale de `Program.cs`, antes del login. |
 | Conecta a la base equivocada o no encuentra el servidor | Falta o está mal `appsettings.Local.json`. Debe estar **junto al `.sln`**, copiado de `appsettings.example.json`, con tu instancia en `ConnectionString` (por ejemplo `Server=.\\SQLEXPRESS;...`). Si no existe, la app usa `Server=.` (la instancia por defecto). El archivo está en el `.gitignore`. |
-| Cada pantalla muestra "No se pudieron cargar..." con la app ya abierta | SQL Server cayó o se cortó la conexión después de arrancar. No hay manejador global: cada pantalla muestra el error de su operación en la franja. |
-| Al compilar: **error de archivo bloqueado** (`MSB3027`, "being used by another process") | La aplicación sigue abierta y bloquea los `.dll` de `bin/`. Cerrala. Ojo: por cómo está armado el cierre de sesión, el proceso puede quedar vivo y **oculto** aunque no veas ninguna ventana (ver [`04`](04-flujos.md#a-arranque-de-la-app-y-login), deducido): buscá `SGC.UI.exe` en el Administrador de tareas y finalizalo. |
+| Cada pantalla muestra "No se pudieron cargar..." con la app ya abierta | SQL Server cayó o se cortó la conexión después de arrancar. Cada pantalla muestra el error de su operación en la franja; lo que no se atrapa llega al manejador global de `Program.cs` ("Ocurrió un error inesperado...") y la aplicación sigue abierta. |
+| Al compilar: **error de archivo bloqueado** (`MSB3027`, "being used by another process") | La aplicación sigue abierta y bloquea los `.dll` de `bin/`. Cerrala (cerrar el menú con la X termina el proceso). Si igual queda algo, buscá `SGC.UI.exe` en el Administrador de tareas y finalizalo; para compilar sin cerrarla, usá `-p:OutDir=<otra carpeta>`. |
 | No sabés qué hay en la base | `sqlcmd -S ".\NICO_SERV1" -E -C -d SGC -Q "SELECT COUNT(*) FROM Turnos"` (cambiá la instancia por la tuya; usá solo `SELECT`). |
 | Un reporte "no cierra" con otro | Los procedimientos filtran distinto los cancelados (ver defecto R-2 más abajo). |
 | Una pantalla de Luciano se corta con otra escala | Usa píxeles fijos en algunos lugares; reemplazar por `EscalaDpi.Px` (ver [`06`](06-capa-ui.md#6-escala-de-pantalla-dpi)). |
@@ -104,14 +107,14 @@ Código en `SGC.Logica/BackupService.cs` y `SGC.UI/FormBackup.cs`; reglas en [`0
 | Trampa | Qué pasa | Cómo evitarla |
 |--------|----------|---------------|
 | **Designer** | Visual Studio regenera `InitializeComponent()` al abrir el formulario en modo diseño y borra en silencio lo que no sea asignación de propiedades (columnas, métodos propios). | Columnas, chips y estilos van en el `.cs`. Ver [`06`](06-capa-ui.md#5-lógica-en-el-cs-el-designer-solo-para-la-estructura). |
-| **Tildes** | Los textos que ve el usuario llevan tildes y ñ; los **comentarios** del código no (evita problemas de codificación). Muchos mensajes de los Services no tienen tildes; los de los `.sql` sí, porque se escriben como `N'...'`. | Textos de usuario con tildes. Para scripts SQL a mano: `sqlcmd ... -f 65001`. Un `RAISERROR` con tildes necesita el prefijo `N`. |
+| **Tildes y registro** | Los textos que ve el usuario van en español neutro (sin voseo: "Seleccione", "Indique"), con tildes, ñ y signos de apertura (¿ ¡); los **comentarios** del código no llevan tildes (evita problemas de codificación). Los datos sembrados (`DbSeeder`, `HasData`) todavía tienen especialidades y tipos de actividad sin tildes: cambiarlos exige una migración. Los mensajes de los `.sql` llevan tildes porque se escriben como `N'...'`. | Textos de usuario con tildes. Para scripts SQL a mano: `sqlcmd ... -f 65001`. Un `RAISERROR` con tildes necesita el prefijo `N`. La cultura de la aplicación es es-AR (`Program.Main`). |
 | **DPI** | Un tamaño fijo en píxeles recorta el texto con escala 125 %/150 %. Lo creado por código no se autoescala. | `EscalaDpi.Px(this, valor)`, `Dock`, layouts y medir el texto. |
 | **`EXEC` no componible** | EF no puede agregar `Include`, `Where` ni `JOIN` sobre un `EXEC` de procedimiento. | Leer el resultado a memoria y cargar las navegaciones con una segunda consulta (ver `TurnoService.ObtenerPorMedicoYFecha`). |
 | **`SelectionChanged`** | Asignar el `DataSource` selecciona la primera fila y dispara el evento: la pantalla pasa a "editar" sola. | Desenganchar, asignar, `ClearSelection`, volver a enganchar; y la bandera `_cargando`. |
 | **`HoraFin` no es columna** | `Turno.HoraFin` es calculada, EF no la traduce a SQL. | Traer los turnos del día y comparar en memoria (`HaySuperposicion`). |
 | **Día de la semana** | `DayOfWeek` de C# (0 = domingo) y `DATEPART(weekday)` de SQL (depende de `@@DATEFIRST`) no coinciden. | En SQL usar la fórmula con `DATEDIFF` desde `'19000107'` (ver [`05`](05-procedimientos-almacenados.md#21-el-día-de-la-semana-no-depende-del-idioma)). |
 | **Parámetros opcionales** | Un `null` de C# no viaja como `NULL` de SQL. | `DBNull.Value` (`ParametroEntero`, `ParametroFecha`). |
-| **Baja lógica e índices únicos** | Los índices únicos incluyen filas inactivas: no se puede volver a crear un registro dado de baja con el mismo DNI/nombre. | Ver defecto D-1. |
+| **Baja lógica e índices únicos** | Los índices únicos incluyen filas inactivas: no se puede volver a crear un registro dado de baja con el mismo DNI/nombre (ahora con un mensaje claro). | Ver defecto N-10. |
 | **Migraciones viejas** | Una migración aplicada no se vuelve a ejecutar. | Cambios nuevos = migración nueva. |
 | **Ruta del backup** | El `.bak` lo escribe y lee la cuenta de servicio de SQL Server, no tu usuario de Windows: una carpeta tuya puede fallar aunque exista. | Usar la carpeta por defecto de la instancia o dar permiso a esa cuenta. |
 | **Restaurar y `SINGLE_USER`** | Reemplazar la base exige `master` y acceso exclusivo; si queda en `SINGLE_USER` nadie entra. | No quitar el `finally` de `BackupService.Restaurar`; vaciar los pooles. |
@@ -131,7 +134,7 @@ Código en `SGC.Logica/BackupService.cs` y `SGC.UI/FormBackup.cs`; reglas en [`0
 1. `HaySuperposicion(...)`: consulta si el médico ya tiene un turno que se pisa.
 2. `contexto.Turnos.Add(...)` + `SaveChanges()`: inserta.
 
-Entre el paso 1 y el 2 no hay nada que bloquee. Escenario:
+Entre el paso 1 y el 2 no hay nada que bloquee (lo mismo vale para la comprobación de que el paciente no tenga otro turno a la vez, `ExigirPacienteLibre`). Escenario:
 
 | Tiempo | Recepcionista A | Recepcionista B |
 |--------|-----------------|-----------------|
@@ -146,9 +149,9 @@ Resultado: **dos turnos superpuestos** del mismo médico. La base no lo impide: 
 
 Como es una agenda de pocos usuarios, la probabilidad es baja, pero es el único lugar donde dos operaciones simultáneas pueden dejar datos inconsistentes.
 
-### Otro caso: dos guardados encadenados
+### Antes había dos guardados encadenados (resuelto)
 
-`ExcepcionAgendaService.Agregar` hace **dos** `SaveChanges`: uno para insertar la ausencia y otro (dentro de `CancelarTurnosAfectados`) para cancelar los turnos. Son dos transacciones separadas: si la segunda falla, la ausencia queda guardada y los turnos sin cancelar. Es la única operación de `SGC.Logica` que encadena dos guardados (se revisó el conteo de `SaveChanges` de cada Service).
+`ExcepcionAgendaService.Agregar` hacía dos `SaveChanges` (la ausencia y la cancelación de turnos) y podía dejar la ausencia guardada con los turnos sin cancelar. Ahora marca todo en el mismo contexto y llama **una sola vez** a `SaveChanges` (una transacción implícita); los avisos se registran después. Ver N-2.
 
 ### Cómo arreglarlo (propuesta, no implementada)
 
@@ -169,7 +172,7 @@ BEGIN TRANSACTION;
 COMMIT TRANSACTION;
 ```
 
-Con `UPDLOCK, HOLDLOCK` el segundo que llega espera al primero y después ve su turno. En C#, `TurnoService.AsignarTurno` ejecutaría `EXEC sp_AsignarTurno` y traduciría el `SqlException` (los `RAISERROR` de severidad 16) en un mensaje. Como además el procedimiento ya valida las ausencias, esto resuelve también el defecto N-3. `ModificarTurno` necesitaría un procedimiento equivalente.
+Con `UPDLOCK, HOLDLOCK` el segundo que llega espera al primero y después ve su turno. En C#, `TurnoService.AsignarTurno` ejecutaría `EXEC sp_AsignarTurno` y traduciría el `SqlException` (los `RAISERROR` de severidad 16) en un mensaje. Antes habría que **actualizar el procedimiento** con las reglas que hoy solo tiene el C# (paciente y médico activos, duración 5-240 sin cruzar la medianoche, paciente sin turnos simultáneos). `ModificarTurno` necesitaría un procedimiento equivalente.
 
 ### Historia de `sp_AsignarTurno`
 
@@ -186,67 +189,73 @@ Ese segundo commit es el que agregó la validación de ausencias que `TurnoServi
 
 ## Defectos y deuda conocidos
 
-Consolidado de **todos** los hallazgos de [`01`](01-arquitectura.md#hallazgos), [`02`](02-modelo-de-datos.md), [`03`](03-reglas-de-negocio.md#hallazgos) y [`05`](05-procedimientos-almacenados.md#hallazgos), más los que se encontraron al escribir esta guía. Impacto: **A** = puede dar datos incorrectos o filtrar información; **M** = confunde o complica; **B** = cosmético o de mantenimiento.
+Consolidado de **todos** los hallazgos de [`01`](01-arquitectura.md#hallazgos), [`02`](02-modelo-de-datos.md), [`03`](03-reglas-de-negocio.md#hallazgos) y [`05`](05-procedimientos-almacenados.md#hallazgos), más los que se encontraron al escribir esta guía y los de la auditoría posterior. **Estado:** *vigente* = sigue pasando con el código actual; *resuelto* = corregido (se indica el commit o el cambio). Impacto: **A** = puede dar datos incorrectos o filtrar información; **M** = confunde o complica; **B** = cosmético o de mantenimiento.
 
 ### Reglas de negocio y datos
 
-| ID | Hallazgo | Dónde | Imp. | Sugerencia de arreglo |
-|----|----------|-------|:----:|-----------------------|
-| N-1 | **Carrera al asignar o modificar:** consulta de superposición y luego inserción, sin transacción ni índice único; dos asignaciones simultáneas pueden crear turnos superpuestos | `TurnoService.AsignarTurno`, `ModificarTurno`; `sp_AsignarTurno.sql` | A | Transacción con `UPDLOCK, HOLDLOCK` dentro de `sp_AsignarTurno` y que C# lo invoque (ver sección anterior) |
-| N-2 | **`ExcepcionAgendaService.Agregar` usa dos `SaveChanges`:** si falla el segundo, la ausencia queda sin cancelar los turnos | `ExcepcionAgendaService.Agregar` / `CancelarTurnosAfectados` | M | Un solo `SaveChanges` (hacer la cancelación en el mismo contexto antes de guardar) o transacción explícita |
-| N-3 | **`AsignarTurno` y `ModificarTurno` ignoran `ExcepcionAgenda`**; solo la pantalla pinta esos horarios como ocupados y solo `sp_AsignarTurno` las valida | `SGC.Logica/TurnoService.cs`; `FormTurnos.CrearHorarios` | A | Validar `ExcepcionesAgenda` en C# (consulta en el mismo contexto) o usar el procedimiento |
-| N-4 | `AsignarTurno` no valida que paciente y médico existan y estén activos; `ModificarTurno` tampoco revisa el médico | `TurnoService` | M | Validar `Activo` antes de insertar |
-| N-5 | Se puede **modificar o cancelar un turno ya atendido** (`Asistio`/`Ausente`); cancelar un `Asistio` conserva `Monto` y `MedioPago` | `TurnoService.ModificarTurno`/`CancelarTurno`; `FormTurnos.ActualizarAcciones` | M | Rechazar si el estado es `Asistio` o `Ausente`, en el Service y en la pantalla |
-| N-6 | **Modificar o eliminar una ausencia no re-evalúa turnos:** modificar no cancela turnos nuevos afectados; eliminar no restituye los cancelados | `ExcepcionAgendaService.Modificar`, `EliminarLogico` | M | Reaplicar `CancelarTurnosAfectados` al modificar; avisar en pantalla al eliminar |
-| N-7 | ~~El estado `Pendiente (0)` nunca se crea~~ **Resuelto:** se eliminó del enum, la UI y los procedimientos (los demás valores conservan su número). | `QuitaEstadoPendiente` | B | - |
-| N-8 | Editar un paciente cuya obra social fue dada de baja lo guarda como **Particular sin avisar** (deducido) | `FormPacientes.CargarCombos`, `BtnGuardar_Click` | M | Cargar la obra social actual del paciente aunque esté inactiva, o avisar |
-| N-9 | La **matrícula duplicada** no se valida en C#; solo la base la rechaza (mensaje técnico) | `MedicoService.Validar` | B | Validar contra médicos activos con mensaje claro |
-| N-10 | **No se puede recrear** un médico, paciente, obra social, usuario ni franja dados de baja con los mismos datos únicos (índices sin filtro de `Activo`); solo `Usuario` tiene `Reactivar` | `SGCContext.cs` (índices) | M | Agregar `Reactivar` (como `UsuarioService.Reactivar`) o índices filtrados `WHERE Activo = 1` |
-| N-11 | Validaciones de C# y de la base **no idénticas** (DNI 7-8 dígitos vs. 15 caracteres; nacimiento hasta 120 años vs. solo no futuro; email solo en C#) | `PacienteService.Validar`; `SGCContext.cs` | B | Alinear los `CHECK` o documentar la diferencia |
-| N-12 | `Turnos.MedioPago` es **texto libre** con el nombre de la obra social; un renombre no actualiza turnos viejos | `FormConfirmarAsistencia` | B | Guardar el `ObraSocialId` o un código de medio de pago |
-| N-13 | ~~16 turnos en estado `Pendiente`~~ **Resuelto:** la migración `QuitaEstadoPendiente` los pasó a `Confirmado`. El script de demo (`carga_masiva_demo.sql`) todavía puede generar `Estado = 0`; conviene corregirlo antes de volver a usarlo. | `SGC.Datos/Scripts/carga_masiva_demo.sql` | B | Generar la demo con `Confirmado` |
-| N-14 | `FormAgendaMedico` y `FormRegistrarActividad`: si el usuario no tiene médico vinculado, toman **el primero de la lista** de médicos | `DeterminarMedicoActivo` (ambas) | M | Mostrar un error en vez de asumir un médico |
+| ID | Estado | Hallazgo | Dónde | Imp. | Sugerencia de arreglo |
+|----|:------:|----------|-------|:----:|-----------------------|
+| N-1 | **Vigente** | **Carrera al asignar o modificar:** consulta de superposición (médico y paciente) y luego inserción, sin transacción ni índice único; dos asignaciones simultáneas pueden crear turnos superpuestos | `TurnoService.AsignarTurno`, `ModificarTurno`; `sp_AsignarTurno.sql` | A | Transacción con `UPDLOCK, HOLDLOCK` dentro de `sp_AsignarTurno` y que C# lo invoque (ver sección anterior) |
+| N-2 | Resuelto | ~~`ExcepcionAgendaService.Agregar` usaba dos `SaveChanges`~~ Ahora la ausencia y la cancelación de turnos se guardan con **un solo** `SaveChanges` (commit `c3a9c56`) | `ExcepcionAgendaService.Agregar` | — | — |
+| N-3 | Resuelto | ~~`AsignarTurno` y `ModificarTurno` ignoraban las ausencias~~ Ahora rechazan cualquier turno dentro de una ausencia (`ExigirSinAusencia`, commit `c3a9c56`); además las ausencias activas no pueden superponerse entre sí | `TurnoService`, `ExcepcionAgendaService` | — | — |
+| N-4 | Resuelto | ~~`AsignarTurno` no validaba que paciente y médico existieran y estuvieran activos~~ Ahora ambos métodos releen y exigen paciente y médico activos (`ExigirActivos`, commit `813c20a`); las bajas se rechazan si dejan turnos futuros (sección 13 de `03`) | `TurnoService` | — | — |
+| N-5 | Resuelto | ~~Se podía modificar o cancelar un turno ya atendido~~ Solo se modifica o cancela un turno `Confirmado`, en el Service y en la pantalla (commit `4472d8e`) | `TurnoService`, `FormTurnos.ActualizarAcciones` | — | — |
+| N-6 | **Vigente** | **Modificar o eliminar una ausencia no re-evalúa turnos:** modificar no cancela los turnos que queden afectados; eliminar no restituye los cancelados | `ExcepcionAgendaService.Modificar`, `EliminarLogico` | M | Reaplicar `CancelarTurnosAfectados` al modificar; avisar en pantalla al eliminar |
+| N-7 | Resuelto | ~~El estado `Pendiente (0)` nunca se crea~~ Se eliminó del enum, la UI y los procedimientos (los demás valores conservan su número) | `QuitaEstadoPendiente` | — | — |
+| N-8 | **Vigente** | Editar un paciente cuya obra social fue dada de baja lo guarda como **Particular sin avisar** (deducido) | `FormPacientes.CargarCombos`, `BtnGuardar_Click` | M | Cargar la obra social actual del paciente aunque esté inactiva, o avisar |
+| N-9 | Resuelto | ~~La matrícula duplicada solo la rechazaba la base~~ `MedicoService.Validar` la controla con mensaje claro (commit `eb6250f`) | `MedicoService.Validar` | — | — |
+| N-10 | **Parcial** | Los índices únicos incluyen filas dadas de baja, así que **no se puede recrear** un médico, paciente u obra social con los mismos datos únicos. Mejoró: ahora el mensaje es claro ("... está dado de baja", commit `eb6250f`), el usuario tiene `Reactivar` y la franja de agenda se reactiva sola | `SGCContext.cs` (índices), `Persistencia.Guardar` | M | Agregar `Reactivar` a médico, paciente y obra social, o índices filtrados `WHERE Activo = 1` |
+| N-11 | **Vigente** | Validaciones de C# y de la base **no idénticas** (DNI 7-8 dígitos vs. 15 caracteres; nacimiento hasta 120 años y no hoy vs. solo no futuro; email solo en C#; precio `> 0` en C# vs. `>= 0` en la base) | `PacienteService.Validar`; `MedicoService.Validar`; `SGCContext.cs` | B | Alinear los `CHECK` o documentar la diferencia |
+| N-12 | **Vigente** | `Turnos.MedioPago` es **texto libre** con el nombre de la obra social; un renombre no actualiza turnos viejos | `FormConfirmarAsistencia` | B | Guardar el `ObraSocialId` o un código de medio de pago |
+| N-13 | Resuelto | ~~El script de demo podía generar `Estado = 0`~~ Corregido (commits `0027ddb` y `ac4b935`: no genera turnos fuera de la agenda ni depende de ids fijos) | `SGC.Datos/Scripts/carga_masiva_demo.sql` | — | — |
+| N-14 | **Vigente** | `FormAgendaMedico` y `FormRegistrarActividad`: si el usuario no tiene médico vinculado, toman **el primero de la lista** de médicos | `DeterminarMedicoActivo` (ambas) | M | Mostrar un error en vez de asumir un médico |
+| N-15 | **Vigente** | **Los turnos `Confirmado` de fechas pasadas no se cierran solos** (nadie los pasa a `Asistio` o `Ausente`): siguen figurando como pendientes y los reportes los cuentan como confirmados. Hay 89 al 02/11/2026 en la base de desarrollo (`SELECT COUNT(*) FROM Turnos WHERE Estado = 1 AND Fecha < CAST(GETDATE() AS date)`) | `TurnoService`, reportes | M | Cierre manual por recepción o un proceso que los marque `Ausente` |
+| N-16 | **Vigente** | **RNF#07 solo a nivel de aplicación:** hay un único login de SQL Server para todos los roles; la separación de datos clínicos vive en la interfaz y en `AtencionFila`, no en el motor. **Decisión explícita:** el Médico puede leer la historia clínica completa de un paciente (incluidas las atenciones de otros médicos); la Recepcionista nunca ve datos clínicos | `AtencionFila`, `FormHistorialClinico`, `03` sección 8 | M | Usuarios de base por rol o vistas/permisos si se exigiera a nivel de motor |
+| N-17 | **Vigente** | **No hay copias de seguridad programadas:** solo manuales desde la pantalla; el `.bak` lo escribe la cuenta de servicio de SQL Server en el servidor | `BackupService` | M | Un trabajo de SQL Server Agent o una tarea programada |
+| N-18 | **Vigente** | **Datos de demostración en la base de desarrollo:** el paciente "prueba aprueba" y la obra social "nuevoobra" siguen cargados (la usa una paciente), y los pacientes de demo pueden tener turnos que se superponen entre sí por corridas viejas del script | Base de desarrollo | B | Limpiar antes de una demo o de una entrega |
 
 ### Procedimientos y reportes
 
-| ID | Hallazgo | Dónde | Imp. | Sugerencia de arreglo |
-|----|----------|-------|:----:|-----------------------|
-| R-1 | **`sp_AsignarTurno` no está conectado a nada** (ningún Service ni pantalla lo invoca) | `sp_AsignarTurno.sql`, `TurnoService.cs` | M | Conectarlo (ver N-1) o eliminarlo para no tener dos reglas |
-| R-2 | **Los reportes filtran distinto los cancelados:** cuentan cancelados `sp_ReporteTurnosPorPeriodo`, `sp_ReporteAsistencia`, `sp_ReportePacientesPorMes` y `sp_ReporteRendimientoMedicos`; los excluyen `sp_ReporteOcupacionAgenda` y `sp_ReporteTurnosPorObraSocial`; Recaudación solo cuenta `Asistio` | `StoredProcedures/*.sql` | M | Definir un criterio único y aplicarlo con una migración nueva por procedimiento |
-| R-3 | **Resuelto.** Reporte "Obras sociales" para la Recepcionista: mostraba datos y recaudación de todos los médicos. Ahora `sp_ReporteTurnosPorObraSocial` recibe `@MedicoId` y la pantalla acota a los médicos del usuario (migración `AgregaMedicoIdAReportes`, no probada contra la base todavía) | `FormReportes.Estadisticas.cs`; `sp_ReporteTurnosPorObraSocial` | — | — |
-| R-4 | Dos reportes agrupan por la **obra social actual del paciente**, no por lo cobrado | `sp_ReporteRecaudacion`, `sp_ReporteTurnosPorObraSocial` | M | Guardar la obra social usada en el turno al cobrar |
-| R-5 | **Texto acoplado SQL ↔ pantalla:** `EstadoNombre = 'Asistió'` se compara por texto | `sp_ReporteTurnosPorPeriodo`; `FormReportes.GenerarTurnos` | B | Devolver también el número de estado y comparar por número |
-| R-6 | **Vigente y ampliado:** los procedimientos con filtro de **un solo médico** se ejecutan una vez por médico para la Recepcionista. Antes eran Turnos, Asistencia, Ocupación, Pacientes por mes y el resumen de Inicio; ahora también Recaudación, Obras sociales y Rendimiento (`MedicosAConsultar`), así que "Todos mis médicos" hace N consultas por pestaña | `ResumenService`, `FormReportes` | B | Parámetro con lista de médicos (tabla de valores) |
-| R-7 | `sp_ReporteOcupacionAgenda` no filtra `Medicos.Activo` (deducido) | `sp_ReporteOcupacionAgenda.sql` | B | Agregar el filtro |
-| R-8 | El CSV no escapa un `-` inicial (solo `=`, `+`, `@`); **no verificado** cómo lo trata Excel | `FormReportes.EscaparCsv` | B | Agregar `-` a la lista si corresponde |
+| ID | Estado | Hallazgo | Dónde | Imp. | Sugerencia de arreglo |
+|----|:------:|----------|-------|:----:|-----------------------|
+| R-1 | **Vigente** | **`sp_AsignarTurno` no está conectado a nada** (ningún Service ni pantalla lo invoca) y tiene menos reglas que el C# | `sp_AsignarTurno.sql`, `TurnoService.cs` | M | Conectarlo (ver N-1) actualizándolo antes, o eliminarlo para no tener dos reglas |
+| R-2 | **Vigente** | **Los reportes filtran distinto los cancelados:** cuentan cancelados `sp_ReporteTurnosPorPeriodo`, `sp_ReporteAsistencia`, `sp_ReportePacientesPorMes` y `sp_ReporteRendimientoMedicos`; los excluyen `sp_ReporteOcupacionAgenda` y `sp_ReporteTurnosPorObraSocial`; Recaudación solo cuenta `Asistio` | `StoredProcedures/*.sql` | M | Definir un criterio único y aplicarlo con una migración nueva por procedimiento |
+| R-3 | Resuelto | ~~El reporte "Obras sociales" mostraba a la Recepcionista los datos de todos los médicos~~ `sp_ReporteTurnosPorObraSocial` recibe `@MedicoId` y la pantalla acota a los médicos del usuario (migración `AgregaMedicoIdAReportes`, aplicada; los tres procedimientos se ejecutaron con y sin `@MedicoId`) | `FormReportes.Estadisticas.cs`; `sp_ReporteTurnosPorObraSocial` | — | — |
+| R-4 | **Vigente** | Dos reportes agrupan por la **obra social actual del paciente**, no por lo cobrado (recaudación por obra social vs. medio de pago) | `sp_ReporteRecaudacion`, `sp_ReporteTurnosPorObraSocial` | M | Guardar la obra social usada en el turno al cobrar |
+| R-5 | **Vigente** | **Texto acoplado SQL ↔ pantalla:** `EstadoNombre = 'Asistió'` se compara por texto | `sp_ReporteTurnosPorPeriodo`; `FormReportes.GenerarTurnos` | B | Devolver también el número de estado y comparar por número |
+| R-6 | **Vigente** | Los procedimientos con filtro de **un solo médico** se ejecutan una vez por médico para la Recepcionista (Turnos, Asistencia, Ocupación, Pacientes por mes, Recaudación, Obras sociales, Rendimiento y el resumen de Inicio): "Todos mis médicos" hace N consultas por pestaña | `ResumenService`, `FormReportes` | B | Parámetro con lista de médicos (tabla de valores) |
+| R-7 | **Vigente** | `sp_ReporteOcupacionAgenda` no filtra `Medicos.Activo` (deducido del SQL) | `sp_ReporteOcupacionAgenda.sql` | B | Agregar el filtro |
+| R-8 | Resuelto | ~~El CSV no escapaba un `-` inicial~~ `EscaparCsv` antepone `'` a `=`, `+`, `@` y a un `-` que no sea un número (commit `3ac3fb0`); los números negativos se dejan como están | `FormReportes.EscaparCsv` | — | — |
 
 ### Arquitectura, interfaz y mantenimiento
 
-| ID | Hallazgo | Dónde | Imp. | Sugerencia de arreglo |
-|----|----------|-------|:----:|-----------------------|
-| A-1 | **Cerrar sesión no termina el proceso** (deducido): el primer `FormLogin` queda oculto y manda en el ciclo de vida | `FormLogin.cs`, `FormMenuPrincipal.BtnCerrarSesion_Click` | M | Abrir el login con `ShowDialog` o cerrar/`Application.Exit` según corresponda |
-| A-2 | Dos servicios con **datos en memoria**: `HorarioService` (tramos) y `NotificacionService` (avisos; los emails son simulados) | `SGC.Logica/HorarioService.cs`, `NotificacionService.cs` | M | Persistir los avisos o integrar un envío real; documentar que son simulados |
-| A-3 | La cadena de conexión por defecto es `Server=.`, no `SQLEXPRESS` | `SGCContextFactory.cs` | B | Mantener el `appsettings.Local.json` por integrante (ya documentado) |
-| A-4 | **Tildes inconsistentes:** especialidades y tipos de actividad sembrados sin tildes, `NombreDia` ("Miercoles"), mensajes de los Services sin tildes | `DbSeeder.cs`, `SGCContext.cs`, `AgendaMedico.cs`, `SGC.Logica/*.cs` | B | Unificar a tildes en textos de usuario |
-| A-5 | Pantallas de Luciano sin los componentes compartidos y con píxeles fijos (`FormAgendaMedico`, `FormRegistrarActividad`) | `SGC.UI` | B | Migrarlas al patrón de [`06`](06-capa-ui.md) |
-| A-6 | `FormHistorialPaciente` (versión modal) no se abre desde el menú: solo corre sin navegador | `FormHistorialPaciente.cs` | B | Eliminarla o usarla de verdad |
-| A-7 | **No hay proyecto de pruebas automáticas** en la solución | `SistemaGestionConsultorio.sln` | M | Agregar un proyecto de pruebas para las reglas de `TurnoService` |
-| A-8 | El README estaba desactualizado (decía que no había base de datos) | `README.md` | B | **Resuelto en esta rama** (el README ya describe EF Core y SQL Server) |
-| A-9 | La **copia de seguridad/restauración** y la migración `AgregaMedicoIdAReportes` **no se probaron contra una base real** (la instancia de desarrollo estaba detenida) | `BackupService.cs`, `FormBackup.cs`, `Migrations/20261102151455_AgregaMedicoIdAReportes.cs` | A | Probar en una base de prueba: crear, verificar y restaurar una copia, y los tres procedimientos con y sin `@MedicoId` |
+| ID | Estado | Hallazgo | Dónde | Imp. | Sugerencia de arreglo |
+|----|:------:|----------|-------|:----:|-----------------------|
+| A-1 | Resuelto | ~~Cerrar sesión no terminaba el proceso~~ Cerrar el menú con la X ejecuta `Application.Exit` salvo que se esté cerrando sesión, y cerrar sesión reutiliza el login oculto (commit `95ec2a6`) | `FormMenuPrincipal.OnFormClosed`, `CerrarSesion`, `FormLogin.Reiniciar` | — | — |
+| A-2 | **Vigente** | Dos servicios con **datos en memoria**: `HorarioService` (tramos) y `NotificacionService` (avisos; los emails son simulados y los avisos se vacían al cerrar sesión) | `SGC.Logica/HorarioService.cs`, `NotificacionService.cs` | M | Persistir los avisos o integrar un envío real |
+| A-3 | **Vigente** | La cadena de conexión por defecto es `Server=.`, no `SQLEXPRESS` (ahora se lee una sola vez y un `appsettings.Local.json` mal formado se informa con un mensaje claro) | `SGCContextFactory.cs` | B | Mantener el `appsettings.Local.json` por integrante (ya documentado) |
+| A-4 | **Parcial** | **Tildes:** los textos visibles para el usuario (pantallas, mensajes de los Services, `NombreDia`, etiquetas de estado, avisos) ya llevan tildes y signos de apertura. Quedan **sin tildes** las especialidades y tipos de actividad sembrados, y los comentarios del código | `DbSeeder.cs`, `SGCContext.cs` (`HasData`) | B | Corregir los datos sembrados con una migración nueva |
+| A-5 | **Vigente** | Pantallas de Luciano sin todos los componentes compartidos y con píxeles fijos en algunos lugares (`FormAgendaMedico`, `FormRegistrarActividad`) | `SGC.UI` | B | Migrarlas al patrón de [`06`](06-capa-ui.md) |
+| A-6 | **Vigente** | `FormHistorialPaciente` (versión modal) no se abre desde el menú: solo corre cuando se abre sin navegador | `FormHistorialPaciente.cs` | B | Eliminarla o usarla de verdad |
+| A-7 | **Vigente** | **No hay proyecto de pruebas automáticas** en la solución | `SistemaGestionConsultorio.sln` | M | Agregar un proyecto de pruebas para las reglas de `TurnoService` |
+| A-8 | Resuelto | ~~El README estaba desactualizado~~ El README describe EF Core, SQL Server, roles y copia de seguridad | `README.md` | — | — |
+| A-9 | **Parcial** | La **copia de seguridad/restauración** se probó solo contra una base de prueba: falta probarla desde la pantalla. La migración `AgregaMedicoIdAReportes` está aplicada y los tres procedimientos se ejecutaron con y sin `@MedicoId` | `BackupService.cs`, `FormBackup.cs` | M | Probar desde la pantalla: crear, verificar y restaurar una copia con el usuario administrador |
+| A-10 | **Vigente** | **`script-base-datos.sql`** (raíz del repositorio, sin versionar) fue generado antes de las migraciones nuevas y **no forma parte de la entrega**: no usarlo; la base se crea con `dotnet ef database update --project SGC.Datos` o abriendo la aplicación | `script-base-datos.sql` | B | Regenerarlo desde las migraciones o no entregarlo |
 
 ---
 
 ## Qué se puede mejorar para la próxima entrega
 
-Ordenado por prioridad (primero lo que evita datos incorrectos):
+Ya están hechos (ver la tabla anterior): quitar el estado `Pendiente` (N-7), las ausencias que bloquean turnos y se guardan en una sola transacción (N-2, N-3), turnos atendidos inmutables (N-5), matrícula duplicada (N-9), cierre de proceso (A-1) y las bajas con control.
 
-1. **Conectar `sp_AsignarTurno` con transacción.** Agregar `UPDLOCK, HOLDLOCK` y `BEGIN TRANSACTION` dentro del procedimiento y hacer que `TurnoService.AsignarTurno` lo invoque. Cierra N-1, N-3 (para asignar) y R-1 de una sola vez.
-2. **Validar `ExcepcionAgenda` en C#** también para `ModificarTurno` (y para `AsignarTurno` si se decide no usar el procedimiento). Cierra N-3.
-3. ~~Quitar el estado `Pendiente`~~ **Hecho:** se quitó del enum, de la UI y de los procedimientos, con valores explícitos (`Confirmado = 1` … `Ausente = 4`) y la migración `QuitaEstadoPendiente`. Cerró N-7 y N-13.
-4. **Validar la matrícula duplicada en `MedicoService.Validar`** con un mensaje claro. Cierra N-9.
-5. **Poder reactivar médicos, franjas, pacientes y obras sociales** dados de baja (como `UsuarioService.Reactivar`). Cierra N-10.
+Lo que sigue, ordenado por prioridad (primero lo que evita datos incorrectos):
 
-Si queda tiempo, en este orden: unificar el `SaveChanges` de la carga de ausencias (N-2), impedir modificar o cancelar turnos ya atendidos (N-5) y mostrar un error cuando un usuario Médico no tiene médico vinculado (N-14).
+1. **Probar la copia de seguridad desde la pantalla** (A-9) y decidir si hace falta programarla (N-17).
+2. **Cerrar la carrera de asignación** (N-1): `UPDLOCK, HOLDLOCK` y `BEGIN TRANSACTION` dentro de `sp_AsignarTurno`, actualizándolo antes con las reglas que hoy solo tiene el C#, y que `TurnoService` lo invoque (cierra también R-1).
+3. **Definir qué hacer con los turnos `Confirmado` vencidos** (N-15).
+4. **Poder reactivar médicos, pacientes y obras sociales** dados de baja (como `UsuarioService.Reactivar`). Cierra N-10.
+5. **Re-evaluar turnos al modificar o eliminar una ausencia** (N-6) y mostrar un error cuando un usuario Médico no tiene médico vinculado (N-14).
+6. **Limpiar los datos de demostración** (N-18) y unificar el criterio de cancelados en los reportes (R-2).
 
 ## Para seguir leyendo
 

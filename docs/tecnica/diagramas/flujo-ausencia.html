@@ -5061,44 +5061,44 @@
         </g>
         </g>
 
-        <g data-edge-from="svc" data-edge-to="sql" data-edge-label="Validar: el médico existe y esta activo" data-edge-key="2" data-edge-id="m3">
+        <g data-edge-from="svc" data-edge-to="sql" data-edge-label="Validar: médico activo y sin ausencia superpuesta" data-edge-key="2" data-edge-id="m3">
           <path data-composition-edge-from="svc" data-composition-edge-to="sql" data-composition-edge-id="m3" data-composition-points="618,269;831,269" d="M 618 269 L 831 269" class="a-default" stroke-width="1.4" marker-end="url(#arrowhead)"/>
         <g data-detail="context">
-          <rect x="617.1" y="249" width="214.8" height="16" rx="3" class="c-mask"/>
-          <text x="724.5" y="259" class="t-backend" font-size="9" text-anchor="middle">Validar: el médico existe y esta activo</text>
+          <rect x="591.1" y="249" width="266.8" height="16" rx="3" class="c-mask"/>
+          <text x="724.5" y="259" class="t-backend" font-size="9" text-anchor="middle">Validar: médico activo y sin ausencia superpuesta</text>
         </g>
         </g>
 
-        <g data-edge-from="svc" data-edge-to="sql" data-edge-label="INSERT ExcepcionAgenda (1.er SaveChanges)" data-edge-key="3" data-edge-id="m4">
-          <path data-composition-edge-from="svc" data-composition-edge-to="sql" data-composition-edge-id="m4" data-composition-points="618,311;831,311" d="M 618 311 L 831 311" class="a-emphasis" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+        <g data-edge-from="svc" data-edge-to="sql" data-edge-label="Agregar la ausencia al contexto (sin guardar)" data-edge-key="3" data-edge-id="m4">
+          <path data-composition-edge-from="svc" data-composition-edge-to="sql" data-composition-edge-id="m4" data-composition-points="618,311;831,311" d="M 618 311 L 831 311" class="a-default" stroke-width="1.4" marker-end="url(#arrowhead)"/>
         <g data-detail="context">
-          <rect x="611.9" y="291" width="225.20000000000002" height="16" rx="3" class="c-mask"/>
-          <text x="724.5" y="301" class="t-backend" font-size="9" text-anchor="middle">INSERT ExcepcionAgenda (1.er SaveChanges)</text>
+          <rect x="601.5" y="291" width="246" height="16" rx="3" class="c-mask"/>
+          <text x="724.5" y="301" class="t-backend" font-size="9" text-anchor="middle">Agregar la ausencia al contexto (sin guardar)</text>
         </g>
         </g>
 
-        <g data-edge-from="svc" data-edge-to="sql" data-edge-label="SELECT turnos Pendiente o Confirmado del día" data-edge-key="4" data-edge-id="m5">
+        <g data-edge-from="svc" data-edge-to="sql" data-edge-label="SELECT turnos Confirmado del día" data-edge-key="4" data-edge-id="m5">
           <path data-composition-edge-from="svc" data-composition-edge-to="sql" data-composition-edge-id="m5" data-composition-points="618,375;831,375" d="M 618 375 L 831 375" class="a-default" stroke-width="1.4" marker-end="url(#arrowhead)"/>
         <g data-detail="context">
-          <rect x="604.1" y="355" width="240.8" height="16" rx="3" class="c-mask"/>
-          <text x="724.5" y="365" class="t-backend" font-size="9" text-anchor="middle">SELECT turnos Pendiente o Confirmado del día</text>
+          <rect x="635.3" y="355" width="178.4" height="16" rx="3" class="c-mask"/>
+          <text x="724.5" y="365" class="t-backend" font-size="9" text-anchor="middle">SELECT turnos Confirmado del día</text>
         </g>
         </g>
 
-        <g data-edge-from="svc" data-edge-to="sql" data-edge-label="UPDATE Estado = Cancelado (2.o SaveChanges)" data-edge-key="5" data-edge-id="m6">
+        <g data-edge-from="svc" data-edge-to="sql" data-edge-label="Estado = Cancelado + SaveChanges único" data-edge-key="5" data-edge-id="m6">
           <path data-composition-edge-from="svc" data-composition-edge-to="sql" data-composition-edge-id="m6" data-composition-points="618,417;831,417" d="M 618 417 L 831 417" class="a-emphasis" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
         <g data-detail="context">
-          <rect x="606.7" y="397" width="235.6" height="16" rx="3" class="c-mask"/>
-          <text x="724.5" y="407" class="t-backend" font-size="9" text-anchor="middle">UPDATE Estado = Cancelado (2.o SaveChanges)</text>
+          <rect x="619.7" y="397" width="209.6" height="16" rx="3" class="c-mask"/>
+          <text x="724.5" y="407" class="t-backend" font-size="9" text-anchor="middle">Estado = Cancelado + SaveChanges único</text>
         </g>
-        <text data-detail="fine" x="630" y="435" class="t-dim" font-size="7">Son dos SaveChanges: dos transacciones separadas.</text>
+        <text data-detail="fine" x="630" y="435" class="t-dim" font-size="7">Un solo SaveChanges: la ausencia y las cancelaciones se guardan juntas.</text>
         </g>
 
-        <g data-edge-from="svc" data-edge-to="noti" data-edge-label="AvisarTurno por cada turno cancelado" data-edge-key="6" data-edge-id="m7">
+        <g data-edge-from="svc" data-edge-to="noti" data-edge-label="AvisarTurno (después de guardar)" data-edge-key="6" data-edge-id="m7">
           <path data-composition-edge-from="svc" data-composition-edge-to="noti" data-composition-edge-id="m7" data-composition-points="618,459;1058,459" d="M 618 459 L 1058 459" class="a-dashed" stroke-width="1.4" marker-end="url(#arrowhead-dashed)"/>
         <g data-detail="context">
-          <rect x="738.4" y="439" width="199.20000000000002" height="16" rx="3" class="c-mask"/>
-          <text x="838" y="449" class="t-messagebus" font-size="9" text-anchor="middle">AvisarTurno por cada turno cancelado</text>
+          <rect x="748.8" y="439" width="178.4" height="16" rx="3" class="c-mask"/>
+          <text x="838" y="449" class="t-messagebus" font-size="9" text-anchor="middle">AvisarTurno (después de guardar)</text>
         </g>
         </g>
 
@@ -5120,12 +5120,12 @@
 
         <!-- Segment Labels -->
         <g data-graph-role="segment-label" data-segment-id="0">
-          <rect x="56" y="135" width="112.8" height="18" rx="3" class="c-mask"/>
-          <text x="62" y="148" class="t-dim" font-size="9" font-weight="600">Guardar la ausencia</text>
+          <rect x="56" y="135" width="107.60000000000001" height="18" rx="3" class="c-mask"/>
+          <text x="62" y="148" class="t-dim" font-size="9" font-weight="600">Validar y preparar</text>
         </g>
         <g data-graph-role="segment-label" data-segment-id="1">
-          <rect x="56" y="325" width="164.8" height="18" rx="3" class="c-mask"/>
-          <text x="62" y="338" class="t-dim" font-size="9" font-weight="600">Cancelar los turnos afectados</text>
+          <rect x="56" y="325" width="107.60000000000001" height="18" rx="3" class="c-mask"/>
+          <text x="62" y="338" class="t-dim" font-size="9" font-weight="600">Cancelar y guardar</text>
         </g>
 
         <!-- Participants -->

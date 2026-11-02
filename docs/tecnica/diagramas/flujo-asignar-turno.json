@@ -159,9 +159,9 @@
       "from": "tserv",
       "to": "sql",
       "y": 669,
-      "label": "HaySuperposicion: turnos del médico ese día",
+      "label": "Validar: activos, ausencia, médico y paciente libres",
       "variant": "default",
-      "note": "Consulta y despues inserta, sin transacción: ver 08-guia-para-modificar."
+      "note": "Consulta y después inserta, sin transacción: ver 08-guia-para-modificar."
     },
     {
       "id": "m13",
@@ -184,7 +184,7 @@
       "from": "turnos",
       "to": "noti",
       "y": 817,
-      "label": "AvisarTurno(paciente, \"Confirmacion\")",
+      "label": "AvisarTurno(paciente, \"Confirmación\")",
       "variant": "dashed"
     },
     {

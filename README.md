@@ -6,7 +6,7 @@ Trabajo integrador de Taller de Programación II. Aplicación de escritorio en C
 
 ## Cómo correr el proyecto
 
-1. Tener **SQL Server** corriendo (Express, Developer o una instancia con nombre). La app **crea la base y aplica las migraciones sola** al arrancar, y siembra los datos iniciales si está vacía.
+1. Tener **SQL Server** corriendo (Express, Developer o una instancia con nombre). La app **crea la base y aplica las migraciones sola** al arrancar, y siembra los datos iniciales si está vacía. (También se puede crear con `dotnet ef database update --project SGC.Datos`.) El archivo `script-base-datos.sql` de la raíz es un script generado **antes de las migraciones nuevas** y no forma parte de la entrega: no lo use; use `dotnet ef database update` o abra la aplicación.
 2. Copiar `appsettings.example.json` como `appsettings.Local.json` (mismo nivel, junto al `.sln`) y poner tu propia instancia en `ConnectionString`. Ese archivo **no se sube a git**: cada integrante tiene el suyo. Si no existe, la app prueba con `Server=.`.
 3. Abrir `SistemaGestionConsultorio.sln` en Visual Studio 2022 (carga de trabajo "Desarrollo de escritorio de .NET").
 4. Confirmar que **SGC.UI** sea el proyecto de inicio y correr con `Ctrl+F5`.
@@ -20,6 +20,8 @@ Trabajo integrador de Taller de Programación II. Aplicación de escritorio en C
 | medico      | medico123       | Médico         | Mi agenda, Registrar actividad, Historial clínico, Reportes (6, solo los suyos; sin Rendimiento) |
 
 Todos ven además la pantalla de **Inicio** con el resumen del día según su rol.
+
+> La base de desarrollo conserva datos de demostración (el paciente "prueba aprueba" y la obra social "nuevoobra"); conviene limpiarlos antes de una entrega.
 
 ### Datos de demostración (opcional)
 
@@ -55,11 +57,11 @@ Regla de dependencias: cada capa solo referencia a la de abajo. `SGC.Entidades` 
 | Login + menú principal con navegación por rol | Hecho |
 | Recepcionista: Pacientes, Turnos (asignar, modificar, cancelar, confirmar asistencia) | Hecho |
 | Administrador: Médicos, Horarios, Usuarios, Obras sociales, Vacaciones y ausencias | Hecho |
-| Administrador: Copia de seguridad (crear, verificar, ver historial, restaurar) | Implementado; sin probar contra una base real |
+| Administrador: Copia de seguridad (crear, verificar, ver historial, restaurar) | Implementado; probado solo contra una base de prueba, falta la prueba desde la pantalla. Las copias son manuales (no hay copias programadas) |
 | Médico: Mi agenda, Registrar actividad, Historial clínico | Hecho |
-| Inicio (resumen según el rol) y Reportes con estadísticas, gráficos y exportación a CSV, acotados por rol | Hecho; el alcance por médico (migración `AgregaMedicoIdAReportes`) sin probar contra una base real |
+| Inicio (resumen según el rol) y Reportes con estadísticas, gráficos y exportación a CSV, acotados por rol | Hecho; la migración `AgregaMedicoIdAReportes` está aplicada y sus procedimientos verificados con y sin médico; falta la prueba manual de las pantallas por rol |
 
-Pendientes y defectos conocidos: ver `docs/tecnica/08-guia-para-modificar.md`.
+Pendientes y defectos conocidos (con su estado actual): ver `docs/tecnica/08-guia-para-modificar.md`. Entre los límites conocidos: la separación de datos clínicos (RNF#07) se hace solo en la aplicación (el Médico puede ver la historia completa de un paciente por decisión de alcance; la Recepcionista nunca ve datos clínicos), no hay copias de seguridad programadas y los turnos confirmados de fechas pasadas no se cierran solos.
 
 ## Cómo agregar una pantalla nueva
 

@@ -19,7 +19,7 @@ Acá vas a encontrar cómo funciona la pantalla **Reportes**: las 7 pestañas (c
 | 7 | Obras sociales | Luciano | `sp_ReporteTurnosPorObraSocial` | Año, Médico | Barras horizontales (GDI+ a mano) |
 
 - Las pestañas 1 a 4 se arman en `FormReportes.cs`; las 5 a 7 (las "por año") en `FormReportes.Estadisticas.cs`, que es una clase parcial del mismo formulario. El autor de cada procedimiento se ve con `git log -- SGC.Datos/StoredProcedures/<archivo>.sql`.
-- Las 5 a 7 "se calculan solas" al abrir la pestaña por primera vez (`GenerarEstadisticasAlAbrir`) y se recalculan al cambiar año o mes (`RegenerarSiCorresponde`). Las 1 a 4 esperan el botón **Generar**.
+- Las 5 a 7 "se calculan solas" al abrir la pestaña por primera vez (`GenerarEstadisticasAlAbrir`) y se recalculan al cambiar año, mes o médico (`RegenerarSiCorresponde`). Las 1 a 4 esperan el botón **Generar**, y **si se cambia un filtro después de generar, el resultado se vacía** (ver sección 5).
 - Qué pestañas ve cada rol está en la sección 2: la Recepcionista ve las 7, el Médico 6 y el Administrador ninguna.
 - Ninguna pestaña incluye datos clínicos (RNF#07): ni los procedimientos ni los DTO tienen motivo, procedimiento ni receta.
 
@@ -60,11 +60,11 @@ Otras reglas del Médico: en Recaudación no se ofrece "Agrupar por Médico" (so
 
 Casos sin acceso (`_sinAcceso`): un Médico sin `MedicoId` o una Recepcionista sin médicos asignados ven un mensaje de error y todos los botones **Generar** quedan deshabilitados.
 
-**Por qué ahora Recaudación y Rendimiento no son solo de un rol:** antes `sp_ReporteRecaudacion` no admitía filtrar por médico, así que solo podía verla quien ve todo. Los tres procedimientos de plata (Recaudación, Obras sociales, Rendimiento) ahora reciben `@MedicoId` opcional, y eso permite acotarlos a "los suyos". El rendimiento compara médicos entre sí, por eso queda solo para la Recepcionista (que ve varios).
+**Por qué ahora Recaudación y Rendimiento no son solo de un rol:** antes `sp_ReporteRecaudacion` no admitía filtrar por médico, así que solo podía verla quien ve todo. Los tres procedimientos de plata (Recaudación, Obras sociales, Rendimiento) ahora reciben `@MedicoId` opcional, y eso permite acotarlos a "los suyos". El rendimiento compara médicos entre sí, por eso queda solo para la Recepcionista (que ve varios). Los médicos que se consultan son siempre los **asignados y activos**: `UsuarioService.ActualizarMedicosAsignados` relee la lista al abrir la pantalla, así que un médico dado de baja o una asignación quitada por el Administrador no aparece.
 
 > **Importante:** estas restricciones viven **solo en la pantalla**. Ni `ReporteService` ni los procedimientos validan el rol (el comentario de `ReporteService` lo dice: "restringir a qué médicos puede ver cada usuario es responsabilidad de la UI").
 
-> **No probado contra la base todavía:** la migración que agrega `@MedicoId` y las pantallas por rol no se ejecutaron contra una instancia real; el alcance descripto sale de leer el código.
+> **Verificado en parte:** la migración que agrega `@MedicoId` está aplicada y los tres procedimientos se ejecutaron con y sin `@MedicoId`. Las pantallas por rol se verificaron leyendo el código y compilando; falta la prueba manual de las pantallas con cada rol.
 
 ### Hallazgo resuelto: "Obras sociales" y la Recepcionista
 
@@ -148,14 +148,14 @@ El botón **Exportar a CSV** (a la derecha del resumen) se habilita cuando el re
 
 | Paso | Dónde | Qué hace |
 |------|-------|----------|
-| 1 | `FormReportes.ExportarCsv` | Abre un `SaveFileDialog` con nombre sugerido `reporte_<pestaña>_<desde>_<hasta>.csv`. |
+| 1 | `FormReportes.ExportarCsv` | Abre un `SaveFileDialog` con nombre sugerido `reporte_<pestaña>[_<médico>][_<opción>]_<desde>_<hasta>.csv`: incluye el médico y la opción elegidos (estado o agrupación) en minúsculas, sin tildes y con `_` (`EtiquetaFiltrosArchivo`, `NombreSeguro`), por ejemplo `reporte_turnos_todos_mis_medicos_confirmado_20261001_20261031.csv`. Esa parte del nombre se fija al generar. |
 | 2 | `FormReportes.EscribirCsv` | Escribe `Encabezados` + `FilasExportacion` con **separador `;`** y **UTF-8 con BOM** (Excel configurado en es-AR lo abre bien y muestra las tildes). |
-| 3 | `FormReportes.EscaparCsv` | Si el valor tiene `;`, comillas o saltos de línea, lo entrecomilla; y si empieza con `=`, `+` o `@` le antepone `'` para que Excel no lo interprete como fórmula (CSV injection). |
+| 3 | `FormReportes.EscaparCsv` | Si el valor tiene `;`, comillas o saltos de línea, lo entrecomilla; y si empieza con `=`, `+`, `@` o con un `-` que **no** sea un número (un negativo como `-12,50` queda como está) le antepone `'` para que Excel no lo interprete como fórmula (CSV injection). |
 | 4 | Manejo de errores | Distingue falta de permisos (`UnauthorizedAccessException`), archivo abierto en otro programa (`IOException`) y error inesperado. |
 
-Los números se exportan con `ToString("0.00", CulturaAr)` (con coma decimal). **No verificado:** el `-` inicial no está en la lista de caracteres que se escapan; no se probó cómo lo trata Excel.
+Los números se exportan con `ToString("0.00", CulturaAr)` (con coma decimal).
 
-El CSV exporta lo que se **generó**, no lo que muestra la grilla ahora: `FilasExportacion` se guarda en `Generar*`. Por eso, si se cambian los filtros sin volver a generar, el archivo sigue siendo el del último "Generar".
+El CSV exporta lo que se **generó**: `FilasExportacion` se guarda en `Generar*`. Para que nunca se exporte algo que no corresponde a los filtros en pantalla, **al cambiar un filtro** (fechas, médico, estado o agrupación) de una pestaña ya generada `MarcarDesactualizado` limpia la grilla, el resumen y el gráfico, deshabilita **Exportar** y muestra "Los filtros cambiaron. Pulse Generar para actualizar." (las pestañas por año se recalculan solas).
 
 ## 6. Cómo agregar una pestaña nueva
 

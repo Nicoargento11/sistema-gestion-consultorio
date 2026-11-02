@@ -8,7 +8,7 @@ Acá vas a encontrar la puerta de entrada a la documentación técnica: qué es 
 - Gestiona **pacientes, médicos, horarios, turnos, cobro de la consulta, atención clínica, reportes y copias de seguridad**.
 - Tiene **tres roles** con pantallas distintas: Administrador (administra el sistema: usuarios, médicos, horarios y copias de seguridad; sin reportes ni dinero), Recepcionista (agenda, cobra y ve los reportes de sus médicos asignados) y Médico (atiende, ve el historial clínico y sus propios reportes; es el único que ve datos clínicos).
 - Está dividido en **cuatro capas** (Entidades, Datos, Lógica, UI) y parte de los cálculos (reportes, resumen del día) viven en 10 procedimientos almacenados de la base.
-- Todo lo escrito acá se verificó contra el código y la base de la rama; lo que no se pudo comprobar dice "no verificado" o "deducido".
+- Todo lo escrito acá se verificó contra el código y la base de la rama; lo que no se pudo comprobar dice "no verificado" o "deducido". Las pantallas todavía no pasaron una prueba manual completa con los tres roles.
 
 ## Mapa del proyecto
 
@@ -46,7 +46,8 @@ La dependencia va de arriba hacia abajo: `SGC.UI` → `SGC.Logica` → `SGC.Dato
 | ¿Cómo se hace y se restaura una copia de seguridad? | [`04-flujos.md`](04-flujos.md#i-copia-de-seguridad-y-restauración) y [`03`](03-reglas-de-negocio.md#12-copia-de-seguridad-y-restauración) |
 | ¿Cómo agrego una pantalla, un campo, un reporte o un procedimiento? | [`08-guia-para-modificar.md`](08-guia-para-modificar.md#recetas) |
 | ¿Cómo depuro "no se puede conectar" o un error de compilación por DLL bloqueada? | [`08-guia-para-modificar.md`](08-guia-para-modificar.md#cómo-depurar) |
-| ¿Qué defectos conocidos hay y qué conviene arreglar primero? | [`08-guia-para-modificar.md`](08-guia-para-modificar.md#defectos-y-deuda-conocidos) |
+| ¿Qué defectos conocidos hay (con su estado actual) y qué conviene arreglar primero? | [`08-guia-para-modificar.md`](08-guia-para-modificar.md#defectos-y-deuda-conocidos) |
+| ¿Qué bajas se rechazan, cómo se cierra la sesión y qué pasa al arrancar? | [`03`](03-reglas-de-negocio.md#13-bajas-con-control) y [`03`](03-reglas-de-negocio.md#14-sesión-y-arranque) |
 
 ## Orden de lectura sugerido (20 minutos)
 
@@ -84,16 +85,18 @@ Después, según lo que vayas a tocar: modelo de datos (02), procedimientos (05)
 |-----------|-----------|
 | [`01-arquitectura.md`](01-arquitectura.md) | Capas, arranque, patrones, sesión y roles |
 | [`02-modelo-de-datos.md`](02-modelo-de-datos.md) | Tablas, relaciones, restricciones, baja lógica |
-| [`03-reglas-de-negocio.md`](03-reglas-de-negocio.md) | Todas las reglas y dónde viven |
+| [`03-reglas-de-negocio.md`](03-reglas-de-negocio.md) | Todas las reglas y dónde viven (turnos, ausencias, bajas con control, actividad médica, copia de seguridad, sesión y arranque) |
 | [`04-flujos.md`](04-flujos.md) | 9 recorridos de la pantalla a la base (incluye copia de seguridad) |
 | [`05-procedimientos-almacenados.md`](05-procedimientos-almacenados.md) | Los 10 procedimientos y cómo se despliegan |
 | [`06-capa-ui.md`](06-capa-ui.md) | Pantallas, navegación, patrón visual, componentes |
 | [`07-reportes.md`](07-reportes.md) | Las 7 pestañas, qué ve cada rol, gráficos, CSV |
-| [`08-guia-para-modificar.md`](08-guia-para-modificar.md) | Recetas, trampas, defectos y mejoras |
+| [`08-guia-para-modificar.md`](08-guia-para-modificar.md) | Recetas, trampas, defectos (con su estado) y mejoras |
 
 ## Diagramas
 
 Cada diagrama tiene una versión en imagen (`.png`), una interactiva (`.html`, se abre en el navegador) y la fuente editable (`.json`) en [`diagramas/`](diagramas/).
+
+> **Imágenes pendientes de regenerar:** `flujo-ausencia` y `flujo-asignar-turno` tienen el `.json` y el `.html` al día, pero su `.png`/`.svg` son anteriores (siguen mostrando "dos SaveChanges" y "Pendiente" en el primero y las validaciones anteriores en el segundo). `flujo-backup`, `flujo-modificar-cancelar` y `flujo-confirmar-asistencia` todavía no incluyen la validación del `.bak` y la migración posterior, el rechazo de turnos atendidos y la pregunta de confirmación, respectivamente. Las tablas de `04-flujos.md` son la referencia al día.
 
 | Diagrama | Imagen | Interactivo |
 |----------|--------|-------------|

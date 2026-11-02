@@ -4,7 +4,7 @@ Acá vas a encontrar los 10 procedimientos almacenados (SP) que usa el sistema: 
 
 Todo se verificó contra los archivos `.sql`, las migraciones, el código C# y la base real (los 10 procedimientos existen en la base de desarrollo; `sp_ResumenDelDia` y `sp_ReporteAsistencia` se ejecutaron con `sqlcmd` y respondieron).
 
-> **Novedad, no probada contra la base todavía:** `sp_ReporteRecaudacion`, `sp_ReporteTurnosPorObraSocial` y `sp_ReporteRendimientoMedicos` ahora reciben `@MedicoId INT = NULL`, por la migración `20261102151455_AgregaMedicoIdAReportes`. El texto del `.sql` y el de la migración se compararon (coinciden), pero la migración no se aplicó ni los procedimientos se ejecutaron contra una instancia real (la de desarrollo estaba detenida).
+> **Novedad, aplicada y verificada:** `sp_ReporteRecaudacion`, `sp_ReporteTurnosPorObraSocial` y `sp_ReporteRendimientoMedicos` reciben `@MedicoId INT = NULL`, por la migración `20261102151455_AgregaMedicoIdAReportes`. El texto del `.sql` y el de la migración se compararon (coinciden), la migración se aplicó a la base de desarrollo y los tres procedimientos se ejecutaron con y sin `@MedicoId`.
 
 ## Tabla resumen
 
@@ -106,7 +106,7 @@ Validaciones, en orden (todas cortan con `RAISERROR`): fecha no pasada; existe u
 
 **Devuelve:** `Medico`, `TotalTurnos`, `Atendidos` (Estado 3), `Ausentes` (4), `Cancelados` (2), `PorcentajeAsistencia`. El porcentaje es `Atendidos / (Atendidos + Ausentes)`: **los cancelados y los turnos sin resolver no entran**; si no hay atendidos ni ausentes, da 0. `TotalTurnos` sí cuenta todos los estados, así que no es igual a la suma de las tres columnas. No filtra `Activo`.
 
-**Quién lo llama:** `ReporteService.ObtenerAsistencia` desde la pestaña Asistencia de `FormReportes` (Administrador y Médico).
+**Quién lo llama:** `ReporteService.ObtenerAsistencia` desde la pestaña Asistencia de `FormReportes` (Recepcionista, con sus médicos asignados, y Médico; el Administrador no tiene Reportes).
 
 ### `sp_ReporteOcupacionAgenda`
 
@@ -133,7 +133,7 @@ Validaciones, en orden (todas cortan con `RAISERROR`): fecha no pasada; existe u
 
 Cierra con `OPTION (MAXRECURSION 400)` (el default de SQL Server es 100, no alcanza para 366 días). No filtra `Medicos.Activo`; lista a los médicos que tengan agenda configurada o turnos en el período.
 
-**Quién lo llama:** `ReporteService.ObtenerOcupacionAgenda` desde la pestaña Ocupación de agenda de `FormReportes` (Administrador y Médico). El Service valida el límite de 366 días antes de llamar para dar un mensaje claro; el procedimiento lo valida también.
+**Quién lo llama:** `ReporteService.ObtenerOcupacionAgenda` desde la pestaña Ocupación de agenda de `FormReportes` (Recepcionista, con sus médicos asignados, y Médico; el Administrador no tiene Reportes). El Service valida el límite de 366 días antes de llamar para dar un mensaje claro; el procedimiento lo valida también.
 
 ### `sp_ResumenDelDia`
 
@@ -256,7 +256,7 @@ Cada procedimiento existe en **dos lugares con el mismo texto** (verificado comp
 
 - [ ] El `.sql` y el SQL de la migración nueva tienen el mismo texto.
 - [ ] Las columnas del procedimiento coinciden con las propiedades del DTO.
-- [ ] Los números de estado (`0` a `4`) coinciden con `EstadoTurno` (ver `02-modelo-de-datos.md`).
+- [ ] Los números de estado (`1` a `4`) coinciden con `EstadoTurno` (ver `02-modelo-de-datos.md`).
 - [ ] Si el cambio afecta una pantalla, probada la grilla/gráfico que lo usa.
 
 ---
@@ -267,13 +267,13 @@ Hechos observados, sin juicio.
 
 | # | Hallazgo | Dónde |
 |---|----------|-------|
-| 1 | **`sp_AsignarTurno` no está conectado a nada.** Ningún Service ni pantalla lo invoca; `TurnoService.AsignarTurno` reimplementa la validación en C#, sin la verificación de ausencias que el procedimiento sí hace. | `SGC.Logica/TurnoService.cs`, `SGC.Datos/StoredProcedures/sp_AsignarTurno.sql` |
+| 1 | **`sp_AsignarTurno` no está conectado a nada.** Ningún Service ni pantalla lo invoca; `TurnoService.AsignarTurno` reimplementa la validación en C# y hoy valida **más** que el procedimiento (paciente y médico activos, duración 5-240 sin cruzar la medianoche, paciente sin turnos simultáneos). | `SGC.Logica/TurnoService.cs`, `SGC.Datos/StoredProcedures/sp_AsignarTurno.sql` |
 | 2 | **Los reportes no filtran los turnos cancelados con el mismo criterio.** `sp_ReporteTurnosPorPeriodo`, `sp_ReporteAsistencia`, `sp_ReportePacientesPorMes` y `sp_ReporteRendimientoMedicos` no miran `Activo` (cuentan los cancelados, que están en `Activo = 0`); `sp_ReporteOcupacionAgenda` excluye cancelados y exige `Activo = 1`; `sp_ReporteTurnosPorObraSocial` solo filtra `Activo = 1` (excluye cancelados) y `sp_ReporteRecaudacion` solo cuenta `Estado = 3`. Por eso "turnos" del reporte por obra social puede no coincidir con "turnos" del reporte por período. | `SGC.Datos/StoredProcedures/*.sql` |
 | 3 | **Dos reportes agrupan por la obra social actual del paciente, no por lo que se cobró.** Un turno cobrado como Particular (porque el médico no acepta la obra social del paciente) aparece en `sp_ReporteRecaudacion` y `sp_ReporteTurnosPorObraSocial` bajo la obra social del paciente. Lo que sí queda registrado como cobrado es `Turnos.MedioPago`. | `sp_ReporteRecaudacion.sql`, `sp_ReporteTurnosPorObraSocial.sql` |
 | 4 | **Texto acoplado entre SQL y pantalla:** `sp_ReporteTurnosPorPeriodo` devuelve `EstadoNombre = 'Asistió'` y `FormReportes` compara contra esa cadena exacta. | `SGC.UI/FormReportes.cs` |
 | 5 | **Los procedimientos con filtro de médico se ejecutan una vez por médico** cuando hay que sumar varios (Recepcionista): `sp_ResumenDelDia` en el Inicio y `sp_ReporteTurnosPorPeriodo` en Reportes. No hay un parámetro de lista de médicos. | `SGC.Logica/ResumenService.cs`, `SGC.UI/FormReportes.cs` |
 | 6 | **`sp_ReporteOcupacionAgenda` no filtra `Medicos.Activo`:** si un médico dado de baja conserva franjas activas, aparece en el reporte. Deducido del SQL; no se ejecutó con ese caso. | `sp_ReporteOcupacionAgenda.sql` |
-| 7 | **Los mensajes de error de los `.sql` llevan tildes** ("médico", "días", "agrupación") porque se escriben como `N'...'` (Unicode); en cambio muchos mensajes de los Services en C# no las llevan (ver `03-reglas-de-negocio.md`). | `SGC.Datos/StoredProcedures/*.sql` |
+| 7 | **Los mensajes de error de los `.sql` llevan tildes** ("médico", "días", "agrupación") porque se escriben como `N'...'` (Unicode); los mensajes de los Services en C# ya también las llevan (ver `03-reglas-de-negocio.md`). | `SGC.Datos/StoredProcedures/*.sql` |
 
 ## Para seguir leyendo
 

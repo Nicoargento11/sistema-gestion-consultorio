@@ -18,8 +18,8 @@ Columna **Origen**: *Rediseñada* = usa los componentes compartidos del patrón 
 | `FormMenuPrincipal` | Todos | Barra lateral por rol y panel donde se abren las pantallas | — | Rediseñada |
 | `FormInicio` | Todos | Resumen según el rol (tarjetas, próximo paciente, avisos). Administrador: estado del sistema y última copia, sin dinero | `ResumenService`, `NotificacionService`, `MedicoService`, `SistemaService`, `BackupService` | Código |
 | `FormPacientes` | Recepcionista | ABM de pacientes, buscador, "solo con ausencias" | `PacienteService`, `ObraSocialService` | Rediseñada |
-| `FormTurnos` | Recepcionista | Asignar, reprogramar, cancelar y confirmar asistencia | `TurnoService`, `PacienteService`, `MedicoService`, `AgendaMedicoService`, `HorarioService`, `NotificacionService` | Rediseñada |
-| `FormConfirmarAsistencia` | Recepcionista | Diálogo modal: Asistió/Ausente, medio de pago y monto | (usa métodos estáticos de `TurnoService`) | Rediseñada |
+| `FormTurnos` | Recepcionista | Asignar, reprogramar, cancelar y confirmar asistencia (`Enter` asigna: `AcceptButton = BtnAsignar`) | `TurnoService`, `PacienteService`, `MedicoService`, `AgendaMedicoService`, `HorarioService`, `NotificacionService` | Rediseñada |
+| `FormConfirmarAsistencia` | Recepcionista | Diálogo modal: Asistió/Ausente, medio de pago y monto; `Enter` confirma, `Esc` cancela, y pregunta "¿Confirma ...?" (por defecto "No") antes de la acción irreversible | (usa métodos estáticos de `TurnoService`) | Rediseñada |
 | `FormMedicos` | Administrador | ABM de médicos, precio y obras sociales que acepta | `MedicoService`, `ObraSocialService` | Rediseñada |
 | `FormConfigurarAgenda` ("Horarios") | Administrador | Franjas semanales de cada médico (vista semanal y listado) | `AgendaMedicoService`, `MedicoService` | Rediseñada |
 | `FormUsuarios` | Administrador | ABM de usuarios, rol, médico o médicos asignados, reactivar | `UsuarioService`, `MedicoService` | Rediseñada |
@@ -27,8 +27,8 @@ Columna **Origen**: *Rediseñada* = usa los componentes compartidos del patrón 
 | `FormExcepcionesAgenda` ("Vacaciones y ausencias") | Administrador | Cargar ausencias; cancela los turnos afectados | `ExcepcionAgendaService`, `MedicoService` | Rediseñada |
 | `FormBackup` ("Copia de seguridad") | Administrador | Crear una copia `.bak` (con verificación), ver el historial y restaurar. Flujo en [`04`](04-flujos.md#i-copia-de-seguridad-y-restauración) | `BackupService` | Rediseñada (tres tarjetas, `FranjaMensaje`, `GrillaUi`; las operaciones corren en `Task.Run`) |
 | `FormAgendaMedico` ("Mi agenda") | Médico | Turnos del día, próximo paciente, filtros | `AgendaDiariaService`, `MedicoService`, `ActividadMedicaService` | Luciano (usa `PaletaEstados`) |
-| `FormRegistrarActividad` | Médico | Escribir la atención de un turno (motivo, procedimiento, receta) | `ActividadMedicaService`, `TurnoService`, `MedicoService` | Luciano |
-| `FormHistorialClinico` | Médico | Historial de atenciones con filtros y detalle | `ActividadMedicaService`, `PacienteService`, `MedicoService` | Luciano (usa `EscalaDpi`, `HistorialGrilla`) |
+| `FormRegistrarActividad` | Médico | Escribir la atención de un turno (motivo, procedimiento, receta); admite turnos `Confirmado` o `Asistio` no futuros | `ActividadMedicaService`, `TurnoService`, `MedicoService` | Luciano |
+| `FormHistorialClinico` | Médico | Historial de atenciones con filtros y detalle (el Médico ve la historia completa del paciente); el botón "Registrar atención" abre `FormRegistrarActividad` | `ActividadMedicaService`, `PacienteService`, `MedicoService` | Luciano (usa `EscalaDpi`, `HistorialGrilla`) |
 | `FormHistorialPaciente` | Médico | Versión modal del historial; solo se abre si no hay navegador (hoy no se usa desde el menú) | `ActividadMedicaService`, `MedicoService` | Luciano (usa `EscalaDpi`, `HistorialGrilla`) |
 | `FormReportes` (+ `FormReportes.Estadisticas.cs`) | Recepcionista (7 pestañas) y Médico (6); el Administrador no la tiene | Reportes con grilla, gráfico y CSV, acotados a los médicos del usuario | `ReporteService`, `MedicoService` | Rediseñada; las 3 pestañas "por año" son de Luciano ([`07`](07-reportes.md)) |
 
@@ -156,7 +156,7 @@ catch (Exception ex)
 }
 ```
 
-El mensaje que ve el usuario es literalmente el `Message` de la excepción del Service. Por eso los mensajes de `SGC.Logica` están escritos para personas (aunque varios no llevan tildes; ver [`03`](03-reglas-de-negocio.md)). Si SQL Server cae con la app abierta, cada pantalla lo captura en su propia operación y lo muestra en su franja; no hay un manejador global.
+El mensaje que ve el usuario es literalmente el `Message` de la excepción del Service. Por eso los mensajes de `SGC.Logica` están escritos para personas, en español neutro (sin voseo: "Seleccione", "Indique"), con tildes y con signos de apertura en las preguntas (¿Está seguro...?). Todos los errores se muestran igual, sin prefijo ("Error: " ya no se usa). Si SQL Server cae con la app abierta, cada pantalla lo captura en su propia operación y lo muestra en su franja; lo que no se atrapa llega al manejador global de `Program.cs`, que muestra "Ocurrió un error inesperado..." y no cierra la aplicación. La cultura de la aplicación es **es-AR** (se fija en `Program.Main`), así que los selectores de fecha, los números y los nombres de días y meses salen en español.
 
 ## 8. Enganchar y desenganchar `SelectionChanged`
 
@@ -178,9 +178,9 @@ Y siempre: después de guardar o eliminar, volver al modo nuevo (`_idSeleccionad
 
 ## Qué significa "pendiente" en la interfaz
 
-El estado de turno `Pendiente` se eliminó (el sistema nunca lo asignaba; ver [`03-reglas-de-negocio.md`](03-reglas-de-negocio.md#1-ciclo-de-vida-del-turno)). Hoy "pendiente" solo se usa como **"pendiente de atender / asistir"**: un turno `Confirmado` que todavía no se atendió y, para el médico, además no tiene una atención clínica cargada.
+El estado de turno `Pendiente` se eliminó (el sistema nunca lo asignaba; ver [`03-reglas-de-negocio.md`](03-reglas-de-negocio.md#1-ciclo-de-vida-del-turno)). Hoy "pendiente" solo se usa como **"pendiente de atender / asistir"**: para el médico, un turno activo `Confirmado` **o `Asistio`** que todavía no tiene una atención clínica cargada (`AgendaDiariaService.EsPendienteDeAtencion`); `Ausente` y `Cancelado` no cuentan.
 
-- `FormAgendaMedico.EsPendienteDeAtencion`: lo que cuenta el botón "PENDIENTES (n)" de Mi agenda y su resumen del día.
+- `FormAgendaMedico.EsPendienteDeAtencion` (delega en `AgendaDiariaService.EsPendienteDeAtencion`): lo que cuenta el botón "PENDIENTES (n)" de Mi agenda y su resumen del día.
 - `AgendaDiariaService.ElegirProximo`: el próximo paciente de Mi agenda.
 - `ResumenService.ObtenerProximoPaciente`: el próximo paciente de Inicio (rol Médico).
 - Mismo criterio (`Confirmado`): el próximo turno de `FormPacientes` (`PacienteService.ObtenerListado`) y los turnos que `ExcepcionAgendaService.CancelarTurnosAfectados` cancela al cargar una ausencia.
