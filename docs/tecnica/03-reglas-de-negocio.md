@@ -25,7 +25,7 @@ Las reglas se verificaron leyendo el código. Cuando una regla vive en la UI o e
 
 ## 1. Ciclo de vida del turno
 
-`EstadoTurno` (`SGC.Entidades/Turno.cs`): 0 Pendiente, 1 Confirmado, 2 Cancelado, 3 Asistio, 4 Ausente.
+`EstadoTurno` (`SGC.Entidades/Turno.cs`): 1 Confirmado, 2 Cancelado, 3 Asistio, 4 Ausente.
 
 ```
             AsignarTurno
@@ -35,20 +35,18 @@ Las reglas se verificaron leyendo el código. Cuando una regla vive en la UI o e
                                │
                                ├────CancelarTurno──────────────────────►  Cancelado (2)
                                └────Agregar ausencia (ExcepcionAgenda)──►  Cancelado (2)
-
-   Pendiente (0): existe en el enum, ninguna pantalla ni servicio lo crea.
 ```
 
 | Transición | Quién la dispara | Dónde |
 |-----------|------------------|-------|
 | Nace **Confirmado** | Recepcionista, pantalla Turnos | `TurnoService.AsignarTurno` (`Estado = EstadoTurno.Confirmado`) |
 | Confirmado → Asistio / Ausente | Recepcionista, diálogo "Confirmar asistencia" | `TurnoService.ConfirmarAsistencia` |
-| Confirmado (o Pendiente) → Cancelado | Recepcionista, botón Cancelar | `TurnoService.CancelarTurno` |
-| Pendiente/Confirmado → Cancelado (masivo) | Administrador, al cargar una ausencia | `ExcepcionAgendaService.Agregar` → `CancelarTurnosAfectados` |
+| Confirmado → Cancelado | Recepcionista, botón Cancelar | `TurnoService.CancelarTurno` |
+| Confirmado → Cancelado (masivo) | Administrador, al cargar una ausencia | `ExcepcionAgendaService.Agregar` → `CancelarTurnosAfectados` |
 
 Cancelar deja `Estado = Cancelado` **y** `Activo = false` (las dos cosas, en `CancelarTurno` y en `CancelarTurnosAfectados`).
 
-**Sobre `Pendiente (0)`:** aunque no se crea, el código sí lo trata en varios lugares como "turno por atender" junto con `Confirmado` (`AgendaDiariaService.ElegirProximo`, `PacienteService.ObtenerListado`, `ResumenService.ObtenerProximoPaciente`, `ExcepcionAgendaService.CancelarTurnosAfectados`). `ResumenService.ObtenerProximosSinConfirmar` busca exclusivamente `Pendiente`, así que en una base creada solo por la app siempre devuelve vacío.
+**Sobre el estado `Pendiente`:** se eliminó (el sistema nunca lo asignaba). "Turno por atender" es ahora simplemente un turno `Confirmado` (sin atender), en `AgendaDiariaService.ElegirProximo`, `PacienteService.ObtenerListado`, `ResumenService.ObtenerProximoPaciente` y `ExcepcionAgendaService.CancelarTurnosAfectados`.
 
 ---
 
@@ -194,7 +192,7 @@ Es solo ayuda para la pantalla: **no** modifica las reglas de `AsignarTurno` ni 
 
 `Agregar` guarda la ausencia y llama a `CancelarTurnosAfectados`:
 
-1. Busca turnos **activos** del médico en esa fecha con estado `Pendiente` o `Confirmado`.
+1. Busca turnos **activos** del médico en esa fecha con estado `Confirmado`.
 2. Si la ausencia es `DiaCompleto`, afecta a todos; si es `RangoHorario`, solo a los que se superponen (`turno.HoraInicio < HoraFin && HoraInicio < turno.HoraFin`).
 3. Los pasa a `Cancelado` + `Activo = false` y registra un aviso al paciente con `NotificacionService.AvisarTurno` ("... por ausencia del profesional").
 4. Devuelve la lista de turnos cancelados para que la pantalla informe.
@@ -363,7 +361,7 @@ Hechos observados en el código, sin juicio.
 | 2 | **`AsignarTurno` no valida que paciente y médico estén activos**; `ModificarTurno` tampoco revisa el estado del médico. | `SGC.Logica/TurnoService.cs` |
 | 3 | **Se puede modificar o cancelar un turno ya atendido** (`Asistio` o `Ausente`): los servicios solo rechazan los cancelados y la UI habilita los botones para cualquier turno no cancelado. Cancelar un `Asistio` lo deja `Cancelado` conservando `Monto` y `MedioPago`. | `TurnoService.ModificarTurno`, `CancelarTurno`; `FormTurnos.ActualizarAcciones` |
 | 4 | **Cargar o editar una ausencia no afecta turnos de la misma forma:** solo `Agregar` cancela turnos; `Modificar` no los revisa y `EliminarLogico` no los restituye. | `SGC.Logica/ExcepcionAgendaService.cs` |
-| 5 | **`Pendiente (0)` nunca se crea**, pero hay lógica que lo trata (y `ObtenerProximosSinConfirmar` solo busca `Pendiente`). | Varios (sección 1) |
+| 5 | ~~`Pendiente (0)` nunca se crea~~ **Resuelto:** el estado se eliminó del enum y de la UI (migración `QuitaEstadoPendiente`). | Varios (sección 1) |
 | 6 | **Editar un paciente cuya obra social fue dada de baja lo guarda como Particular sin avisar.** El combo de `FormPacientes` solo carga obras sociales activas; al editar, `CboObraSocial.SelectedValue` queda sin coincidencia y `BtnGuardar_Click` lo interpreta como 0 = Particular. Deducido del código, no ejecutado. | `SGC.UI/FormPacientes.cs` (`CargarCombos`, `BtnGuardar_Click`) |
 | 7 | **Mensajes sin tildes en los Services** ("Debe seleccionar un medico valido.", "El turno no existe.") mientras que `DisponibilidadDia`, `ReporteService`, `PacienteService` (DNI, email, teléfono) sí las llevan. | `SGC.Logica/*.cs` |
 | 8 | **Resuelto.** Antes, el reporte "Obras sociales" mostraba a la Recepcionista datos de todos los médicos (el procedimiento no recibía médico). Ahora `sp_ReporteTurnosPorObraSocial` recibe `@MedicoId` y la pantalla acota a los médicos del usuario; el Médico lo ve con lo propio y el Administrador ya no tiene Reportes. | `SGC.UI/FormReportes.Estadisticas.cs` (`ObtenerObrasSocialesAcotado`), `sp_ReporteTurnosPorObraSocial` |

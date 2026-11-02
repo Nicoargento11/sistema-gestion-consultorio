@@ -144,7 +144,7 @@ Cierra con `OPTION (MAXRECURSION 400)` (el default de SQL Server es 100, no alca
 | `@Fecha` | DATE | |
 | `@MedicoId` | INT = NULL | `NULL` = todos |
 
-**Devuelve:** `Pendientes`, `Confirmados`, `Asistieron`, `Ausentes`, `Cancelados` (los del día `@Fecha`), `TurnosSemana` (semana lunes a domingo, sin cancelados), `AusentesMes`, `RecaudacionMes` (suma de `Monto` de los `Asistio` del mes) y `MedicosConAgendaHoy` (médicos activos con franja ese día de la semana y sin ausencia de día completo).
+**Devuelve:** `Confirmados`, `Asistieron`, `Ausentes`, `Cancelados` (los del día `@Fecha`), `TurnosSemana` (semana lunes a domingo, sin cancelados), `AusentesMes`, `RecaudacionMes` (suma de `Monto` de los `Asistio` del mes) y `MedicosConAgendaHoy` (médicos activos con franja ese día de la semana y sin ausencia de día completo).
 
 **Quién lo llama:** `ResumenService.ObtenerResumen` y `ObtenerResumenDeMedicos`, desde `FormInicio`. Como el procedimiento recibe un solo médico, para la Recepcionista el Service lo ejecuta **una vez por médico asignado** y suma los resultados con `ResumenDelDiaFila.Sumar`. Una lista vacía da todo en cero (nunca "todos los médicos").
 
@@ -154,7 +154,7 @@ Los tres vienen del módulo de reportes de Luciano (ver comentario de la migraci
 
 | Procedimiento | Parámetros | Devuelve | Notas |
 |---------------|------------|----------|-------|
-| `sp_ReportePacientesPorMes` | `@Anio INT`, `@MedicoId INT = NULL` | `MesNumero`, `NombreMes`, `TotalTurnos`, `PacientesAtendidos`, `Ausentes`, `Cancelados`, `PendientesOConfirmados` | Agrupa por mes; **solo aparecen los meses con turnos** (no rellena los vacíos). Los nombres de mes están escritos en el CASE. No filtra `Activo`. |
+| `sp_ReportePacientesPorMes` | `@Anio INT`, `@MedicoId INT = NULL` | `MesNumero`, `NombreMes`, `TotalTurnos`, `PacientesAtendidos`, `Ausentes`, `Cancelados`, `Confirmados` | Agrupa por mes; **solo aparecen los meses con turnos** (no rellena los vacíos). Los nombres de mes están escritos en el CASE. No filtra `Activo`. |
 | `sp_ReporteRendimientoMedicos` | `@Anio INT`, `@Mes INT = NULL`, `@MedicoId INT = NULL` | `MedicoId`, `MedicoNombre`, `Especialidad`, `TotalTurnos`, `TurnosAtendidos`, `TurnosAusentes`, `TurnosCancelados`, `TotalRecaudado` | `LEFT JOIN` con la condición del año/mes **en el `ON`**: así un médico activo sin turnos igual aparece con ceros. Solo médicos activos. Ordena por atendidos y total. `@MedicoId` filtra `m.Id` (un médico sin turnos igual aparece con ceros). |
 | `sp_ReporteTurnosPorObraSocial` | `@Anio INT`, `@MedicoId INT = NULL` | `ObraSocial`, `CantidadTurnos`, `TotalRecaudado` | Agrupa por la obra social **actual** del paciente ("Particular" si no tiene). Filtra `Activo = 1` (excluye cancelados). `@MedicoId` filtra `t.MedicoId`; sin él cuenta todos los médicos. |
 
@@ -226,6 +226,7 @@ Cada procedimiento existe en **dos lugares con el mismo texto** (verificado comp
 | `20261019114456_AgregaSpResumenDelDia` | `sp_ResumenDelDia` |
 | `20261019153000_AgregaSpReportesPacientesRendimientoObraSocial` | `sp_ReportePacientesPorMes`, `sp_ReporteRendimientoMedicos`, `sp_ReporteTurnosPorObraSocial` |
 | `20261102151455_AgregaMedicoIdAReportes` | No crea nada nuevo: **reemplaza** (`CREATE OR ALTER`) `sp_ReporteRecaudacion`, `sp_ReporteTurnosPorObraSocial` y `sp_ReporteRendimientoMedicos` para sumarles `@MedicoId`. Su `Down` restaura las versiones anteriores. |
+| `20261102175410_QuitaEstadoPendiente` | No crea nada nuevo: pasa los turnos con `Estado = 0` a `Confirmado` (1) y **reemplaza** (`CREATE OR ALTER`) `sp_ResumenDelDia` (sin la columna `Pendientes`), `sp_ReportePacientesPorMes` (`PendientesOConfirmados` pasa a `Confirmados` y cuenta solo `Estado = 1`) y `sp_ReporteTurnosPorPeriodo` (sin el caso 0). Su `Down` restaura los procedimientos anteriores, pero **no revierte el cambio de datos**. |
 
 **Cómo llegan a la base:**
 

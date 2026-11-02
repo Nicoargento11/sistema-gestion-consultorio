@@ -176,39 +176,15 @@ Se complementa con una bandera `_cargando`: mientras vale `true` (cuando el cód
 
 Y siempre: después de guardar o eliminar, volver al modo nuevo (`_idSeleccionado = null`).
 
-## Las dos acepciones de "pendiente"
+## Qué significa "pendiente" en la interfaz
 
-En el código la palabra "pendiente" significa **dos cosas distintas**. Conviene no mezclarlas.
-
-### 1) El estado de turno `Pendiente` (valor 0)
-
-Es un valor del enum `EstadoTurno` (0 Pendiente, 1 Confirmado, 2 Cancelado, 3 Asistio, 4 Ausente): un turno **sin confirmar**.
-
-- **Nunca se crea:** `TurnoService.AsignarTurno` inserta siempre `Confirmado`.
-- Solo existe en datos cargados a mano o por el script de demo.
-- Aparece donde se cuenta o se filtra por ese estado exacto: el contador "Pendientes" de `FormTurnos`, la tarjeta "Pendientes" de Inicio (que sale de `sp_ResumenDelDia`, `Estado = 0`), la opción "Pendiente" del filtro de Reportes → Turnos, la lista "Próximos turnos sin confirmar" de Inicio (`ResumenService.ObtenerProximosSinConfirmar`) y los colores de `PaletaEstados`.
-
-### 2) "Pendiente de atender / asistir"
-
-Es un turno que **todavía no se atendió**: está en estado `Pendiente` **o** `Confirmado` (sin resolver) y, para el médico, además no tiene una atención clínica cargada.
+El estado de turno `Pendiente` se eliminó (el sistema nunca lo asignaba; ver [`03-reglas-de-negocio.md`](03-reglas-de-negocio.md#1-ciclo-de-vida-del-turno)). Hoy "pendiente" solo se usa como **"pendiente de atender / asistir"**: un turno `Confirmado` que todavía no se atendió y, para el médico, además no tiene una atención clínica cargada.
 
 - `FormAgendaMedico.EsPendienteDeAtencion`: lo que cuenta el botón "PENDIENTES (n)" de Mi agenda y su resumen del día.
 - `AgendaDiariaService.ElegirProximo`: el próximo paciente de Mi agenda.
 - `ResumenService.ObtenerProximoPaciente`: el próximo paciente de Inicio (rol Médico).
-- Mismo criterio de "sin resolver" (`Pendiente` o `Confirmado`): el próximo turno de `FormPacientes` (`PacienteService.ObtenerListado`) y los turnos que `ExcepcionAgendaService.CancelarTurnosAfectados` cancela al cargar una ausencia.
+- Mismo criterio (`Confirmado`): el próximo turno de `FormPacientes` (`PacienteService.ObtenerListado`) y los turnos que `ExcepcionAgendaService.CancelarTurnosAfectados` cancela al cargar una ausencia.
 - En el combo de `FormRegistrarActividad` la etiqueta `[Pendiente]` también se usa en este sentido (turno sin atención cargada).
-
-### Cómo distinguirlas al leer código
-
-| Si ves... | Es la acepción |
-|-----------|----------------|
-| `Estado == EstadoTurno.Pendiente` solo | 1 (el estado) |
-| `Estado == Pendiente \|\| Estado == Confirmado` (a veces con `!Atendido`) | 2 (por atender) |
-| Una consulta SQL con `Estado = 0` | 1 |
-| Un botón o texto "Pendientes" en **Mi agenda** | 2 |
-| Un contador "Pendientes" en **Turnos** o **Inicio** | 1 |
-
-Por eso en Mi agenda "PENDIENTES (5)" puede convivir con "Pendientes: 0" en Inicio: cuentan cosas distintas.
 
 ## Para seguir leyendo
 

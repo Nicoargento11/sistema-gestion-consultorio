@@ -107,7 +107,7 @@ Un parámetro opcional sin valor tiene que viajar como `DBNull.Value`, no como `
 | Recaudación | Monto total, turnos cobrados | Solo cuenta turnos `Asistio` con monto. El encabezado de la primera columna cambia según el agrupamiento. |
 | Asistencia | Total, atendidos, ausentes, % de asistencia | El % es `atendidos / (atendidos + ausentes)`: los cancelados no entran. |
 | Ocupación | Horas configuradas, ocupadas y % global | Descuenta de la agenda las ausencias cargadas. |
-| Pacientes por mes | Contadores de chips (total, atendidos, ausentes, cancelados, "pendientes o confirmados") y "Facturación anual" | "Pendientes o confirmados" suma los estados 0 y 1 juntos (columna `PendientesOConfirmados`). La facturación sale de `ObtenerTurnosPorObraSocial(anio, medicoId)` (`ObtenerObrasSocialesAcotado`), acotada a los mismos médicos que la pestaña. |
+| Pacientes por mes | Contadores de chips (total, atendidos, ausentes, cancelados, confirmados) y "Facturación anual" | "Confirmados" cuenta el estado 1 (columna `Confirmados`). La facturación sale de `ObtenerTurnosPorObraSocial(anio, medicoId)` (`ObtenerObrasSocialesAcotado`), acotada a los mismos médicos que la pestaña. |
 | Rendimiento de médicos | Cantidad de médicos, turnos, atendidos, ausentes, recaudado | Muestra todos los médicos activos, incluso con 0 turnos. |
 | Obras sociales | Cantidad de obras sociales, turnos y facturación (de los médicos del usuario) | Agrupa por la obra social **actual** del paciente, no por lo cobrado (ver hallazgo 3 de [`05`](05-procedimientos-almacenados.md)). |
 

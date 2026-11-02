@@ -41,7 +41,7 @@ La dependencia va de arriba hacia abajo: `SGC.UI` → `SGC.Logica` → `SGC.Dato
 | ¿Qué procedimientos hay y cuál se usa realmente? | [`05-procedimientos-almacenados.md`](05-procedimientos-almacenados.md) |
 | ¿Qué pantallas existen y qué servicio usa cada una? | [`06-capa-ui.md`](06-capa-ui.md#1-mapa-de-pantallas) |
 | ¿Por qué el Designer "me borra" cosas? ¿Cómo manejo la escala de pantalla? | [`06-capa-ui.md`](06-capa-ui.md#5-lógica-en-el-cs-el-designer-solo-para-la-estructura) |
-| ¿Qué quiere decir "pendiente"? | [`06-capa-ui.md`](06-capa-ui.md#las-dos-acepciones-de-pendiente) |
+| ¿Qué quiere decir "pendiente"? | [`06-capa-ui.md`](06-capa-ui.md#qué-significa-pendiente-en-la-interfaz) |
 | ¿Qué ve cada rol en Reportes? | [`07-reportes.md`](07-reportes.md#2-reglas-por-rol) |
 | ¿Cómo se hace y se restaura una copia de seguridad? | [`04-flujos.md`](04-flujos.md#i-copia-de-seguridad-y-restauración) y [`03`](03-reglas-de-negocio.md#12-copia-de-seguridad-y-restauración) |
 | ¿Cómo agrego una pantalla, un campo, un reporte o un procedimiento? | [`08-guia-para-modificar.md`](08-guia-para-modificar.md#recetas) |
@@ -64,7 +64,7 @@ Después, según lo que vayas a tocar: modelo de datos (02), procedimientos (05)
 
 | Término | Qué es en este sistema |
 |---------|------------------------|
-| **Turno** | Una cita de un paciente con un médico, en una fecha y hora, con una duración (`Turno`). Tiene un **estado**: Pendiente (0), Confirmado (1), Cancelado (2), Asistio (3) o Ausente (4). |
+| **Turno** | Una cita de un paciente con un médico, en una fecha y hora, con una duración (`Turno`). Tiene un **estado**: Confirmado (1), Cancelado (2), Asistio (3) o Ausente (4). |
 | **Franja / agenda** | Un bloque semanal en que un médico atiende (por ejemplo lunes de 8 a 12): `AgendaMedico`. Los horarios de turnos se cortan de las franjas. |
 | **Excepción / ausencia** | Un día u horario en que un médico **no** atiende aunque su franja diga que sí (vacaciones, congreso): `ExcepcionAgenda`. Puede ser de día completo o por rango horario. |
 | **Obra social** | Cobertura médica del paciente. Cada una tiene un **porcentaje de cobertura** y cada médico elige cuáles acepta. |

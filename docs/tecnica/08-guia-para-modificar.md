@@ -198,13 +198,13 @@ Consolidado de **todos** los hallazgos de [`01`](01-arquitectura.md#hallazgos), 
 | N-4 | `AsignarTurno` no valida que paciente y médico existan y estén activos; `ModificarTurno` tampoco revisa el médico | `TurnoService` | M | Validar `Activo` antes de insertar |
 | N-5 | Se puede **modificar o cancelar un turno ya atendido** (`Asistio`/`Ausente`); cancelar un `Asistio` conserva `Monto` y `MedioPago` | `TurnoService.ModificarTurno`/`CancelarTurno`; `FormTurnos.ActualizarAcciones` | M | Rechazar si el estado es `Asistio` o `Ausente`, en el Service y en la pantalla |
 | N-6 | **Modificar o eliminar una ausencia no re-evalúa turnos:** modificar no cancela turnos nuevos afectados; eliminar no restituye los cancelados | `ExcepcionAgendaService.Modificar`, `EliminarLogico` | M | Reaplicar `CancelarTurnosAfectados` al modificar; avisar en pantalla al eliminar |
-| N-7 | El estado `Pendiente (0)` **nunca se crea**, pero hay contadores, filtros y una lista ("sin confirmar") para él | `AsignarTurno`; `FormTurnos`, `FormInicio`, `ResumenService.ObtenerProximosSinConfirmar` | B | Quitarlo de la UI y mantener el 0 reservado en el enum (ver sección siguiente) |
+| N-7 | ~~El estado `Pendiente (0)` nunca se crea~~ **Resuelto:** se eliminó del enum, la UI y los procedimientos (los demás valores conservan su número). | `QuitaEstadoPendiente` | B | - |
 | N-8 | Editar un paciente cuya obra social fue dada de baja lo guarda como **Particular sin avisar** (deducido) | `FormPacientes.CargarCombos`, `BtnGuardar_Click` | M | Cargar la obra social actual del paciente aunque esté inactiva, o avisar |
 | N-9 | La **matrícula duplicada** no se valida en C#; solo la base la rechaza (mensaje técnico) | `MedicoService.Validar` | B | Validar contra médicos activos con mensaje claro |
 | N-10 | **No se puede recrear** un médico, paciente, obra social, usuario ni franja dados de baja con los mismos datos únicos (índices sin filtro de `Activo`); solo `Usuario` tiene `Reactivar` | `SGCContext.cs` (índices) | M | Agregar `Reactivar` (como `UsuarioService.Reactivar`) o índices filtrados `WHERE Activo = 1` |
 | N-11 | Validaciones de C# y de la base **no idénticas** (DNI 7-8 dígitos vs. 15 caracteres; nacimiento hasta 120 años vs. solo no futuro; email solo en C#) | `PacienteService.Validar`; `SGCContext.cs` | B | Alinear los `CHECK` o documentar la diferencia |
 | N-12 | `Turnos.MedioPago` es **texto libre** con el nombre de la obra social; un renombre no actualiza turnos viejos | `FormConfirmarAsistencia` | B | Guardar el `ObraSocialId` o un código de medio de pago |
-| N-13 | **16 turnos en estado `Pendiente`** en la base de desarrollo, que viene del script de demo, no de la app | `SGC.Datos/Scripts/carga_masiva_demo.sql` | B | Generar la demo con `Confirmado` si se quiere reflejar el uso real |
+| N-13 | ~~16 turnos en estado `Pendiente`~~ **Resuelto:** la migración `QuitaEstadoPendiente` los pasó a `Confirmado`. El script de demo (`carga_masiva_demo.sql`) todavía puede generar `Estado = 0`; conviene corregirlo antes de volver a usarlo. | `SGC.Datos/Scripts/carga_masiva_demo.sql` | B | Generar la demo con `Confirmado` |
 | N-14 | `FormAgendaMedico` y `FormRegistrarActividad`: si el usuario no tiene médico vinculado, toman **el primero de la lista** de médicos | `DeterminarMedicoActivo` (ambas) | M | Mostrar un error en vez de asumir un médico |
 
 ### Procedimientos y reportes
@@ -242,7 +242,7 @@ Ordenado por prioridad (primero lo que evita datos incorrectos):
 
 1. **Conectar `sp_AsignarTurno` con transacción.** Agregar `UPDLOCK, HOLDLOCK` y `BEGIN TRANSACTION` dentro del procedimiento y hacer que `TurnoService.AsignarTurno` lo invoque. Cierra N-1, N-3 (para asignar) y R-1 de una sola vez.
 2. **Validar `ExcepcionAgenda` en C#** también para `ModificarTurno` (y para `AsignarTurno` si se decide no usar el procedimiento). Cierra N-3.
-3. **Quitar el estado `Pendiente` de la UI** (contador de Turnos, tarjeta de Inicio, filtro de Reportes, lista "sin confirmar") **manteniendo el valor 0 reservado en el enum `EstadoTurno`**, porque los procedimientos almacenados usan los números 0 a 4 y borrarlo correría los demás. Cierra N-7 y evita la confusión descrita en [`06`](06-capa-ui.md#las-dos-acepciones-de-pendiente).
+3. ~~Quitar el estado `Pendiente`~~ **Hecho:** se quitó del enum, de la UI y de los procedimientos, con valores explícitos (`Confirmado = 1` … `Ausente = 4`) y la migración `QuitaEstadoPendiente`. Cerró N-7 y N-13.
 4. **Validar la matrícula duplicada en `MedicoService.Validar`** con un mensaje claro. Cierra N-9.
 5. **Poder reactivar médicos, franjas, pacientes y obras sociales** dados de baja (como `UsuarioService.Reactivar`). Cierra N-10.
 

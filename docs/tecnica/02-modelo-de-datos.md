@@ -157,13 +157,14 @@ EF Core guarda los enums como **entero** (columna `int`). Si agregás o reorden�
 
 | N | Nombre | Quién lo asigna |
 |---|--------|-----------------|
-| 0 | `Pendiente` | **Ninguna pantalla ni servicio lo crea.** Existe en el enum (y es el valor por defecto de la propiedad `Turno.Estado`), pero `TurnoService.AsignarTurno` siempre inserta `Confirmado`. Solo aparece en datos cargados a mano o por el script de demo (`SGC.Datos/Scripts/carga_masiva_demo.sql`). |
 | 1 | `Confirmado` | `TurnoService.AsignarTurno` (así nace todo turno) |
 | 2 | `Cancelado` | `TurnoService.CancelarTurno`; `ExcepcionAgendaService.Agregar` (cancela turnos afectados) |
 | 3 | `Asistio` | `TurnoService.ConfirmarAsistencia(asistio: true)` |
 | 4 | `Ausente` | `TurnoService.ConfirmarAsistencia(asistio: false)` |
 
 Los procedimientos almacenados comparan contra estos números (`Estado = 3` es "atendido"). Los comentarios de los `.sql` repiten la tabla.
+
+El valor 0 (`Pendiente`) se eliminó del enum: el sistema nunca lo asignaba. Los números restantes se fijaron de forma **explícita** (`Confirmado = 1` … `Ausente = 4`) para que no se corran. La migración `QuitaEstadoPendiente` pasó a `Confirmado` los 16 turnos que estaban en 0 (venían del script de demo). El valor por defecto de `Turno.Estado` es ahora `Confirmado`.
 
 ### `RolUsuario` (`Usuarios.Rol`)
 
@@ -272,7 +273,7 @@ Hechos observados, sin juicio.
 | 2 | **Mensajes y valores sin tildes en la base y en el código:** especialidades sembradas como "Clinica General", "Cardiologia", "Pediatria"; tipos de actividad ("Estudio / Practica", "Receta / Prescripcion", "Certificado Medico"); `AgendaMedico.NombreDia` devuelve "Miercoles" y "Sabado"; muchos mensajes de los Services no llevan tildes. Parte es una convención declarada en el README (evitar tildes en strings por problemas de codificación), pero otros archivos sí usan tildes (`DisponibilidadDia.cs`, `ReporteService.cs`). | `SGC.Datos/DbSeeder.cs`, `SGCContext.cs` (`HasData`), `SGC.Entidades/AgendaMedico.cs` |
 | 3 | **`Turnos.MedioPago` es texto libre** y guarda el nombre de la obra social ("OSDE", "PAMI"...) o "Particular". Un renombre de una obra social no actualiza los turnos viejos. | `SGC.UI/FormConfirmarAsistencia.cs` |
 | 4 | **Validaciones de C# y de la base no son idénticas:** C# exige DNI de 7 a 8 dígitos; la base solo exige que no sea todo ceros (acepta hasta 15 caracteres). C# permite nacimiento hasta 120 años atrás; la base solo exige que no sea futuro. El email se valida solo en C# (que tenga `@` y `.`). | `PacienteService.Validar`, `SGCContext.cs` |
-| 5 | **Existen 16 turnos en estado `Pendiente` en la base de desarrollo**, aunque el código nunca los crea (vienen del script de demo). Las pantallas y los reportes los muestran igual. | `SGC.Datos/Scripts/carga_masiva_demo.sql` |
+| 5 | ~~16 turnos en estado `Pendiente`~~ **Resuelto:** la migración `QuitaEstadoPendiente` los pasó a `Confirmado` (189 turnos Confirmados en total en la base de desarrollo). | `SGC.Datos/Migrations/20261102175410_QuitaEstadoPendiente.cs` |
 
 ## Para seguir leyendo
 

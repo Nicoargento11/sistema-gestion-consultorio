@@ -156,7 +156,7 @@ Esta parte es del rol Médico (pantallas de Luciano). **Atender un turno no camb
 - **Atención y asistencia son cosas distintas.** La asistencia/cobro la registra la recepción (flujo d); la atención clínica la registra el médico. No se pisan.
 - **El navegador (`Action<Form>`) evita ventanas sueltas.** Las pantallas del médico se abren como hijas del menú. Cada una tiene una rama alternativa con `ShowDialog()` (y `FormHistorialPaciente`, la versión modal del historial) que **solo se usa cuando no hay navegador**; en la aplicación real el menú siempre lo pasa, así que esas ramas hoy no se ejecutan (deducido).
 - **La seguridad clínica (RNF#07) está en la fila, no en la pantalla:** aunque una grilla quisiera mostrar el motivo, `AtencionFila` ya lo trae vacío para otros roles.
-- **En el combo de "Registrar actividad"** cada turno lleva la marca `[Atendido]` o `[Pendiente]`: acá "Pendiente" significa "sin atención cargada", no el estado de turno (ver [`06-capa-ui.md`](06-capa-ui.md#las-dos-acepciones-de-pendiente)).
+- **En el combo de "Registrar actividad"** cada turno lleva la marca `[Atendido]` o `[Pendiente]`: acá "Pendiente" significa "sin atención cargada", no un estado de turno (ver [`06-capa-ui.md`](06-capa-ui.md#qué-significa-pendiente-en-la-interfaz)).
 
 ---
 
@@ -164,12 +164,14 @@ Esta parte es del rol Médico (pantallas de Luciano). **Atender un turno no camb
 
 ![Cargar una ausencia](diagramas/flujo-ausencia.png)
 
+> Diagrama pendiente de regenerar: la etiqueta de la flecha del Service dice "SELECT turnos Pendiente o Confirmado del día", pero ahora solo se buscan turnos `Confirmado`.
+
 | Paso | Archivo y método | Qué pasa |
 |------|------------------|----------|
 | 1 | `SGC.UI/FormExcepcionesAgenda.cs` → `BtnGuardar_Click` | Arma un `ExcepcionAgenda` (médico, fecha, tipo `DiaCompleto` o `RangoHorario`, horas, motivo) y llama a `Agregar` (o a `Modificar` si había una fila elegida). |
 | 2 | `SGC.Logica/ExcepcionAgendaService.cs` → `Validar` | Médico existente y activo, fecha no pasada (hoy sí), motivo obligatorio, y horas coherentes si es rango. |
 | 3 | `ExcepcionAgendaService.Agregar` | Inserta la ausencia (`SaveChanges` #1). |
-| 4 | `ExcepcionAgendaService.CancelarTurnosAfectados` | Busca los turnos **activos** del médico en esa fecha en estado `Pendiente` o `Confirmado`; si la ausencia es de rango, solo los que se superponen. |
+| 4 | `ExcepcionAgendaService.CancelarTurnosAfectados` | Busca los turnos **activos** del médico en esa fecha en estado `Confirmado`; si la ausencia es de rango, solo los que se superponen. |
 | 5 | `CancelarTurnosAfectados` | Los pasa a `Cancelado` con `Activo = false` y guarda (`SaveChanges` #2). Registra un aviso simulado al paciente. |
 | 6 | `FormExcepcionesAgenda.BtnGuardar_Click` | Muestra "Excepción guardada correctamente. Se cancelaron N turno(s)...". |
 
@@ -177,7 +179,7 @@ Esta parte es del rol Médico (pantallas de Luciano). **Atender un turno no camb
 
 | Turno del médico ese día | Efecto |
 |--------------------------|--------|
-| `Confirmado` (o `Pendiente`) dentro de la ausencia | Se cancela solo, y se avisa (simulado) |
+| `Confirmado` dentro de la ausencia | Se cancela solo, y se avisa (simulado) |
 | `Confirmado` fuera del rango horario | No se toca |
 | `Asistio` / `Ausente` | No se toca (ya están resueltos) |
 | Ya cancelado | No se toca |
@@ -225,7 +227,7 @@ El diagrama muestra la pestaña "Turnos"; todas siguen el mismo camino. El módu
 | 2 | `SGC.UI/FormInicio.cs` → `Cargar` | Según el rol llama a `CargarAdministrador`, `CargarMedico` o `CargarRecepcionista`. El Administrador ve el estado del sistema; no ve dinero. |
 | 3 | `SGC.Logica/ResumenService.cs` → `ObtenerResumen` (Médico) | `EXEC sp_ResumenDelDia @Fecha, @MedicoId` y devuelve **una fila** (`ResumenDelDiaFila`) con los contadores del día, la semana y el mes. |
 | 4 | `ResumenService.ObtenerResumenDeMedicos` | Para la Recepcionista: llama al procedimiento una vez por médico asignado y suma con `ResumenDelDiaFila.Sumar`. Una lista vacía da todo en cero. |
-| 5 | `ResumenService.ObtenerProximoPaciente` / `ObtenerProximosSinConfirmar` | Consultas con EF para el próximo paciente (Médico) y la lista de turnos en estado `Pendiente` (Recepcionista). |
+| 5 | `ResumenService.ObtenerProximoPaciente` / `ObtenerProximosTurnos` | Consultas con EF para el próximo paciente (Médico) y la lista "Próximos turnos" (Recepcionista): turnos `Confirmado` del día que todavía no empezaron (si la fecha es hoy), ordenados por hora. |
 | 6 | `NotificacionService.ObtenerAvisos` / `ObtenerAvisosDeMedico` (Recepcionista y Médico; el Administrador no los ve) | Muestra los avisos simulados **de esta sesión**: están en una lista en memoria. |
 | 7 | `FormInicio.AgregarEstadoDelSistema` → `SistemaService.ObtenerSalud` (solo Administrador) | Consultas EF de solo lectura: usuarios activos por rol, médicos sin horarios, médicos sin recepcionista y obras sociales activas. Los contadores en cero se pintan normal; los que indican algo por corregir, en advertencia. |
 | 8 | `FormInicio.CrearTarjetaUltimoBackup` → `BackupService.ObtenerUltimoBackup` (solo Administrador) | `MAX(backup_finish_date)` de `msdb`. Advertencia si nunca hubo copia, si no se pudo consultar o si tiene más de 7 días. |
@@ -235,7 +237,7 @@ El diagrama muestra la pestaña "Turnos"; todas siguen el mismo camino. El módu
 - **`FormInicio` no tiene Designer:** toda la interfaz se arma en código (ver [`06-capa-ui.md`](06-capa-ui.md)). Es la excepción al patrón normal y se hizo para que el diseñador de Visual Studio no pueda borrarla.
 - **Los números del día vienen de un solo procedimiento** para no hacer cinco consultas separadas. El estado del sistema del Administrador no: son contadores de configuración, y por eso salen de EF.
 - **El botón "Actualizar"** vuelve a ejecutar `Cargar`; la pantalla no se refresca sola.
-- **La tarjeta "Pendientes"** cuenta turnos en **estado** `Pendiente` (valor 0). Como ninguna pantalla crea ese estado, en una base creada solo por la aplicación suele mostrar 0.
+- **Las tarjetas del día** son Confirmados, Asistieron, Ausentes y Cancelados; el estado `Pendiente` ya no existe, así que no hay tarjeta "Pendientes".
 
 ---
 
