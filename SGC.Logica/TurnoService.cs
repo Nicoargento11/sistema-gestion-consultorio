@@ -129,6 +129,7 @@ public class TurnoService
         // Se vuelve a leer de la base: los objetos que llegan de la UI pueden
         // estar desactualizados (alguien pudo dar de baja al paciente o medico).
         ExigirActivos(contexto, paciente.Id, medico.Id);
+        ExigirSinAusencia(contexto, medico.Id, medico.Apellido, fecha, horaInicio, duracionMinutos);
 
         if (HaySuperposicion(contexto, medico.Id, fecha, horaInicio, duracionMinutos, excluirTurnoId: null))
             throw new InvalidOperationException(
@@ -177,6 +178,8 @@ public class TurnoService
             throw new InvalidOperationException(
                 $"El profesional no atiende el {AgendaMedico.NombreDia(nuevaFecha.DayOfWeek)} en el horario {nuevaHoraInicio:HH:mm} - {nuevaHoraFin:HH:mm}.");
 
+        ExigirSinAusencia(contexto, turno.MedicoId, turno.Medico?.Apellido, nuevaFecha, nuevaHoraInicio, nuevaDuracionMinutos);
+
         if (HaySuperposicion(contexto, turno.MedicoId, nuevaFecha, nuevaHoraInicio, nuevaDuracionMinutos, excluirTurnoId: turnoId))
             throw new InvalidOperationException(
                 $"El Dr./Dra. {turno.Medico?.Apellido} ya tiene otro turno asignado el {nuevaFecha:dd/MM/yyyy} que se superpone con {nuevaHoraInicio:HH:mm} - {nuevaHoraFin:HH:mm}.");
@@ -199,6 +202,15 @@ public class TurnoService
 
         if (Horas.Minutos(horaInicio) + duracionMinutos > 24 * 60)
             throw new ArgumentException("El turno no puede terminar después de las 24:00 (pasaría al día siguiente).");
+    }
+
+    // Un turno no puede caer dentro de una ausencia activa del medico.
+    private static void ExigirSinAusencia(SGCContext contexto, int medicoId, string? apellido, DateOnly fecha, TimeOnly horaInicio, int duracionMinutos)
+    {
+        var ausencia = ExcepcionAgendaService.BuscarAusencia(contexto, medicoId, fecha, horaInicio, duracionMinutos);
+        if (ausencia != null)
+            throw new InvalidOperationException(
+                $"El Dr./Dra. {apellido} tiene una ausencia cargada el {fecha:dd/MM/yyyy} ({ExcepcionAgendaService.Describir(ausencia)}: {ausencia.Motivo}) que se superpone con ese horario.");
     }
 
     // Un paciente no puede estar en dos turnos a la vez, aunque sean con

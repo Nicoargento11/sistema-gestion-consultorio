@@ -85,18 +85,24 @@ public class ExcepcionAgendaService
         excepcion.Activo = true;
         excepcion.Medico = medico;
         contexto.ExcepcionesAgenda.Add(excepcion);
+
+        // La ausencia y la cancelacion de los turnos afectados se guardan
+        // juntas (un unico SaveChanges): si algo falla no queda una ausencia
+        // guardada con un error en pantalla.
+        var turnosAfectados = CancelarTurnosAfectados(excepcion, contexto);
         contexto.SaveChanges();
 
-        return CancelarTurnosAfectados(excepcion, contexto);
+        // Los avisos se registran recien con todo guardado.
+        AvisarCancelaciones(turnosAfectados, excepcion);
+        return turnosAfectados;
     }
 
     // Al cargar una ausencia, los turnos que ya estaban agendados en ese
     // rango dejan de tener sentido: se cancelan y se avisa al paciente
     // (mismo patron que usaba FormHorarios al eliminar un bloque de horario).
+    // Solo marca los turnos como cancelados en el contexto; no guarda ni avisa.
     private List<Turno> CancelarTurnosAfectados(ExcepcionAgenda excepcion, SGCContext contexto)
     {
-        var notificacionService = new NotificacionService();
-
         var turnosAfectados = contexto.Turnos
             .Include(t => t.Paciente)
             .Where(t => t.Activo && t.MedicoId == excepcion.MedicoId && t.Fecha == excepcion.Fecha)
@@ -109,16 +115,20 @@ public class ExcepcionAgendaService
         {
             turno.Estado = EstadoTurno.Cancelado;
             turno.Activo = false;
-
-            if (turno.Paciente != null)
-            {
-                notificacionService.AvisarTurno(turno.Paciente, "Cancelacion",
-                    $"Se cancelo su turno del {turno.Fecha:dd/MM/yyyy} con el Dr./Dra. {excepcion.Medico?.Apellido} por ausencia del profesional.");
-            }
         }
 
-        contexto.SaveChanges();
         return turnosAfectados;
+    }
+
+    private static void AvisarCancelaciones(List<Turno> turnosCancelados, ExcepcionAgenda excepcion)
+    {
+        var notificacionService = new NotificacionService();
+
+        foreach (var turno in turnosCancelados.Where(t => t.Paciente != null))
+        {
+            notificacionService.AvisarTurno(turno.Paciente!, "Cancelacion",
+                $"Se cancelo su turno del {turno.Fecha:dd/MM/yyyy} con el Dr./Dra. {excepcion.Medico?.Apellido} por ausencia del profesional.");
+        }
     }
 
     private static bool SeSuperponeConRango(Turno turno, ExcepcionAgenda excepcion)
@@ -134,10 +144,11 @@ public class ExcepcionAgendaService
     public void Modificar(ExcepcionAgenda excepcion)
     {
         using var contexto = SGCContextFactory.Crear();
-        var medico = Validar(excepcion, contexto);
 
         var existente = contexto.ExcepcionesAgenda.FirstOrDefault(e => e.Id == excepcion.Id)
             ?? throw new InvalidOperationException("La excepcion que intenta modificar no existe.");
+
+        var medico = Validar(excepcion, contexto, existente);
 
         existente.MedicoId = excepcion.MedicoId;
         existente.Medico = medico;
@@ -159,27 +170,90 @@ public class ExcepcionAgendaService
         contexto.SaveChanges();
     }
 
-    private Medico Validar(ExcepcionAgenda excepcion, SGCContext contexto)
+    // existente = la ausencia tal como esta guardada (solo al modificar). Si el
+    // rango (medico, fecha, tipo, horas) no cambia, no se exige que sea futuro
+    // ni se revisan superposiciones: permite corregir el motivo de una
+    // ausencia que ya paso.
+    private Medico Validar(ExcepcionAgenda excepcion, SGCContext contexto, ExcepcionAgenda? existente = null)
     {
         var medico = contexto.Medicos.FirstOrDefault(m => m.Id == excepcion.MedicoId);
         if (medico is null || !medico.Activo)
-            throw new ArgumentException("Debe seleccionar un medico valido.");
+            throw new ArgumentException("Debe seleccionar un médico válido.");
 
-        if (excepcion.Fecha < DateOnly.FromDateTime(DateTime.Today))
-            throw new ArgumentException("No se puede cargar una excepcion en una fecha pasada.");
-
-        if (string.IsNullOrWhiteSpace(excepcion.Motivo))
+        excepcion.Motivo = Texto.Normalizar(excepcion.Motivo);
+        if (excepcion.Motivo.Length == 0)
             throw new ArgumentException("Debe indicar el motivo de la ausencia.");
+
+        if (excepcion.Motivo.Length > 200)
+            throw new ArgumentException("El motivo no puede superar los 200 caracteres.");
 
         if (excepcion.Tipo == TipoExcepcionAgenda.RangoHorario)
         {
             if (excepcion.HoraInicio is null || excepcion.HoraFin is null)
-                throw new ArgumentException("Debe indicar hora de inicio y fin para una excepcion de rango horario.");
+                throw new ArgumentException("Debe indicar hora de inicio y fin para una excepción de rango horario.");
 
             if (excepcion.HoraFin <= excepcion.HoraInicio)
                 throw new ArgumentException("La hora de fin debe ser posterior a la hora de inicio.");
         }
+        else
+        {
+            // Dia completo no lleva horas (lo exige una restriccion de la base).
+            excepcion.HoraInicio = null;
+            excepcion.HoraFin = null;
+        }
+
+        bool rangoCambiado = existente is null
+            || existente.MedicoId != excepcion.MedicoId
+            || existente.Fecha != excepcion.Fecha
+            || existente.Tipo != excepcion.Tipo
+            || existente.HoraInicio != excepcion.HoraInicio
+            || existente.HoraFin != excepcion.HoraFin;
+
+        if (rangoCambiado)
+        {
+            if (excepcion.Fecha < DateOnly.FromDateTime(DateTime.Today))
+                throw new ArgumentException("No se puede cargar una excepción en una fecha pasada.");
+
+            ExigirSinSuperposicion(excepcion, contexto);
+        }
 
         return medico;
+    }
+
+    // Dos ausencias activas del mismo medico y fecha no pueden superponerse
+    // (un dia completo se superpone con cualquier otra del mismo dia).
+    private static void ExigirSinSuperposicion(ExcepcionAgenda excepcion, SGCContext contexto)
+    {
+        var delDia = contexto.ExcepcionesAgenda
+            .AsNoTracking()
+            .Where(e => e.Activo && e.MedicoId == excepcion.MedicoId && e.Fecha == excepcion.Fecha && e.Id != excepcion.Id)
+            .ToList();
+
+        foreach (var otra in delDia)
+        {
+            bool alguna = otra.Tipo == TipoExcepcionAgenda.DiaCompleto || excepcion.Tipo == TipoExcepcionAgenda.DiaCompleto
+                || Horas.Superpone(Horas.Minutos(excepcion.HoraInicio!.Value), Horas.Minutos(excepcion.HoraFin!.Value),
+                                   Horas.Minutos(otra.HoraInicio!.Value), Horas.Minutos(otra.HoraFin!.Value));
+            if (alguna)
+                throw new InvalidOperationException(
+                    $"El médico ya tiene una ausencia cargada el {excepcion.Fecha:dd/MM/yyyy} ({Describir(otra)}: {otra.Motivo}) que se superpone con esta.");
+        }
+    }
+
+    internal static string Describir(ExcepcionAgenda e)
+        => e.Tipo == TipoExcepcionAgenda.DiaCompleto ? "todo el día" : $"de {e.HoraInicio:HH:mm} a {e.HoraFin:HH:mm}";
+
+    // Ausencia activa del medico que se superpone con el horario dado (dia
+    // completo, o rango horario que se cruza con el turno); null si no hay.
+    internal static ExcepcionAgenda? BuscarAusencia(SGCContext contexto, int medicoId, DateOnly fecha, TimeOnly horaInicio, int duracionMinutos)
+    {
+        int inicio = Horas.Minutos(horaInicio), fin = inicio + duracionMinutos;
+
+        return contexto.ExcepcionesAgenda
+            .Where(e => e.Activo && e.MedicoId == medicoId && e.Fecha == fecha)
+            .AsEnumerable()
+            .FirstOrDefault(e => e.Tipo == TipoExcepcionAgenda.DiaCompleto
+                || (e.HoraInicio != null && e.HoraFin != null
+                    && Horas.Superpone(inicio, fin, Horas.Minutos(e.HoraInicio.Value), Horas.Minutos(e.HoraFin.Value))));
     }
 }
