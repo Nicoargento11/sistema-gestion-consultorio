@@ -223,10 +223,10 @@ El diagrama muestra la pestaña "Turnos"; todas siguen el mismo camino. El módu
 |------|------------------|----------|
 | 1 | `FormMenuPrincipal.CargarPantallaInicialPorDefecto` | Todos los roles arrancan en Inicio: `new FormInicio(usuario)`. |
 | 2 | `SGC.UI/FormInicio.cs` → `Cargar` | Según el rol llama a `CargarAdministrador`, `CargarMedico` o `CargarRecepcionista`. El Administrador ve el estado del sistema; no ve dinero. |
-| 3 | `SGC.Logica/ResumenService.cs` → `ObtenerResumen` | `EXEC sp_ResumenDelDia @Fecha, @MedicoId` y devuelve **una fila** (`ResumenDelDiaFila`) con los contadores del día, la semana y el mes. |
+| 3 | `SGC.Logica/ResumenService.cs` → `ObtenerResumen` (Médico) | `EXEC sp_ResumenDelDia @Fecha, @MedicoId` y devuelve **una fila** (`ResumenDelDiaFila`) con los contadores del día, la semana y el mes. |
 | 4 | `ResumenService.ObtenerResumenDeMedicos` | Para la Recepcionista: llama al procedimiento una vez por médico asignado y suma con `ResumenDelDiaFila.Sumar`. Una lista vacía da todo en cero. |
 | 5 | `ResumenService.ObtenerProximoPaciente` / `ObtenerProximosSinConfirmar` | Consultas con EF para el próximo paciente (Médico) y la lista de turnos en estado `Pendiente` (Recepcionista). |
-| 6 | `NotificacionService.ObtenerAvisos` / `ObtenerAvisosDeMedico` | Muestra los avisos simulados **de esta sesión**: están en una lista en memoria. |
+| 6 | `NotificacionService.ObtenerAvisos` / `ObtenerAvisosDeMedico` (Recepcionista y Médico; el Administrador no los ve) | Muestra los avisos simulados **de esta sesión**: están en una lista en memoria. |
 | 7 | `FormInicio.AgregarEstadoDelSistema` → `SistemaService.ObtenerSalud` (solo Administrador) | Consultas EF de solo lectura: usuarios activos por rol, médicos sin horarios, médicos sin recepcionista y obras sociales activas. Los contadores en cero se pintan normal; los que indican algo por corregir, en advertencia. |
 | 8 | `FormInicio.CrearTarjetaUltimoBackup` → `BackupService.ObtenerUltimoBackup` (solo Administrador) | `MAX(backup_finish_date)` de `msdb`. Advertencia si nunca hubo copia, si no se pudo consultar o si tiene más de 7 días. |
 

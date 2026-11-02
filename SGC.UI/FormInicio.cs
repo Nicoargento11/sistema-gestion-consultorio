@@ -116,20 +116,9 @@ public class FormInicio : Form
 
     private void CargarAdministrador()
     {
-        var resumen = _resumenService.ObtenerResumen(_fecha);
-
-        AgregarTurnosDelDia(resumen);
-
-        AgregarSeccion("Resumen general");
-        var tarjetas = CrearFilaTarjetas();
-        tarjetas.Controls.Add(CrearTarjeta(resumen.TurnosSemana.ToString(CulturaAr), "Turnos de la semana", ColorAzul, IconoCalendario));
-        tarjetas.Controls.Add(CrearTarjeta(resumen.AusentesMes.ToString(CulturaAr), "Ausentes del mes", PaletaEstados.Acento(EstadoTurno.Ausente), IconoAlerta));
-        tarjetas.Controls.Add(CrearTarjeta(resumen.MedicosConAgendaHoy.ToString(CulturaAr), EsHoy ? "Médicos con agenda hoy" : "Médicos con agenda ese día", ColorTexto, IconoPersonas));
-        _contenido.Controls.Add(tarjetas);
-
+        // El Administrador solo ve el estado del sistema: los turnos, ausentes y avisos
+        // a pacientes son de la operacion diaria (Recepcionista y Medico).
         AgregarEstadoDelSistema();
-
-        AgregarAvisos(_notificacionService.ObtenerAvisos(), "Avisos");
     }
 
     // Tarjetas de salud del sistema (solo Administrador). Las que indican algo
