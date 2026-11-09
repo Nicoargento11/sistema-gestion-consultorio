@@ -1,0 +1,363 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Manual de Usuario - Sistema de Gestión de Consultorio (SGC)</title>
+<style>
+
+@page {
+    size: A4;
+    margin: 20mm 15mm 20mm 15mm;
+    @bottom-right {
+        content: counter(page);
+    }
+}
+body {
+    font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
+    color: #2c3e50;
+    line-height: 1.5;
+    font-size: 10pt;
+    margin: 0;
+    padding: 0;
+}
+.cover-page {
+    page-break-after: always;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    border-top: 8px solid #1e3c72;
+    border-bottom: 8px solid #2a5298;
+    padding: 40px 20px;
+    box-sizing: border-box;
+}
+.cover-title {
+    font-size: 26pt;
+    font-weight: 800;
+    color: #1e3c72;
+    margin-bottom: 10px;
+    line-height: 1.2;
+}
+.cover-subtitle {
+    font-size: 15pt;
+    font-weight: 600;
+    color: #2a5298;
+    margin-bottom: 25px;
+}
+.cover-desc {
+    font-size: 11pt;
+    color: #555;
+    max-width: 650px;
+    margin-bottom: 40px;
+}
+.cover-meta {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 20px 30px;
+    text-align: left;
+    width: 80%;
+    max-width: 500px;
+}
+.cover-meta table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.cover-meta td {
+    padding: 6px 10px;
+    font-size: 10pt;
+}
+.cover-meta td.label {
+    font-weight: bold;
+    color: #1e3c72;
+    width: 35%;
+}
+.toc-page {
+    page-break-after: always;
+    padding-top: 20px;
+}
+h1 {
+    color: #1e3c72;
+    font-size: 17pt;
+    border-bottom: 2px solid #1e3c72;
+    padding-bottom: 5px;
+    margin-top: 26px;
+    margin-bottom: 14px;
+    page-break-after: avoid;
+}
+h2 {
+    color: #2a5298;
+    font-size: 13pt;
+    border-bottom: 1px solid #cbd5e1;
+    padding-bottom: 4px;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    page-break-after: avoid;
+}
+h3 {
+    color: #334155;
+    font-size: 11pt;
+    margin-top: 14px;
+    margin-bottom: 8px;
+    page-break-after: avoid;
+}
+p, ul, ol {
+    margin-top: 6px;
+    margin-bottom: 10px;
+    text-align: justify;
+}
+li {
+    margin-bottom: 4px;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 9.5pt;
+    page-break-inside: avoid;
+}
+th, td {
+    border: 1px solid #cbd5e1;
+    padding: 6px 8px;
+    text-align: left;
+    vertical-align: top;
+}
+th {
+    background-color: #1e3c72;
+    color: #ffffff;
+    font-weight: 600;
+}
+tr:nth-child(even) {
+    background-color: #f8fafc;
+}
+.badge-role {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 8.5pt;
+    font-weight: bold;
+}
+.badge-admin { background: #fee2e2; color: #991b1b; }
+.badge-recep { background: #dbeafe; color: #1e40af; }
+.badge-med { background: #dcfce7; color: #166534; }
+.badge-all { background: #f3e8ff; color: #6b21a8; }
+.box-info {
+    background-color: #eff6ff;
+    border-left: 4px solid #3b82f6;
+    padding: 9px 12px;
+    margin: 10px 0;
+    border-radius: 0 5px 5px 0;
+    font-size: 9.5pt;
+}
+.box-warning {
+    background-color: #fffbeb;
+    border-left: 4px solid #f59e0b;
+    padding: 9px 12px;
+    margin: 10px 0;
+    border-radius: 0 5px 5px 0;
+    font-size: 9.5pt;
+}
+.diagram-box {
+    text-align: center;
+    margin: 16px 0;
+    page-break-inside: avoid;
+}
+.diagram-box img {
+    max-width: 90%;
+    max-height: 270px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+}
+.diagram-caption {
+    font-size: 8.5pt;
+    color: #64748b;
+    margin-top: 6px;
+    font-style: italic;
+}
+
+</style>
+</head>
+<body>
+<div class="cover-page">
+<div style="font-size:12pt; text-transform:uppercase; letter-spacing:2px; color:#64748b; margin-bottom:15px;">FACENA - UNNE · Licenciatura en Sistemas de Información</div>
+<div class="cover-title">Manual de Usuario Oficial</div>
+<div class="cover-subtitle">Sistema de Gestión de Consultorio Médico (SGC)</div>
+<div class="cover-desc">Guía práctica y visual paso a paso para el uso operativo de todas las funciones del sistema: Recepcionistas, Médicos y Administradores.</div>
+<div class="cover-meta">
+<table>
+<tr><td class="label">Proyecto:</td><td>Sistema de Gestión de Consultorio (SGC)</td></tr>
+<tr><td class="label">Cátedra:</td><td>Ingeniería de Software I</td></tr>
+<tr><td class="label">Docente:</td><td>Lic. Laura Gómez Solís</td></tr>
+<tr><td class="label">Autores:</td><td>Nicolás Valdés, Luciano Villordo (Grupo 12)</td></tr>
+<tr><td class="label">Versión:</td><td>2.0 (Edición Final para Evaluadores y Usuarios)</td></tr>
+<tr><td class="label">Fecha:</td><td>Noviembre de 2026</td></tr>
+</table>
+</div>
+</div>
+<div class="toc-page">
+<h1>Contenido del Manual</h1>
+<ol style="line-height:1.8; font-size:10pt;">
+<li><strong>Introducción y Primeros Pasos</strong> (Requisitos, Conexión a Base de Datos y Credenciales)</li>
+<li><strong>Interfaz General y Navegación</strong> (Pantalla de Inicio, Menú Lateral y Filosofía de Diseño)</li>
+<li><strong>Módulo de Recepción (Guía del Recepcionista)</strong>
+  <ul>
+    <li>3.1 Gestión de Pacientes (Alta, Edición, Búsqueda y Validación)</li>
+    <li>3.2 Asignación Inteligente de Turnos y Horarios Libres</li>
+    <li>3.3 Reprogramación y Cancelación de Citas</li>
+    <li>3.4 Confirmación de Asistencia y Cobro de Copagos por Obra Social</li>
+  </ul>
+</li>
+<li><strong>Módulo Médico (Guía del Profesional de la Salud)</strong>
+  <ul>
+    <li>4.1 Mi Agenda Diaria y Sala de Espera</li>
+    <li>4.2 Registro de Actividad Clínica (Diagnóstico, Procedimiento y Receta)</li>
+    <li>4.3 Consulta del Historial Clínico Confidencial</li>
+  </ul>
+</li>
+<li><strong>Módulo de Administración (Guía del Administrador)</strong>
+  <ul>
+    <li>5.1 Alta de Obras Sociales y Padrón de Médicos</li>
+    <li>5.2 Configuración de Agendas Semanales</li>
+    <li>5.3 Registro de Vacaciones y Ausencias Programadas</li>
+    <li>5.4 Gestión Segura de Usuarios y Asignación de Roles</li>
+    <li>5.5 Generación y Restauración de Copias de Seguridad (.BAK)</li>
+  </ul>
+</li>
+<li><strong>Módulo de Reportes Estadísticos y Exportación CSV</strong></li>
+<li><strong>Guía de Mensajes Frecuentes y Resolución de Problemas</strong></li>
+</ol>
+</div>
+<h1>1. Introducción y Primeros Pasos</h1>
+<p>El <strong>Sistema de Gestión de Consultorio (SGC)</strong> es una aplicación orientada a simplificar la administración diaria de clínicas y consultorios médicos ambulatorios. Su diseño moderno permite coordinar turnos, recepción de pacientes, atención clínica y control de caja de manera fluida.</p>
+<h2>1.1 Requisitos del Entorno</h2>
+<ul>
+<li><strong>Sistema Operativo:</strong> Microsoft Windows 10 u 11 (64 bits).</li>
+<li><strong>Entorno de Ejecución:</strong> .NET Desktop Runtime 8.0 o superior.</li>
+<li><strong>Base de Datos:</strong> Microsoft SQL Server 2017/2019/2022 o SQL Server Express.</li>
+<li><strong>Resolución de Pantalla:</strong> 1280x720 mínimo (1920x1080 recomendado). Soporta escalas de Windows al 125% y 150%.</li>
+</ul>
+<h2>1.2 Configuración Inicial de Conexión</h2>
+<p>En la carpeta de la aplicación existe una plantilla de configuración denominada <code>appsettings.example.json</code>. Para personalizar la conexión a su motor de SQL Server:</p>
+<ol>
+<li>Copie el archivo con el nombre <code>appsettings.Local.json</code>.</li>
+<li>Indique su cadena de conexión en el parámetro <code>ConnectionString</code> (ejemplo: <code>Server=.\SQLEXPRESS;Database=SGC;Trusted_Connection=True;TrustServerCertificate=True;</code>).</li>
+<li>Al iniciar la aplicación por primera vez, el sistema detecta la base de datos, ejecuta las migraciones automáticas y carga los datos de demostración si la base está vacía.</li>
+</ol>
+<h2>1.3 Cuentas de Acceso de Demostración</h2>
+<table>
+<tr><th>Usuario</th><th>Contraseña</th><th>Rol Asignado</th><th>Propósito</th></tr>
+<tr><td><code>admin</code></td><td><code>admin123</code></td><td><span class="badge-role badge-admin">Administrador</span></td><td>Control total de configuración, médicos, horarios, usuarios, backups y reportes globales.</td></tr>
+<tr><td><code>recepcion</code></td><td><code>recepcion123</code></td><td><span class="badge-role badge-recep">Recepcionista</span></td><td>Gestión diaria de turnos, pacientes, confirmación de asistencia y cobro en mostrador.</td></tr>
+<tr><td><code>medico</code></td><td><code>medico123</code></td><td><span class="badge-role badge-med">Médico</span></td><td>Agenda del día, evolución médica y consulta confidencial de historias clínicas.</td></tr>
+</table>
+<h1>2. Interfaz General y Filosofía de Diseño</h1>
+<p>El SGC aplica un <strong>diseño consistente y unificado</strong> en todos sus módulos para que cualquier usuario aprenda a operarlo en pocos minutos:</p>
+<ul>
+<li><strong>Tarjeta Numerada a la Izquierda:</strong> El formulario de captura o edición sigue pasos lógicos («1. Datos», «2. Contacto», «3. Cobertura»). Al hacer clic en un registro de la lista, la tarjeta entra automáticamente en <em>Modo Edición</em>; con el botón <em>«Nuevo»</em> regresa a modo de alta.</li>
+<li><strong>Grilla Interactiva a la Derecha:</strong> Muestra los datos cargados con campo de búsqueda rápida en tiempo real, filtros avanzados y contadores visuales con código de colores.</li>
+<li><strong>Franja Inferior de Mensajes:</strong> Todas las confirmaciones y advertencias se muestran en una barra inferior clara sin interrumpir con cuadros de diálogo invasivos.</li>
+</ul>
+<h1>3. Módulo de Recepción (Guía del Recepcionista)</h1>
+<h2>3.1 Gestión de Pacientes</h2>
+<p>Permite administrar el padrón único de pacientes que asisten al consultorio:</p>
+<ol>
+<li>En el menú lateral, haga clic en <strong>«Pacientes»</strong>.</li>
+<li>Complete el paso 1 con Apellido, Nombre, DNI y Fecha de Nacimiento.</li>
+<li>En el paso 2, ingrese Teléfono y Correo Electrónico.</li>
+<li>En el paso 3, seleccione la Obra Social (deje en blanco si se atiende como Particular).</li>
+<li>Presione <strong>«Guardar»</strong>. El paciente aparecerá inmediatamente en la grilla derecha.</li>
+</ol>
+<div class="box-info"><strong>Búsqueda Rápida:</strong> Escriba en la caja de búsqueda para filtrar al instante por apellido, nombre o documento. Si marca la casilla <em>«Solo con ausencias»</em>, la grilla listará a los pacientes con historial de inasistencias.</div>
+<h2>3.2 Asignación Inteligente de Turnos</h2>
+<p>El sistema elimina por completo los errores de turnos superpuestos o asignados en horarios donde el médico no atiende:</p>
+<ol>
+<li>Haga clic en <strong>«Turnos»</strong> en el menú lateral.</li>
+<li>En la tarjeta izquierda, seleccione el <strong>Médico</strong> y la <strong>Fecha</strong> deseada.</li>
+<li>El sistema consultará la agenda real y calculará los <strong>Horarios Libres</strong>. Elija el horario haciendo clic en el bloque disponible.</li>
+<li>Seleccione al <strong>Paciente</strong> del selector desplegable.</li>
+<li>Presione <strong>«Asignar Turno»</strong>. El turno queda guardado en estado <code>Confirmado</code>.</li>
+</ol>
+<div class="diagram-box">
+<img src="../tecnica/diagramas/flujo-asignar-turno.png" alt="Flujo de Asignación de Turno">
+<div class="diagram-caption">Figura 3: Flujo de validación y confirmación en la asignación de turnos.</div>
+</div>
+<h2>3.3 Confirmación de Asistencia y Cobro en Recepción</h2>
+<p>Cuando el paciente ingresa a la sala de espera:</p>
+<ol>
+<li>Localice el turno en la grilla y presione el botón <strong>«Confirmar Asistencia»</strong>.</li>
+<li>Si el paciente asistió, seleccione <strong>«Asistió»</strong>.</li>
+<li>El sistema calculará automáticamente el arancel a cobrar: si el médico atiende la obra social del paciente, calculará el copago con el descuento correspondiente; si no, sugerirá el precio particular.</li>
+<li>Seleccione el medio de cobro y presione <strong>«Confirmar»</strong>. El paciente queda registrado para el médico en estado <code>Asistió</code>.</li>
+</ol>
+<h1>4. Módulo Médico (Guía del Profesional)</h1>
+<h2>4.1 Mi Agenda Diaria</h2>
+<p>Al ingresar con rol Médico, la pantalla inicial muestra directamente la <strong>Agenda del Día</strong> del profesional logueado:</p>
+<ul>
+<li><strong>Tarjetas de Control Rápido:</strong> Conteo de turnos Totales, Atendidos, En Espera y Cancelados.</li>
+<li><strong>Lista de Turnos:</strong> Grilla ordenada cronológicamente con nombre del paciente, DNI, horario y estado de atención clínica.</li>
+<li><strong>Botón «Atender Paciente»:</strong> Abre directamente el registro de evolución para el paciente seleccionado.</li>
+</ul>
+<h2>4.2 Registro de Actividad Clínica</h2>
+<ol>
+<li>Seleccione el <strong>Tipo de Actividad</strong> (Consulta General, Control, Estudio Clínico, Receta o Certificado).</li>
+<li>Escriba el <strong>Motivo de Consulta</strong> (campo obligatorio).</li>
+<li>Complete el <strong>Diagnóstico / Procedimiento</strong> y las indicaciones de <strong>Receta / Medicamentos</strong>.</li>
+<li>Presione <strong>«Guardar Atención»</strong>. La evolución queda registrada de forma permanente e inviolable.</li>
+</ol>
+<div class="diagram-box">
+<img src="../tecnica/diagramas/flujo-atencion-medica.png" alt="Flujo de Atención Médica">
+<div class="diagram-caption">Figura 4: Proceso de registro clínico y evolución médica confidencial.</div>
+</div>
+<h2>4.3 Consulta de Historial Clínico</h2>
+<p>En la sección <strong>«Historial Clínico»</strong>, el médico puede buscar a cualquier paciente y revisar cronológicamente todas las atenciones previas realizadas en el consultorio, con fecha, médico tratante, motivo, diagnóstico y recetas emitidas.</p>
+<h1>5. Módulo de Administración (Guía del Administrador)</h1>
+<h2>5.1 Configuración de Médicos y Agendas Semanales</h2>
+<ol>
+<li>En <strong>«Médicos»</strong>, registre al profesional indicando matrícula, especialidad, precio de consulta particular y marque las obras sociales con las que atenderá.</li>
+<li>En <strong>«Horarios»</strong>, seleccione al médico, el día de la semana (Lunes a Domingo) y establezca el rango horario de atención (ejemplo: 08:00 a 12:00).</li>
+<li>Puede alternar entre la vista en listado y la <strong>Vista Semanal</strong> para verificar visualmente que no existan huecos ni solapamientos.</li>
+</ol>
+<h2>5.2 Carga de Ausencias y Cancelación Preventiva</h2>
+<p>Cuando un médico no pueda atender por congreso, licencia o vacaciones, ingrese a <strong>«Vacaciones/Ausencias»</strong>:</p>
+<ul>
+<li>Seleccione al médico, la fecha y el tipo de ausencia (Día completo o Franja horaria).</li>
+<li>Escriba el motivo y presione <strong>«Guardar»</strong>.</li>
+<li><strong>Comportamiento Automático:</strong> El sistema cancelará inmediatamente todos los turnos que coincidían con la ausencia, notificará a los pacientes e informará al administrador cuántas citas fueron canceladas para su reprogramación.</li>
+</ul>
+<h2>5.3 Copias de Seguridad y Restauración (Backup & Restore)</h2>
+<p>Para resguardar la base de datos ante fallas de hardware o traslados de equipo, el Administrador dispone del módulo <strong>«Copia de Seguridad»</strong>:</p>
+<ul>
+<li><strong>Generar Respaldo:</strong> Presione <em>«Crear Copia de Seguridad (.BAK)»</em>. El sistema interactúa con SQL Server y genera un archivo sellado con fecha y hora.</li>
+<li><strong>Restaurar Base de Datos:</strong> Seleccione un archivo <code>.bak</code> previo. El sistema verificará la cabecera del archivo para garantizar que pertenece a este sistema, solicitará confirmación estricta y restablecerá la base de datos ejecutando las migraciones que correspondan.</li>
+</ul>
+<div class="diagram-box">
+<img src="../tecnica/diagramas/flujo-backup.png" alt="Flujo de Backup y Restore">
+<div class="diagram-caption">Figura 5: Procedimiento de respaldo y recuperación de datos del Administrador.</div>
+</div>
+<h1>6. Módulo de Reportes y Exportación CSV</h1>
+<p>El módulo de <strong>Reportes</strong> brinda estadísticas estratégicas ejecutadas directamente en SQL Server mediante Procedimientos Almacenados:</p>
+<table>
+<tr><th>Pestaña</th><th>Descripción del Reporte</th><th>Gráfico Incluido</th><th>Roles con Acceso</th></tr>
+<tr><td><strong>Turnos por Período</strong></td><td>Detalle de turnos en un rango de fechas con filtros de médico y estado.</td><td>Indicadores de estado</td><td>Todos</td></tr>
+<tr><td><strong>Recaudación</strong></td><td>Total facturado agrupado por médico, medio de pago u obra social.</td><td>Barras de ingresos</td><td>Administrador</td></tr>
+<tr><td><strong>Asistencia</strong></td><td>Tasa de asistencia real frente a ausentismo y cancelaciones.</td><td>Torta / Indicadores</td><td>Admin, Médico</td></tr>
+<tr><td><strong>Ocupación de Agenda</strong></td><td>Porcentaje de aprovechamiento de los horarios médicos habilitados.</td><td>Barras de ocupación</td><td>Admin, Médico</td></tr>
+<tr><td><strong>Pacientes por Mes</strong></td><td>Evolución mensual de pacientes atendidos a lo largo del año.</td><td>Barras comparativas GDI+</td><td>Todos</td></tr>
+<tr><td><strong>Rendimiento Médico</strong></td><td>Desempeño y volumen de turnos de cada profesional.</td><td>Tabla analítica</td><td>Administrador</td></tr>
+<tr><td><strong>Obras Sociales</strong></td><td>Distribución de consultas por prestataria médica.</td><td>Barras horizontales GDI+</td><td>Admin, Recepcionista</td></tr>
+</table>
+<div class="box-info"><strong>Exportación a CSV:</strong> En cualquier reporte presione el botón <strong>«Exportar a CSV»</strong> para generar una planilla compatible con Excel con los filtros aplicados en el nombre del archivo.</div>
+<h1>7. Mensajes Frecuentes y Solución de Problemas</h1>
+<table>
+<tr><th>Mensaje del Sistema</th><th>Causa Probable</th><th>Acción Correctiva</th></tr>
+<tr><td><em>«El profesional no atiende en ese horario»</em></td><td>La hora elegida no cabe dentro de ninguna franja de la agenda semanal activa del médico.</td><td>Consulte los horarios libres del médico o elija otro día de atención.</td></tr>
+<tr><td><em>«Existe un turno superpuesto para el médico»</em></td><td>Ya existe otra cita confirmada en ese mismo intervalo horario.</td><td>Seleccione otro de los bloques de horarios libres ofrecidos en la pantalla.</td></tr>
+<tr><td><em>«No se puede asignar un turno en fecha pasada»</em></td><td>Se seleccionó una fecha anterior a la fecha actual del sistema.</td><td>Elija la fecha de hoy o una fecha futura en el calendario.</td></tr>
+<tr><td><em>«No se puede desactivar al único administrador activo»</em></td><td>Se intentó dar de baja la única cuenta administradora del sistema.</td><td>Cree o reactive otra cuenta con rol Administrador antes de inactivar la actual.</td></tr>
+<tr><td><em>«No se pudo conectar a la base de datos»</em></td><td>El servicio SQL Server está detenido o la cadena de conexión en <code>appsettings.Local.json</code> es incorrecta.</td><td>Verifique que el servicio de SQL Server esté en ejecución y revise el nombre del servidor o instancia.</td></tr>
+</table>
+</body>
+</html>

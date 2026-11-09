@@ -1,0 +1,440 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Especificación de Requisitos de Software (ERS) - SGC</title>
+<style>
+
+@page {
+    size: A4;
+    margin: 20mm 15mm 20mm 15mm;
+    @bottom-right {
+        content: counter(page);
+    }
+}
+body {
+    font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
+    color: #2c3e50;
+    line-height: 1.5;
+    font-size: 10pt;
+    margin: 0;
+    padding: 0;
+}
+.cover-page {
+    page-break-after: always;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    border-top: 8px solid #1e3c72;
+    border-bottom: 8px solid #2a5298;
+    padding: 40px 20px;
+    box-sizing: border-box;
+}
+.cover-title {
+    font-size: 26pt;
+    font-weight: 800;
+    color: #1e3c72;
+    margin-bottom: 10px;
+    line-height: 1.2;
+}
+.cover-subtitle {
+    font-size: 15pt;
+    font-weight: 600;
+    color: #2a5298;
+    margin-bottom: 25px;
+}
+.cover-desc {
+    font-size: 11pt;
+    color: #555;
+    max-width: 650px;
+    margin-bottom: 40px;
+}
+.cover-meta {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 20px 30px;
+    text-align: left;
+    width: 80%;
+    max-width: 500px;
+}
+.cover-meta table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.cover-meta td {
+    padding: 6px 10px;
+    font-size: 10pt;
+}
+.cover-meta td.label {
+    font-weight: bold;
+    color: #1e3c72;
+    width: 35%;
+}
+.toc-page {
+    page-break-after: always;
+    padding-top: 20px;
+}
+h1 {
+    color: #1e3c72;
+    font-size: 17pt;
+    border-bottom: 2px solid #1e3c72;
+    padding-bottom: 5px;
+    margin-top: 26px;
+    margin-bottom: 14px;
+    page-break-after: avoid;
+}
+h2 {
+    color: #2a5298;
+    font-size: 13pt;
+    border-bottom: 1px solid #cbd5e1;
+    padding-bottom: 4px;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    page-break-after: avoid;
+}
+h3 {
+    color: #334155;
+    font-size: 11pt;
+    margin-top: 14px;
+    margin-bottom: 8px;
+    page-break-after: avoid;
+}
+p, ul, ol {
+    margin-top: 6px;
+    margin-bottom: 10px;
+    text-align: justify;
+}
+li {
+    margin-bottom: 4px;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 9.5pt;
+    page-break-inside: avoid;
+}
+th, td {
+    border: 1px solid #cbd5e1;
+    padding: 6px 8px;
+    text-align: left;
+    vertical-align: top;
+}
+th {
+    background-color: #1e3c72;
+    color: #ffffff;
+    font-weight: 600;
+}
+tr:nth-child(even) {
+    background-color: #f8fafc;
+}
+.badge-role {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 8.5pt;
+    font-weight: bold;
+}
+.badge-admin { background: #fee2e2; color: #991b1b; }
+.badge-recep { background: #dbeafe; color: #1e40af; }
+.badge-med { background: #dcfce7; color: #166534; }
+.badge-all { background: #f3e8ff; color: #6b21a8; }
+.box-info {
+    background-color: #eff6ff;
+    border-left: 4px solid #3b82f6;
+    padding: 9px 12px;
+    margin: 10px 0;
+    border-radius: 0 5px 5px 0;
+    font-size: 9.5pt;
+}
+.box-warning {
+    background-color: #fffbeb;
+    border-left: 4px solid #f59e0b;
+    padding: 9px 12px;
+    margin: 10px 0;
+    border-radius: 0 5px 5px 0;
+    font-size: 9.5pt;
+}
+.diagram-box {
+    text-align: center;
+    margin: 16px 0;
+    page-break-inside: avoid;
+}
+.diagram-box img {
+    max-width: 90%;
+    max-height: 270px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+}
+.diagram-caption {
+    font-size: 8.5pt;
+    color: #64748b;
+    margin-top: 6px;
+    font-style: italic;
+}
+
+</style>
+</head>
+<body>
+<div class="cover-page">
+<div style="font-size:12pt; text-transform:uppercase; letter-spacing:2px; color:#64748b; margin-bottom:15px;">FACENA - UNNE · Licenciatura en Sistemas de Información</div>
+<div class="cover-title">Especificación de Requisitos de Software (ERS)</div>
+<div class="cover-subtitle">Sistema de Gestión de Consultorio Médico (SGC)</div>
+<div class="cover-desc">Estándar IEEE Std 830-1998 · Especificación rigurosa de requisitos funcionales, no funcionales, reglas de negocio, arquitectura en 4 capas, procedimientos almacenados y modelado de casos de uso.</div>
+<div class="cover-meta">
+<table>
+<tr><td class="label">Cátedra:</td><td>Ingeniería de Software I</td></tr>
+<tr><td class="label">Docente:</td><td>Lic. Laura Gómez Solís</td></tr>
+<tr><td class="label">Autores:</td><td>Nicolás Valdés, Luciano Villordo (Grupo 12)</td></tr>
+<tr><td class="label">Fecha:</td><td>Noviembre de 2026</td></tr>
+<tr><td class="label">Versión:</td><td>2.0 (Completa e integrada con SQL Server)</td></tr>
+<tr><td class="label">Repositorio:</td><td>github.com/Nicoargento11/sistema-gestion-consultorio</td></tr>
+</table>
+</div>
+</div>
+<div class="toc-page">
+<h1>Contenido del Documento</h1>
+<ol style="line-height:1.8; font-size:10pt;">
+<li><strong>Introducción</strong> (Propósito, Alcance, Definiciones, Referencias y Visión General)</li>
+<li><strong>Descripción General</strong> (Perspectiva, Funciones del Producto, Usuarios, Restricciones y Suposiciones)</li>
+<li><strong>Requisitos Específicos</strong>
+  <ul>
+    <li>3.1 Interfaces Externas (Usuario, Hardware, Software y Red)</li>
+    <li>3.2 Requisitos Funcionales (RF#01 a RF#28: Turnos, Pacientes, Médicos, Obras Sociales, Agenda, Ausencias, Actividad Médica, Backup y Reportes)</li>
+    <li>3.3 Requisitos No Funcionales (RNF del Producto, Organizacionales y Externos)</li>
+    <li>3.4 Reglas de Negocio (RN#01 a RN#06: Aranceles, Superposición, Bajas Lógicas, Integridad Referencial)</li>
+    <li>3.5 Modelado de Casos de Uso (Plantillas IEEE y Diagramas según especificaciones de cátedra)</li>
+  </ul>
+</li>
+<li><strong>Apéndices</strong>
+  <ul>
+    <li>Apéndice A: Modelo de Datos y Diagrama Entidad-Relación (DER)</li>
+    <li>Apéndice B: Procedimientos Almacenados en SQL Server (Arquitectura de datos y optimización)</li>
+    <li>Apéndice C: Ciclo de Vida y Matriz de Estados de Turnos</li>
+    <li>Apéndice D: Matriz de Permisos por Rol</li>
+  </ul>
+</li>
+</ol>
+</div>
+<h1>1. Introducción</h1>
+<h2>1.1 Propósito</h2>
+<p>El presente documento constituye la <strong>Especificación de Requisitos de Software (ERS)</strong> formal para el <strong>Sistema de Gestión de Consultorio (SGC)</strong>, elaborado bajo los lineamientos y estructura recomendada por el estándar internacional <strong>IEEE Std 830-1998</strong>. El documento tiene como propósito definir con exactitud el comportamiento funcional y técnico del software, sirviendo como contrato y referencia para la cátedra evaluadora (Ingeniería de Software I - FACENA-UNNE), el equipo de desarrollo y el cliente operativo del consultorio.</p>
+<h2>1.2 Alcance del Producto</h2>
+<p>El sistema <strong>SGC</strong> es una solución de escritorio desarrollada sobre la plataforma <strong>.NET 8 (Windows Forms)</strong> con persistencia en <strong>Microsoft SQL Server</strong> mediante <strong>Entity Framework Core</strong> y <strong>Procedimientos Almacenados (Stored Procedures)</strong> nativos. Su objetivo principal es sistematizar integralmente las operaciones administrativas y de atención de un consultorio médico ambulatorio.</p>
+<p><strong>Procesos incluidos en el alcance:</strong></p>
+<ul>
+<li><strong>Gestión de Pacientes:</strong> Padrón único con validaciones de DNI, teléfono y cobertura médica.</li>
+<li><strong>Gestión de Médicos y Agendas:</strong> Configuración de especialidades, aranceles de consulta, días y horarios semanales de atención, y convenios con obras sociales.</li>
+<li><strong>Gestión de Novedades y Ausencias:</strong> Bloqueo preventivo por licencias o congresos con cancelación atómica y aviso a pacientes.</li>
+<li><strong>Asignación de Turnos Inteligente:</strong> Cálculo de horarios libres en base a la agenda real, validación anti-superposición cruzada y duración paramétrica.</li>
+<li><strong>Recepción y Cobranza:</strong> Registro de asistencia (Asistió/Ausente), cálculo automático de copagos según porcentaje de cobertura de obra social y liquidación en caja.</li>
+<li><strong>Módulo Médico y Registro Clínico:</strong> Agenda personalizada del día, registro de evolución clínica (motivo, procedimiento y prescripción farmacológica) e historial cronológico confidencial.</li>
+<li><strong>Analítica y Reportes SQL:</strong> 7 reportes estratégicos calculados dentro de la base de datos con procedimientos almacenados, visualizaciones gráficas y exportación a formato CSV.</li>
+<li><strong>Seguridad y Continuidad Operativa:</strong> Autenticación con contraseñas encriptadas en PBKDF2 (SHA-256), roles segregados y módulo de copia de seguridad (Backup/Restore .BAK) para el Administrador.</li>
+</ul>
+<h2>1.3 Definiciones, Acrónimos y Abreviaturas</h2>
+<table>
+<tr><th>Término</th><th>Definición</th></tr>
+<tr><td><strong>SGC</strong></td><td>Sistema de Gestión de Consultorio.</td></tr>
+<tr><td><strong>ERS</strong></td><td>Especificación de Requisitos de Software (formato IEEE 830).</td></tr>
+<tr><td><strong>ABM</strong></td><td>Alta, Baja y Modificación (CRUD) de entidades del sistema.</td></tr>
+<tr><td><strong>Baja Lógica</strong></td><td>Inactivación de un registro mediante bandera booleana (<code>Activo = 0</code>), garantizando la integridad histórica de datos sin borrado físico.</td></tr>
+<tr><td><strong>Copago</strong></td><td>Monto diferencial que abona el paciente en recepción cuando su cobertura médica no cubre el 100% de la consulta particular del médico.</td></tr>
+<tr><td><strong>Procedimiento Almacenado (SP)</strong></td><td>Subrutina en lenguaje T-SQL compilada y almacenada en el motor SQL Server para ejecutar consultas analíticas y transacciones complejas con alto rendimiento.</td></tr>
+<tr><td><strong>GDI+</strong></td><td>Graphics Device Interface de Windows utilizado para renderizar gráficos analíticos nativos de alta definición sin librerías de terceros.</td></tr>
+<tr><td><strong>PBKDF2</strong></td><td>Password-Based Key Derivation Function 2, algoritmo criptográfico con sal y 100.000 iteraciones para almacenamiento seguro de credenciales.</td></tr>
+</table>
+<h2>1.4 Referencias</h2>
+<ul>
+<li>[IEEE-830] IEEE Recommended Practice for Software Requirements Specifications (IEEE Std 830-1998).</li>
+<li>[FACENA-IS1] Material de cátedra de Ingeniería del Software I: Diagramas de Casos de Uso, Modelo de Comportamiento y ERS (Prof. Lic. Laura Gómez Solís).</li>
+<li>[LEY-25326] Ley Nacional N° 25.326 de Protección de los Datos Personales (República Argentina).</li>
+<li>[LEY-26529] Ley Nacional N° 26.529 de Derechos del Paciente en su Relación con los Profesionales e Instituciones de la Salud e Historia Clínica.</li>
+</ul>
+<h1>2. Descripción General</h1>
+<h2>2.1 Perspectiva del Producto y Arquitectura</h2>
+<p>El SGC opera como un sistema autónomo basado en una arquitectura multicapa desacoplada y modular. La separación de responsabilidades garantiza la mantenibilidad, escalabilidad y facilidad de auditoría:</p>
+<table>
+<tr><th>Capa</th><th>Proyecto C#</th><th>Responsabilidad Primaria</th></tr>
+<tr><td><strong>Presentación</strong></td><td><code>SGC.UI</code></td><td>Formularios Windows Forms, controles de usuario compartidos, estilos visuales (<code>EstiloUi</code>), validación inmediata de teclado y adaptación automática a DPI.</td></tr>
+<tr><td><strong>Lógica de Negocio</strong></td><td><code>SGC.Logica</code></td><td>Servicios transaccionales (<code>TurnoService</code>, <code>PacienteService</code>, <code>BackupService</code>, etc.), reglas de aranceles, validaciones lógicas cruzadas y control de excepciones.</td></tr>
+<tr><td><strong>Acceso a Datos</strong></td><td><code>SGC.Datos</code></td><td>Contexto de Entity Framework Core (<code>SGCContext</code>), migraciones estructuradas, configuración de restricciones CHECK a nivel motor y ejecución de Stored Procedures.</td></tr>
+<tr><td><strong>Entidades del Dominio</strong></td><td><code>SGC.Entidades</code></td><td>Modelos de datos puros (POCO), enumeraciones (<code>RolUsuario</code>, <code>EstadoTurno</code>) y DTOs de reportes. Totalmente independiente de dependencias externas.</td></tr>
+</table>
+<div class="diagram-box">
+<img src="../tecnica/diagramas/capas.png" alt="Arquitectura en Capas">
+<div class="diagram-caption">Figura 1: Diagrama de Arquitectura en 4 Capas del Sistema SGC.</div>
+</div>
+<h2>2.2 Características de los Usuarios y Roles</h2>
+<table>
+<tr><th>Rol de Usuario</th><th>Perfil y Responsabilidad</th><th>Alcance Operativo</th></tr>
+<tr><td><span class="badge-role badge-admin">Administrador</span></td><td>Personal de gestión o directivo del consultorio. Familiaridad con configuraciones de software y gestión técnica.</td><td>Acceso integral a entidades maestras (médicos, obras sociales, usuarios, agendas semanales, licencias), diagnóstico del sistema, copias de seguridad (Backup/Restore) y reportes globales de recaudación.</td></tr>
+<tr><td><span class="badge-role badge-recep">Recepcionista</span></td><td>Personal de front-desk y atención al público. Experiencia en manejo de agenda y atención de pacientes.</td><td>Gestión de pacientes, asignación y reprogramación de turnos, confirmación de asistencia, registro de cobro/copago en recepción y reportes de volumen de turnos y obras sociales de sus médicos asignados.</td></tr>
+<tr><td><span class="badge-role badge-med">Médico</span></td><td>Profesional de la salud matriculado. Enfoque exclusivo en la atención sanitaria.</td><td>Visualización de su agenda diaria de consultas, registro de actividad clínica por turno (diagnóstico y receta), consulta del historial confidencial de pacientes y estadísticas de su propio rendimiento ambulatorio.</td></tr>
+</table>
+<h2>2.3 Restricciones Generales</h2>
+<ul>
+<li><strong>Tecnología:</strong> Plataforma .NET 8.0 Windows Forms en lenguaje C# 12.0. Base de datos SQL Server 2019/2022.</li>
+<li><strong>Persistencia de Transacciones:</strong> Cada operación de base de datos se ejecuta en su propio contexto atómico con Entity Framework Core o llamadas seguras parametrizadas contra inyección SQL.</li>
+<li><strong>Integridad de Datos:</strong> Prohibición estricta de bajas físicas (Hard Delete) en entidades transaccionales o de negocio; toda eliminación se implementa como baja lógica.</li>
+<li><strong>Localización:</strong> Interfaz íntegramente en idioma español, formateo monetario en pesos argentinos (<code>es-AR</code>) y fechas estándar <code>dd/MM/yyyy</code>.</li>
+</ul>
+<h1>3. Requisitos Específicos</h1>
+<h2>3.1 Interfaces Externas</h2>
+<p><strong>Interfaz de Usuario:</strong> Ventana principal contenedor MDI/Panel donde las pantallas hijas se embeben dinámicamente con tamaño adaptativo, garantizando que no existan ventanas flotantes dispersas. Panel lateral interactivo con resaltado de sección activa y adaptación visual para monitores estándar y pantallas de alta densidad DPI (125% y 150%).</p>
+<p><strong>Interfaz de Software:</strong> Conector nativo Microsoft.Data.SqlClient y Microsoft.EntityFrameworkCore.SqlServer contra motor SQL Server local o remoto.</p>
+<h2>3.2 Requisitos Funcionales</h2>
+<h3>Subsistema 1: Gestión de Turnos y Cobranzas</h3>
+<table>
+<tr><th>ID</th><th>Requisito Funcional</th><th>Rol</th><th>Descripción Detallada</th></tr>
+<tr><td><strong>RF#01</strong></td><td>Asignar Turno</td><td><span class="badge-role badge-recep">Recep</span></td><td>El sistema debe permitir seleccionar médico, fecha, horario disponible calculado, duración (30 min por defecto) y paciente. El turno nace en estado <code>Confirmado</code>.</td></tr>
+<tr><td><strong>RF#02</strong></td><td>Validación de Asignación</td><td><span class="badge-role badge-recep">Recep</span></td><td>El sistema debe rechazar turnos en fechas/horas pasadas, fuera de la franja horaria activa del médico, dentro de un período de ausencia médica o si colisiona con otro turno confirmado del mismo médico o del mismo paciente.</td></tr>
+<tr><td><strong>RF#03</strong></td><td>Cálculo de Horarios Libres</td><td><span class="badge-role badge-recep">Recep</span></td><td>El sistema debe calcular y renderizar visualmente los bloques horarios disponibles para el médico en la fecha elegida, identificando con claridad si no hay atención por falta de agenda o por ausencia programada.</td></tr>
+<tr><td><strong>RF#04</strong></td><td>Reprogramación de Turnos</td><td><span class="badge-role badge-recep">Recep</span></td><td>Permite cambiar fecha, hora y duración de un turno confirmado sin alterar al paciente ni al médico, revalidando disponibilidad y superposiciones.</td></tr>
+<tr><td><strong>RF#05</strong></td><td>Cancelación de Turnos</td><td><span class="badge-role badge-recep">Recep</span></td><td>Permite cancelar un turno con confirmación del operador, cambiando su estado a <code>Cancelado</code> e inactivando el registro para liberar el horario.</td></tr>
+<tr><td><strong>RF#06</strong></td><td>Confirmación de Asistencia</td><td><span class="badge-role badge-recep">Recep</span></td><td>Permite registrar el ingreso del paciente a la sala de espera en el día de la fecha. Si el paciente se presentó pasa a estado <code>Asistió</code>; si faltó, pasa a <code>Ausente</code>.</td></tr>
+<tr><td><strong>RF#07</strong></td><td>Cálculo y Cobro de Copago</td><td><span class="badge-role badge-recep">Recep</span></td><td>Si el paciente asiste, el sistema sugiere automáticamente el arancel a cobrar: arancel particular si no posee cobertura o si el médico no atiende su obra social; o el arancel con descuento si la obra social tiene convenio activo.</td></tr>
+<tr><td><strong>RF#08</strong></td><td>Notificación al Paciente</td><td><span class="badge-role badge-recep">Recep</span></td><td>Al registrar, reprogramar o cancelar un turno, el sistema genera el aviso correspondiente en el centro de notificaciones para el paciente.</td></tr>
+</table>
+<h3>Subsistema 2: Gestión de Pacientes</h3>
+<table>
+<tr><th>ID</th><th>Requisito Funcional</th><th>Rol</th><th>Descripción Detallada</th></tr>
+<tr><td><strong>RF#09</strong></td><td>Alta y Edición de Pacientes</td><td><span class="badge-role badge-recep">Recep</span></td><td>Registro de nombre, apellido, DNI, fecha de nacimiento, teléfono, correo electrónico y obra social afiliada.</td></tr>
+<tr><td><strong>RF#10</strong></td><td>Validación de Datos de Paciente</td><td><span class="badge-role badge-recep">Recep</span></td><td>Validación de DNI numérico (7 a 8 dígitos), unicidad de documento entre pacientes activos, formato de correo con '@' y '.' y edad razonable (&le; 120 años).</td></tr>
+<tr><td><strong>RF#11</strong></td><td>Baja Lógica de Pacientes</td><td><span class="badge-role badge-recep">Recep</span></td><td>Inactivación del paciente impidiendo nuevas asignaciones, pero preservando turnos históricos y atenciones clínicas previas. Bloquea la baja si tiene turnos futuros confirmados.</td></tr>
+<tr><td><strong>RF#12</strong></td><td>Búsqueda y Métrica de Paciente</td><td><span class="badge-role badge-recep">Recep</span></td><td>Búsqueda en tiempo real por DNI, apellido o nombre, visualizando fecha de última visita, próximo turno agendado y contador de inasistencias.</td></tr>
+</table>
+<h3>Subsistema 3: Médicos, Obras Sociales y Agendas</h3>
+<table>
+<tr><th>ID</th><th>Requisito Funcional</th><th>Rol</th><th>Descripción Detallada</th></tr>
+<tr><td><strong>RF#13</strong></td><td>ABM de Médicos</td><td><span class="badge-role badge-admin">Admin</span></td><td>Registro de médicos con nombre, apellido, DNI, matrícula profesional única, especialidad y valor monetario de consulta particular.</td></tr>
+<tr><td><strong>RF#14</strong></td><td>Convenio Médico - Obras Sociales</td><td><span class="badge-role badge-admin">Admin</span></td><td>Asignación de las obras sociales aceptadas por cada profesional mediante relación muchos a muchos.</td></tr>
+<tr><td><strong>RF#15</strong></td><td>ABM de Obras Sociales</td><td><span class="badge-role badge-admin">Admin</span></td><td>Registro de prestatarias con nombre único y porcentaje de cobertura pactado (entre 0% y 100%).</td></tr>
+<tr><td><strong>RF#16</strong></td><td>Configuración de Agenda Semanal</td><td><span class="badge-role badge-admin">Admin</span></td><td>Definición de franjas horarias por día de la semana (Lunes a Domingo) con horario de inicio y fin, impidiendo solapamientos.</td></tr>
+<tr><td><strong>RF#17</strong></td><td>Carga de Ausencias / Licencias</td><td><span class="badge-role badge-admin">Admin</span></td><td>Registro de novedades (día completo o rango de horas) por vacaciones, congresos o enfermedad.</td></tr>
+<tr><td><strong>RF#18</strong></td><td>Cancelación Atómica por Ausencia</td><td><span class="badge-role badge-admin">Admin</span></td><td>Al registrar una ausencia médica, el sistema cancela en una única transacción los turnos comprometidos y emite los avisos respectivos.</td></tr>
+</table>
+<h3>Subsistema 4: Atención Médica e Historial Clínico</h3>
+<table>
+<tr><th>ID</th><th>Requisito Funcional</th><th>Rol</th><th>Descripción Detallada</th></tr>
+<tr><td><strong>RF#19</strong></td><td>Agenda del Médico del Día</td><td><span class="badge-role badge-med">Médico</span></td><td>Visualización exclusiva de los turnos asignados al profesional logueado con tarjetas de estado (Total, Atendidos, En Espera, Cancelados).</td></tr>
+<tr><td><strong>RF#20</strong></td><td>Registro de Actividad Clínica</td><td><span class="badge-role badge-med">Médico</span></td><td>Carga de evolución médica sobre un turno asistido: tipo de práctica (catálogo), motivo de consulta obligatorio, procedimiento diagnóstico y receta médica.</td></tr>
+<tr><td><strong>RF#21</strong></td><td>Modificación y Baja de Atención</td><td><span class="badge-role badge-med">Médico</span></td><td>Permite rectificar la evolución o aplicar baja lógica; al eliminarse, el turno vuelve a figurar como pendiente de atención.</td></tr>
+<tr><td><strong>RF#22</strong></td><td>Consulta de Historia Clínica</td><td><span class="badge-role badge-med">Médico</span></td><td>Explorador cronológico confidencial de evoluciones de un paciente seleccionado con filtros por rango de fechas y tipo de actividad.</td></tr>
+</table>
+<h3>Subsistema 5: Seguridad, Backups y Reportes</h3>
+<table>
+<tr><th>ID</th><th>Requisito Funcional</th><th>Rol</th><th>Descripción Detallada</th></tr>
+<tr><td><strong>RF#23</strong></td><td>Autenticación y Control de Acceso</td><td><span class="badge-role badge-all">Todos</span></td><td>Inicio de sesión seguro; restricción estricta de formularios y vistas de datos según el rol del usuario autenticado.</td></tr>
+<tr><td><strong>RF#24</strong></td><td>Administración de Usuarios</td><td><span class="badge-role badge-admin">Admin</span></td><td>Alta y modificación de operadores; vinculación obligatoria de médicos con su perfil y asignación de médicos a recepcionistas. Protección para no desactivar al último administrador.</td></tr>
+<tr><td><strong>RF#25</strong></td><td>Copias de Seguridad (Backup)</td><td><span class="badge-role badge-admin">Admin</span></td><td>Generación de archivos de respaldo <code>.BAK</code> de la base de datos SQL Server desde la interfaz gráfica.</td></tr>
+<tr><td><strong>RF#26</strong></td><td>Restauración de Base de Datos</td><td><span class="badge-role badge-admin">Admin</span></td><td>Restauración segura desde archivo <code>.BAK</code> con verificación previa de base de datos, confirmación y ejecución automática de migraciones.</td></tr>
+<tr><td><strong>RF#27</strong></td><td>Reportes Analíticos con Stored Procedures</td><td><span class="badge-role badge-all">Todos</span></td><td>Ejecución de 7 reportes en base a procedimientos almacenados: Turnos por Período, Recaudación, Asistencia, Ocupación de Agenda, Pacientes por Mes, Rendimiento Médico y Distribución por Obra Social.</td></tr>
+<tr><td><strong>RF#28</strong></td><td>Exportación de Datos a CSV</td><td><span class="badge-role badge-all">Todos</span></td><td>Descarga de datos tabulares calculados en formato CSV estándar compatible con Microsoft Excel con protección de caracteres de fórmula.</td></tr>
+</table>
+<h2>3.3 Requisitos No Funcionales (RNF)</h2>
+<table>
+<tr><th>ID</th><th>Categoría</th><th>Descripción</th></tr>
+<tr><td><strong>RNF#01</strong></td><td>Usabilidad</td><td>Patrón visual estandarizado: formulario de captura con numeración a la izquierda, grilla de resultados con contadores arriba y franja de estado/mensajes en la parte inferior.</td></tr>
+<tr><td><strong>RNF#02</strong></td><td>Rendimiento</td><td>Las consultas habituales de turnos y agendas deben responder en menos de 1 segundo en entorno local. Los reportes analíticos complejos se ejecutan íntegramente en SQL Server mediante Stored Procedures.</td></tr>
+<tr><td><strong>RNF#03</strong></td><td>Seguridad / Confidencialidad</td><td>Los datos de evoluciones clínicas, diagnósticos y recetas solo son accesibles y visibles para usuarios con rol Médico. Ningún reporte administrativo expone información médica confidencial.</td></tr>
+<tr><td><strong>RNF#04</strong></td><td>Seguridad Criptográfica</td><td>Almacenamiento de contraseñas mediante algoritmo PBKDF2 con SHA-256 y 100.000 iteraciones. Nunca se almacenan ni visualizan claves en texto claro.</td></tr>
+<tr><td><strong>RNF#05</strong></td><td>Fiabilidad e Integridad</td><td>Persistencia atómica de transacciones y refuerzo de integridad relacional mediante claves foráneas y restricciones CHECK a nivel de motor de datos (<code>CK_Medico_Precio</code>, <code>CK_Turno_Monto</code>, etc.).</td></tr>
+<tr><td><strong>RNF#06</strong></td><td>Compatibilidad de Pantalla</td><td>Ajuste dinámico de tipografías y contenedores para escalas de visualización de Windows al 100%, 125% y 150% (High DPI).</td></tr>
+</table>
+<h2>3.4 Reglas de Negocio (RN)</h2>
+<table>
+<tr><th>ID</th><th>Regla de Negocio</th><th>Criterio Técnico Aplicado</th></tr>
+<tr><td><strong>RN#01</strong></td><td>Ciclo de Vida de Turno</td><td>Un turno nace exclusivamente en estado <code>Confirmado</code>. Al presentarse pasa a <code>Asistió</code>; ante inasistencia a <code>Ausente</code>; y si se cancela a <code>Cancelado</code> (con baja lógica).</td></tr>
+<tr><td><strong>RN#02</strong></td><td>Anti-Superposición Horaria</td><td>Dos turnos colisionan si: <code>(Inicio_A &lt; Fin_B) Y (Fin_A &gt; Inicio_B)</code>. Turnos contiguos en el borde exacto no se consideran superpuestos. Aplica para el médico y para el paciente.</td></tr>
+<tr><td><strong>RN#03</strong></td><td>Cálculo de Copagos</td><td><code>Monto = PrecioParticular - (PrecioParticular &times; Cobertura / 100)</code> si el médico acepta la obra social del paciente; de lo contrario se factura el 100% del precio particular.</td></tr>
+<tr><td><strong>RN#04</strong></td><td>Cancelación por Licencia</td><td>Al registrar una ausencia médica, los turnos confirmados afectados se cancelan de manera atómica con notificación al paciente.</td></tr>
+<tr><td><strong>RN#05</strong></td><td>Protección de Integridad</td><td>No se permite dar de baja a un médico o paciente que registre turnos confirmados futuros sin reprogramar o cancelar previamente.</td></tr>
+<tr><td><strong>RN#06</strong></td><td>Supervivencia del Administrador</td><td>El sistema rechaza cualquier intento de dar de baja lógica o despojar del rol de Administrador a la última cuenta administradora activa.</td></tr>
+</table>
+<h2>3.5 Modelado de Casos de Uso</h2>
+<p>Conforme a las pautas de la cátedra de Ingeniería del Software I (Lic. Laura Gómez Solís), se modelan los casos de uso principales describiendo actores, precondiciones, flujo típico, flujos alternativos y postcondiciones:</p>
+<h3>CU#01: Asignar Turno a Paciente</h3>
+<table>
+<tr><th style="width:25%;">Campo</th><th>Detalle</th></tr>
+<tr><td><strong>Actor Principal</strong></td><td>Recepcionista</td></tr>
+<tr><td><strong>Precondición</strong></td><td>Sesión iniciada. Médico con agenda activa y paciente registrado en el padrón.</td></tr>
+<tr><td><strong>Flujo Principal</strong></td><td>1. La recepcionista selecciona el médico asignado.<br>2. Selecciona la fecha en el calendario.<br>3. El sistema calcula y muestra los bloques de horarios disponibles.<br>4. Selecciona un horario y duración (30 min por defecto).<br>5. Selecciona el paciente a agendar.<br>6. Presiona «Asignar Turno».<br>7. El sistema valida reglas de negocio, guarda el turno como Confirmado y emite notificación.</td></tr>
+<tr><td><strong>Flujos Alternativos</strong></td><td><strong>3a. Médico sin atención:</strong> El sistema indica ausencia programada o día sin franja y no lista horarios.<br><strong>7a. Colisión o fecha pasada:</strong> El sistema advierte el conflicto y cancela la operación sin guardar.</td></tr>
+<tr><td><strong>Postcondición</strong></td><td>Turno registrado en base de datos en estado Confirmado y horario ocupado en la agenda.</td></tr>
+</table>
+<h3>CU#02: Confirmar Asistencia y Cobranza</h3>
+<table>
+<tr><th style="width:25%;">Campo</th><th>Detalle</th></tr>
+<tr><td><strong>Actor Principal</strong></td><td>Recepcionista</td></tr>
+<tr><td><strong>Precondición</strong></td><td>Existe un turno Confirmado para el día de la fecha o fecha anterior.</td></tr>
+<tr><td><strong>Flujo Principal</strong></td><td>1. Selecciona el turno en la lista y presiona «Confirmar Asistencia».<br>2. Marca opción «Asistió».<br>3. El sistema calcula automáticamente el arancel a cobrar según convenio de obra social.<br>4. Selecciona el medio de pago (Efectivo/Particular u Obra Social).<br>5. Presiona «Confirmar».<br>6. El turno pasa a estado Asistió y queda disponible para el médico en sala de espera.</td></tr>
+<tr><td><strong>Flujos Alternativos</strong></td><td><strong>2a. Paciente Ausente:</strong> Marca «Ausente», no se solicita cobranza y el turno queda registrado como inasistencia.</td></tr>
+<tr><td><strong>Postcondición</strong></td><td>Turno actualizado en estado Asistió con importe y medio de pago registrado.</td></tr>
+</table>
+<h3>CU#03: Registrar Atención Médica</h3>
+<table>
+<tr><th style="width:25%;">Campo</th><th>Detalle</th></tr>
+<tr><td><strong>Actor Principal</strong></td><td>Médico</td></tr>
+<tr><td><strong>Precondición</strong></td><td>Médico autenticado en el sistema. El turno debe estar confirmado o con asistencia registrada.</td></tr>
+<tr><td><strong>Flujo Principal</strong></td><td>1. El médico abre su agenda diaria y presiona «Atender Paciente».<br>2. Selecciona el tipo de actividad clínica (Consulta, Control, Práctica, etc.).<br>3. Ingresa el motivo de consulta obligatorio.<br>4. Registra el diagnóstico/procedimiento y prescripciones farmacológicas.<br>5. Presiona «Guardar Atención».<br>6. El sistema vincula la actividad al turno y actualiza el estado clínico.</td></tr>
+<tr><td><strong>Postcondición</strong></td><td>Evolución clínica persistida confidencialmente e incorporada al historial del paciente.</td></tr>
+</table>
+<h3>CU#04: Generar y Restaurar Copia de Seguridad (Backup/Restore)</h3>
+<table>
+<tr><th style="width:25%;">Campo</th><th>Detalle</th></tr>
+<tr><td><strong>Actor Principal</strong></td><td>Administrador</td></tr>
+<tr><td><strong>Precondición</strong></td><td>Sesión iniciada con credenciales de Administrador. Acceso a SQL Server.</td></tr>
+<tr><td><strong>Flujo Principal</strong></td><td>1. Ingresa a la sección «Copia de Seguridad».<br>2. Para crear: Selecciona carpeta de destino y presiona «Crear Copia de Seguridad (.BAK)». El sistema ejecuta el backup nativo.<br>3. Para restaurar: Selecciona archivo .BAK válido, el sistema verifica cabeceras de base de datos y solicita confirmación de seguridad.<br>4. Se bloquea la navegación, se restaura la base y se aplican migraciones pendientes.</td></tr>
+<tr><td><strong>Postcondición</strong></td><td>Base de datos respaldada o restaurada a su estado operacional íntegro.</td></tr>
+</table>
+<h1>4. Apéndices</h1>
+<h2>Apéndice A: Modelo de Datos y DER</h2>
+<p>El modelo relacional del SGC se encuentra normalizado en tercera forma normal (3FN) e implementado sobre SQL Server con Entity Framework Core. Las claves primarias utilizan identificadores enteros autonuméricos (Identity), resguardando unicidad lógica con índices únicos (DNI, Matrícula, Nombre de Usuario).</p>
+<div class="diagram-box">
+<img src="../tecnica/diagramas/modelo-datos.png" alt="Diagrama de Entidad-Relación">
+<div class="diagram-caption">Figura 2: Diagrama de Entidad-Relación (DER) de la Base de Datos SGC.</div>
+</div>
+<h2>Apéndice B: Procedimientos Almacenados en SQL Server</h2>
+<p>A diferencia de sistemas que procesan grandes volúmenes de datos en memoria cliente, el SGC traslada la lógica pesada de cálculo, agregación y reportería directamente al motor de base de datos mediante Stored Procedures nativos:</p>
+<table>
+<tr><th>Procedimiento Almacenado</th><th>Parámetros</th><th>Propósito y Optimización</th></tr>
+<tr><td><code>sp_ObtenerTurnosPorMedicoYFecha</code></td><td>@MedicoId, @Fecha, @IncluirCancelados</td><td>Recupera los turnos del médico optimizando el filtrado en el motor y materializando relaciones en C#.</td></tr>
+<tr><td><code>sp_AsignarTurno</code></td><td>@PacienteId, @MedicoId, @Fecha, @HoraInicio, @Duracion</td><td>Valida agenda, vigencia y solapamiento horario en una transacción atómica directa en SQL Server.</td></tr>
+<tr><td><code>sp_ReportePacientesPorMes</code></td><td>@Anio, @MedicoId</td><td>Agrupa atenciones mensuales con sumatorias condicionales (Atendidos, Ausentes, Cancelados) según el rol.</td></tr>
+<tr><td><code>sp_ReporteTurnosPorObraSocial</code></td><td>@Anio, @MedicoId</td><td>Calcula volumen de turnos y recaudación total por obra social con soporte de filtro médico.</td></tr>
+<tr><td><code>sp_ReporteRendimientoMedicos</code></td><td>@Anio, @Mes, @MedicoId</td><td>Genera matriz comparativa de desempeño profesional (turnos otorgados, tasa de atención y facturación).</td></tr>
+<tr><td><code>sp_ReporteAsistencia</code></td><td>@Desde, @Hasta, @MedicoId</td><td>Calcula porcentajes y totales de asistencia efectiva vs. ausentismo en un período.</td></tr>
+<tr><td><code>sp_ReporteOcupacionAgenda</code></td><td>@Desde, @Hasta, @MedicoId</td><td>Compara horas de turno ocupadas contra la capacidad máxima de la agenda médica semanal.</td></tr>
+<tr><td><code>sp_ResumenDelDia</code></td><td>@Fecha, @Rol, @UsuarioId, @MedicoId</td><td>Alimenta el panel de inicio en menos de 200ms con las métricas clave de cada usuario.</td></tr>
+</table>
+<h2>Apéndice C: Ciclo de Vida y Estados del Turno</h2>
+<table>
+<tr><th>Estado</th><th>Significado</th><th>Transición y Responsable</th></tr>
+<tr><td><strong>Confirmado</strong></td><td>Turno activo programado en agenda.</td><td>Estado inicial de creación (Recepcionista / RF#01).</td></tr>
+<tr><td><strong>Asistió</strong></td><td>El paciente se presentó al consultorio y se registró el cobro.</td><td>Confirmación de asistencia en recepción (Recepcionista / RF#06).</td></tr>
+<tr><td><strong>Ausente</strong></td><td>El paciente faltó a su cita programada.</td><td>Registro de inasistencia (Recepcionista / RF#06).</td></tr>
+<tr><td><strong>Cancelado</strong></td><td>Turno cancelado por el paciente o por licencia médica.</td><td>Baja lógica del turno (Recepcionista o Administrador / RF#05, RF#18).</td></tr>
+</table>
+<h2>Apéndice D: Matriz de Permisos por Rol</h2>
+<table>
+<tr><th>Módulo / Funcionalidad</th><th>Administrador</th><th>Recepcionista</th><th>Médico</th></tr>
+<tr><td>Pantalla de Inicio y Resumen</td><td>Sí (Estado del Sistema)</td><td>Sí (Turnos de sus médicos)</td><td>Sí (Mi día y próximo paciente)</td></tr>
+<tr><td>Padrón de Pacientes</td><td>No</td><td>Sí (Completo)</td><td>No</td></tr>
+<tr><td>Gestión de Turnos y Cobros</td><td>No</td><td>Sí (Médicos asignados)</td><td>No</td></tr>
+<tr><td>Médicos, Obras Sociales y Agendas</td><td>Sí (Completo)</td><td>No</td><td>No</td></tr>
+<tr><td>Ausencias y Licencias Médicas</td><td>Sí (Completo)</td><td>No</td><td>No</td></tr>
+<tr><td>Gestión de Usuarios y Roles</td><td>Sí (Completo)</td><td>No</td><td>No</td></tr>
+<tr><td>Copia de Seguridad y Restauración</td><td>Sí (Completo)</td><td>No</td><td>No</td></tr>
+<tr><td>Mi Agenda del Día</td><td>No</td><td>No</td><td>Sí (Propia)</td></tr>
+<tr><td>Evolución Clínica y Recetas</td><td>No</td><td>No</td><td>Sí (Propia)</td></tr>
+<tr><td>Historial Clínico del Paciente</td><td>No</td><td>No</td><td>Sí (Solo lectura)</td></tr>
+<tr><td>Reportes y Estadísticas</td><td>Sí (7 Reportes)</td><td>Sí (3 Reportes)</td><td>Sí (4 Reportes)</td></tr>
+</table>
+</body>
+</html>
