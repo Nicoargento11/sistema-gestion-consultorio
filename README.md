@@ -3,6 +3,10 @@
 Trabajo integrador de Taller de Programación II. Aplicación de escritorio en C# / .NET 8 (WinForms) con arquitectura en capas, Entity Framework Core y SQL Server.
 
 > **¿Querés entender cómo funciona por dentro?** Empezá por [`docs/tecnica/00-indice.md`](docs/tecnica/00-indice.md): arquitectura, modelo de datos, reglas de negocio, flujos, procedimientos almacenados y guía para modificar el código.
+> 
+> **Documentación formal del proyecto:**
+> - 📄 [Especificación de Requisitos de Software (ERS)](docs/ERS/Especificacion_de_Requisitos_de_Software_ERS.pdf)
+> - 📘 [Manual de Usuario Oficial](docs/Manual_de_Usuario/Manual_de_Usuario_SGC.pdf)
 
 ## Cómo correr el proyecto
 
